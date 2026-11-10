@@ -5,95 +5,127 @@
 > Status, In-flight, Next Steps, and Open Questions are **snapshots**. Rewrite them; don't append to them.
 
 ## Current Status
-**As of 2026-11-09.** Phase: **Setup.** Project: **Glazed**, a donut shop ERP. Stack: React + Vite + TypeScript (chosen, not scaffolded). Design: the **Glazed design system** is installed in `design-system/` and is mandatory for all UI. No application code exists yet. Repo: https://github.com/skywalkerlb/ERP-GSCM-401 (`main`).
+**As of 2026-11-10.** GitHub publication requested; build and design checks pass, and local credentials are excluded. Credential-free demo login is provisioned locally and hosted. Select a role and Enter demo; six role accounts verified after loading. Ready public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Separate demo backend: `wzsbtfzettxpczgulibd`; persistent backend and project link unchanged.
 
-- **Works:** The doc protocol and its enforcement in Claude Code, Codex, Cursor and Copilot:
-  - Edits are blocked until README, PROGRESS and DESIGN_SYSTEM have been read.
-  - The agent is sent back if it finishes without updating PROGRESS.md, and gets a design checklist after UI changes.
-  - The git pre-commit runs a design lint (`scripts/check-design.sh`) and requires a new PROGRESS entry. This applies to every tool.
-  - No commits have been made yet.
-- **Needs a one-time approval from the user:** project hooks in Codex and Claude Code (`/hooks`). Cursor and Copilot (preview) hooks haven't been confirmed firing inside those apps yet.
-- **Not started:** All ERP functionality.
+- Build/typecheck/design lint, 38 entry/access/sign-out tests and 85 full database checks pass. Rollback-only owner access checks pass. Demo endpoint refuses real invitations (403). Public hosting has no Vercel login wall.
+- Loaded 5,381 sales, 57,352 sale lines, 1,308 production orders, 152 purchase orders and future pickup orders; shops have fresh stock. Inventory/GL/item costs reconcile to $34,672.89 at verification.
+- Sample-data limitation: interrupted connection caused 48 skipped historical events and 19 quantity differences from the simulator. Replay exited 2; it was not a clean deterministic replay. Accounts were provisioned independently and remain verified. No reset/replay process remains running.
+- No design exceptions. Browser automation failed internally, so click-through and both-theme visual verification remain unverified.
 
 ## In-flight Work
-- _None._
+- No application edits or demo setup process running; repository publication is being finalized.
+- Seed recovery/reproducibility and browser visual verification remain follow-ups.
 
 ## Next Steps
-0. User: open the project once in Codex and Claude Code and approve the project hooks (`/hooks`).
-1. Scaffold Vite + React + TS. Import `design-system/tokens.css` and `components/components.css` at the root, set `data-theme` on `<html>`, and record run/build/test commands in README §4.
-2. Port the 12 Glazed components from `design-system/components/reference-components.js` to typed React in `src/components/`, with the props from `index.d.ts` and the same `gz-` classes. Fix the a11y gaps noted below while porting.
-3. Build the app shell (SidebarNav with the donut mark, a 60px topbar, content area) and a light/dark theme toggle.
-4. Build modules from the assignment requirements (Dashboard, Orders, Catering, Batches, Inventory, Staff, Finance).
-
-**Known design-system gaps to handle while porting** (found during the 2026-11-09 review):
-- Select never sets `aria-describedby`.
-- DataTable clickable rows can't be reached by keyboard.
-- Tabs have no arrow-key handling.
-- `components.css` hard-codes some px sizes. That's acceptable inside `design-system/`, which the lint skips.
-- There are no motion, breakpoint or z-index tokens. Ask the user before adding any.
+1. Review seed retry transaction/state handling before a future explicitly requested clean demo replay; preserve current usable dataset meanwhile.
+2. Complete browser click-through and both-theme visual checks when tooling works.
+3. Persistent backend remains separate: correct its local password, apply migrations without resets, configure owner and Auth redirects.
 
 ## Open Questions for the User
-- What does the GSCM 401 assignment require (features, deliverables, due dates)? Are any modules needed beyond the design system's set (e.g. Purchasing/Suppliers)?
-- Data and backend: a local mock or JSON, a database (e.g. Supabase/SQLite), or another option? Hosting?
+- Which confirmed signup email should own the persistent ERP account? Never send passwords in chat.
+- Has the persistent database password been corrected locally?
+- What is the project due date?
+
 ## Recent Changes
-<!-- Newest first. At most 10 entries. Move older ones to docs/progress-archive/YYYY-MM.md. -->
-<!-- Template (each field is required; use None or N/A when it doesn't apply):
-### YYYY-MM-DD: <one-line summary> (<tool: Claude Code | Codex | Cursor | Copilot | Gemini | other>)
-- **What:** <the change in plain language>
-- **Why:** <the user's goal, request, or bug>
-- **How:** <approach, key decisions, alternatives rejected>
-- **Files:** `path/a`, `path/b`
-- **Preferences learned:** <rule → README §8.x> | None
-- **Correction sweep:** <patterns searched, N places fixed, leftovers → Next Steps> | N/A
-- **Rework:** <what the user had redone and why> | None
-- **Follow-ups:** <added to Next Steps> | None
--->
-
-### 2026-11-09: Made the Glazed logo official and pushed the project to GitHub (Claude Code)
-- **What:** The design system's "Glazed" wordmark with the donut ring is now the official logo instead of a placeholder. Made the first commit and pushed it to https://github.com/skywalkerlb/ERP-GSCM-401 (`main`).
-- **Why:** The user said "that logo in the design system is great" and asked for the project to be pushed to that repo.
-- **How:** Updated the brand-mark text in DESIGN_SYSTEM.md and added a logo preference to README §8.1. Commits use the user's GitHub noreply email, set in this repo only, so their real email stays private on the public repo. The commit went through the normal pre-commit checks; no `--no-verify`.
-- **Files:** `design-system/DESIGN_SYSTEM.md`, `README.md` (§2, §8.1), `PROGRESS.md`
-- **Preferences learned:** The official logo is the Glazed wordmark plus donut ring. Keep the user's real email out of public commits; use their GitHub noreply address (→ README §8.1, §8.4).
+### 2026-11-10: Prepared ERP implementation for GitHub publication (Codex)
+- **What:** Prepared the current ERP app, migrations, access controls, demo setup and documentation for the user-requested GitHub push.
+- **Why:** The user requested publishing the working project to GitHub.
+- **How:** Confirmed main matches the remote base, GitHub noreply identity and active hooks; checked 271 candidate files for saved credential values and confirmed local env/hosting/database linkage stays ignored. Build and full design lint pass. Commit hooks remain enabled.
+- **Files:** Current ERP implementation, tests and documentation; `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** None
 - **Correction sweep:** N/A
 - **Rework:** None
-- **Follow-ups:** None
+- **Follow-ups:** Historical seed reproducibility and browser verification remain documented above.
 
-### 2026-11-09: Installed the Glazed design system and made it mandatory (Claude Code)
-- **What:** Added `design-system/` (tokens, 12 React reference components, docs, reference PNGs) as the source of truth for all UI. Every agent must now read `DESIGN_SYSTEM.md` before any edit. Added a design lint to the commit check and a design checklist to the end-of-task reminder. Recorded the project (Glazed donut shop ERP) and stack (React + Vite + TS).
-- **Why:** The user wants every UI/UX change to follow this design system unless they explicitly say otherwise, and wants every agent to read it first and keep it in context.
-- **How:**
-  - The zip was copied unchanged. Two subagents reviewed the tokens and components and found no network calls, eval or hidden instructions.
-  - The zip's own CLAUDE.md UI rules were merged into a new "Rules for AI agents" section in DESIGN_SYSTEM.md, instead of adding a second CLAUDE.md.
-  - `guard.sh` now also requires reading DESIGN_SYSTEM.md, and sets a UI flag for the design checklist.
-  - New `scripts/check-design.sh` checks added lines for raw hex/rgb, px above 2px and literal fonts. `ds-exception:` lines are skipped.
-  - CLAUDE.md and GEMINI.md now also import DESIGN_SYSTEM.md.
-  - Tested 10 guard cases and 6 lint/commit cases; all passed.
-- **Files:** `design-system/**` (new; DESIGN_SYSTEM.md gained the agent-rules section), `scripts/check-design.sh` (new), `scripts/ai-guard/guard.sh`, `.githooks/pre-commit`, `README.md` (§1–§3, §5–§7, §8.1, §9.1, §9.3, §9.5), `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `.cursor/rules/project-docs.mdc`, `.github/copilot-instructions.md`, `PROGRESS.md`
-- **Preferences learned:** All UI follows Glazed unless the user explicitly says otherwise; read the design system before any change; design corrections go through tokens or shared components, and one-offs are logged as exceptions; the stack is React + Vite + TS (→ README §8.1, §3).
+### 2026-11-10: Published and verified public role demos (Codex)
+- **What:** Finished isolated demo provisioning, automatic role entry and public Preview deployment; protected other visitors during demo sign-out.
+- **Why:** Anyone must enter demos without registering or supplying credentials.
+- **How:** Migrated separate Supabase project, verified six accounts, configured Vercel Preview, disabled hosting SSO wall, deployed demo-only People endpoint. Fixed setup paths with spaces and kit cost verification. 38 tests and 85 DB checks pass; build/typecheck/design lint pass. No design exceptions; browser visuals unavailable.
+- **Files:** `src/lib/supabase.ts`, `src/hooks/useAuth.tsx`, `src/app/AuthPages.tsx`, `scripts/demo/setup.mjs`, `scripts/verify/`, `README.md`, `PROGRESS.md`; ignored local demo settings
+- **Preferences learned:** Public role selection requires no visitor credentials; truthful unavailable states (README §8.1).
+- **Correction sweep:** Both login pages share demo entry; all auth sign-out paths preserve shared-account sessions through tab-local exit.
+- **Rework:** Seed connection failure left an orphan lock; closed only the confirmed stale demo connection. Replay completed with 48 skipped events, 19 simulator quantity differences and exit 2; dataset accounting checks pass.
+- **Follow-ups:** Browser verification and seed recovery/reproducibility improvement; persistent backend setup remains separate.
+
+### 2026-11-10: Completing credential-free public demo entry (Codex)
+- **What:** Verified selected demo profile/role, direct landing screens, bounded demo requests, failure cleanup and retry; routed ordinary demo sign-out through tab-local exit to protect other visitors; removed misleading preparation wording.
+- **Why:** Visitors must enter role demos without credentials; existing demo infrastructure was not configured.
+- **How:** Kept automatic account sign-in in an isolated project/tab; 19 demo-entry tests, typecheck and design lint pass. Provisioned and migrated Glazed Demo using current CLI; six accounts verified, Preview Ready and public, demo mutation endpoint returns 403. Full history replay in progress; 75 database checks pass. Fixed URL-encoded path in setup script for folder names with spaces. No design exceptions; visual checks pending.
+- **Files:** `src/lib/supabase.ts`, `src/app/AuthPages.tsx`, `scripts/verify/demo_entry.test.mjs`, `scripts/demo/setup.mjs`, ignored `.env.local`, `README.md`, `PROGRESS.md`
+- **Preferences learned:** No visitor credentials or registration for demos; accurate setup states (README §8.1).
+- **Correction sweep:** Shared selector covers both login pages; role verification prevents incorrect account landing.
+- **Rework:** Previous demo selector existed without configured backend; provisioning now attempted.
+- **Follow-ups:** Finish provisioning, seed, verify all roles and deploy frontend settings.
+
+### 2026-11-10: Integrated and verified account access implementation (Codex)
+- **What:** Completed local login choices, recovery/invitation routes, People access, owner/admin permissions and demo isolation/reset setup.
+- **Why:** Implement the approved plan while preserving the persistent backend.
+- **How:** Separate demo project/storage; guarded reset tools; owner-only service endpoint and database protection. Build/typecheck/design lint passed; 15 endpoint tests and 4 access/reset tests passed. Database check failed on password authentication; browser tools unavailable. No design exceptions.
+- **Files:** `src/`, `supabase/`, `scripts/demo/`, `scripts/seed/run.ts`, `scripts/verify/`, `.env.example`, `README.md`, `PROGRESS.md`
+- **Preferences learned:** Owner controls staff; customer signup; bottom demo selector uses isolated interactive data (README §8.1).
+- **Correction sweep:** Updated shared role types, operation checks, route/nav access, both login pages and legacy quick-login setup guidance.
+- **Rework:** None
+- **Follow-ups:** Restore DB access, bootstrap owner, configure demo, deploy and complete connected verification.
+
+### 2026-11-10: Added owner People screen and simulated access management (Codex)
+- **What:** Added owner-only directory, staff invitation form, role/location editing and invitation resend controls.
+- **Why:** The highest administrator must control who joins as admins, managers and other staff.
+- **How:** Trusted people endpoint for real accounts; demo directory and mutations remain in tab-local storage without emails or permission changes. Shared Glazed components provide loading, error, retry, empty and status states. Typecheck and design lint passed; connected browser checks remain pending. No design exceptions.
+- **Files:** `src/features/people/PeoplePage.tsx`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** Owner controls staff access; interactive demos must not alter real permissions (README updates coordinated with parent).
+- **Correction sweep:** N/A; new People screen uses the shared owner role and trusted endpoint.
+- **Rework:** None
+- **Follow-ups:** Deploy endpoint, verify invitations and access edits in browser, and complete backend setup.
+
+### 2026-11-10: Added login choices and account recovery (Codex)
+- **What:** Added customer signup links, confirmation resend, password recovery/update screens and a demo role dropdown at the bottom of both login pages.
+- **Why:** Users need clear account creation and role preview options, with useful sign-in errors.
+- **How:** Extended roles with owner/admin, separated profile failures from missing profiles, handled thrown errors and loading completion, and reused Glazed components. No design exceptions.
+- **Files:** `src/app/AuthPages.tsx`, `src/hooks/useAuth.tsx`, `PROGRESS.md`
+- **Preferences learned:** Public signup creates customers; staff access comes from the owner; login includes a bottom demo selector (README §8.1).
+- **Correction sweep:** Replaced legacy quick-login buttons on both staff and customer login screens; shared auth behavior applies throughout the app.
+- **Rework:** None
+- **Follow-ups:** Finish backend access setup, verify integrated build/browser behavior, configure Auth redirects and isolated demo credentials.
+
+### 2026-11-10: Implementing account access and isolated demos (Codex)
+- **What:** Added owner/admin access plumbing, recovery routes, People route and separate demo session/client selection.
+- **Why:** Users need self-service accounts, owner-controlled staff access and role demos.
+- **How:** Centralized access lists and isolated demo credentials/storage; no persistent reset.
+- **Files:** `src/app/`, `src/hooks/useRole.ts`, `src/types/domain.ts`, `src/lib/supabase.ts`, `.env.example`, `README.md`, `PROGRESS.md`
+- **Preferences learned:** Public signup is customer-only; owner controls staff; demo selector at bottom of login (README §8.1).
+- **Correction sweep:** Replaced quick-login setup guidance and manager-only role assumptions in shared frontend access helpers.
+- **Rework:** None
+- **Follow-ups:** Complete validation and hosted setup; current changes are in progress.
+
+### 2026-11-10: Added owner access migrations and trusted bootstrap (Codex)
+- **What:** Added owner/admin roles, manager permission inheritance, protected profile access, existing-account profile backfill, a trusted owner bootstrap script and the people Edge Function.
+- **Why:** Public signup must stay customer-only while the highest administrator manages staff access.
+- **How:** Separate enum migration, owner uniqueness index, protected profile writes, atomic service-only assignment/customer linkage and confirmed-owner bootstrap. All 15 executable endpoint tests pass; SQL tests await database access.
+- **Files:** `supabase/migrations/2026111000000*.sql`, `supabase/bootstrap-owner.sql`, `supabase/functions/people/index.ts`, `supabase/CONTRACT.md`, `scripts/verify/access_security.sql`, `scripts/verify/people_endpoint.test.mjs`, `PROGRESS.md`
+- **Preferences learned:** Owner alone manages staff access; public accounts are customers (parent updates README §8).
+- **Correction sweep:** Searched all SQL manager authorization gates; extended policies/helpers without rewriting historical migrations.
+- **Rework:** None
+- **Follow-ups:** Verify migrations and people endpoint on a connected backend, configure APP_URL, bootstrap the verified owner.
+
+### 2026-11-10: Finalized the deployment handoff snapshot (Codex)
+- **What:** Recorded the confirmed Ready frontend Preview and the exact remaining backend authentication step.
+- **Why:** Ensure the required handoff reflects the completed deployment work and the user action needed to continue.
+- **How:** Reconciled Current Status, In-flight Work, Next Steps and Open Questions with the Vercel inspection and Supabase authentication failure.
+- **Files:** `PROGRESS.md`
+- **Preferences learned:** None; the persistent backend rule is already recorded in README §8.5.
 - **Correction sweep:** N/A
 - **Rework:** None
-- **Follow-ups:** Scaffold the app, port the components, build the app shell (Next Steps 1–3).
+- **Follow-ups:** Receive the locally updated database password, inspect the database, apply migrations and verify the connected app.
 
-### 2026-11-09: Enforced read-first / update-after for every AI tool (Claude Code)
-- **What:** Added hooks that block edits until README.md and PROGRESS.md have been read this session (and re-read after another agent changes them), and that send the agent back once if it finishes without updating PROGRESS.md. Also initialized git and added a pre-commit check that requires a new PROGRESS.md entry.
-- **Why:** The user asked to "make sure" every AI reads PROGRESS.md before editing and updates it afterward. Instructions alone weren't guaranteed.
-- **How:** One shared script, `scripts/ai-guard/guard.sh <tool> <event>`, handles all tools. It parses each tool's hook input (Claude Code, Codex `apply_patch`/Bash, Cursor, Copilot) and keeps per-session flags in a gitignored `.ai-state/`. Codex and Copilot hook formats were checked against their docs. The script fails open if jq is missing. Replaced the earlier Claude-only `.claude/hooks/*` scripts. Tested 33 simulated hook calls and 5 commit scenarios; all passed.
-- **Files:** `scripts/ai-guard/guard.sh`, `.claude/settings.json`, `.codex/hooks.json`, `.cursor/hooks.json`, `.github/hooks/ai-guard.json`, `.githooks/pre-commit`, `.gitignore`, `README.md` (§5, §8.4, §9.5), `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`, `.cursor/rules/project-docs.mdc`, `.github/copilot-instructions.md`; removed `.claude/hooks/`
-- **Preferences learned:** The rules must be enforced, not just suggested (→ README §8.4).
-- **Correction sweep:** N/A
-- **Rework:** None. (The user discarded a design-system zip they sent mid-task; it wasn't used.)
-- **Follow-ups:** The user approves hooks in Codex and Claude Code; confirm the Cursor and Copilot hooks fire in the real apps.
-
-### 2026-11-09: Created the AI handoff documentation system (Claude Code)
-- **What:** Set up README.md, PROGRESS.md, AI pointer files for each tool, and a Claude Code reminder hook, so every AI reads the docs first, updates them afterward, and applies user preferences across the whole project.
-- **Why:** The user edits this project with several AI tools and wants each new agent to know the project's state, how it works, and the user's preferences without having to re-explain them.
-- **How:** README holds stable how-it-works content plus curated preferences (§8) and the protocol (§9). PROGRESS holds snapshots plus a 10-entry changelog with a size cap and an archive. The cap fixes the bloat seen in the user's gu-mobile-app project, whose append-only PROGRESS.md grew to 19k lines. CLAUDE.md and GEMINI.md use `@` imports, and AGENTS.md, the Cursor rule, and the Copilot file point to the README. The hook marks a flag when project files are edited and blocks the stop once if PROGRESS.md wasn't updated; it can't loop. Replaced the empty 0-byte file at `~/ERP Project (GSCM401)` with this folder.
-- **Files:** `README.md`, `PROGRESS.md`, `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/project-docs.mdc`, `.github/copilot-instructions.md`, `.claude/settings.json`, `.claude/hooks/docs-mark.sh`, `.claude/hooks/docs-check.sh`, `.gitignore`, `docs/progress-archive/.gitkeep`
-- **Preferences learned:** Docs must always be kept current; corrections apply project-wide; the user works across several AI tools; plan first, ask questions, use subagents (→ README §8.3, §8.4).
-- **Correction sweep:** N/A
-- **Rework:** None
-- **Follow-ups:** Get the project details (Next Steps 1–3).
+### 2026-11-10: Linked hosting and deployed the ERP frontend (Codex)
+- **What:** Linked the intended Supabase backend and existing Vercel project, configured public API settings, and submitted a Preview deployment.
+- **Why:** The user requested deployment of the actual ERP backend and frontend.
+- **How:** Used authenticated CLIs outside the sandbox; configured Vercel environment variables through MCP. Local build passed and Vercel inspection confirmed Ready. Supabase database inspection and migration dry run both failed on the saved database password; no migrations or resets ran.
+- **Files:** `README.md`, `PROGRESS.md`, `.gitignore`; ignored `.env.local`, `.vercel/`, `supabase/.temp/`
+- **Preferences learned:** ERP Project is the persistent backend, not a disposable demo database (README §8.5).
+- **Correction sweep:** Searched README and current PROGRESS snapshots for demo/disposable target assumptions and stale authentication blockers; corrected current guidance. Historical changelog entries preserved.
+- **Rework:** Corrected the prior assumption that the intended backend could be reset as demo data.
+- **Follow-ups:** Correct the saved database password, apply migrations, verify backend and frontend workflows, and complete the release.
 
 ## Archive Index
-- _No archived entries yet._ Files are added here as `docs/progress-archive/YYYY-MM.md`.
+- `docs/progress-archive/2026-11.md`

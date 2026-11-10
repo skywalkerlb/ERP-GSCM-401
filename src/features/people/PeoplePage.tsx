@@ -1,0 +1,183 @@
+import { useState, type FormEvent } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Alert } from '@/components/Alert';
+import { Badge } from '@/components/Badge';
+import { Button } from '@/components/Button';
+import { Card } from '@/components/Card';
+import { DataTable, type DataTableColumn } from '@/components/DataTable';
+import { PageHeader } from '@/components/PageHeader';
+import { Select } from '@/components/Select';
+import { TextField } from '@/components/TextField';
+import { useAuth, type AppRole } from '@/hooks/useAuth';
+import { isDemo, supabase } from '@/lib/supabase';
+
+interface Person {
+  user_id: string;
+  email: string;
+  full_name: string | null;
+  role: AppRole;
+  home_location_id: number | null;
+  invited_at: string | null;
+  email_confirmed_at: string | null;
+  status?: 'active' | 'invited' | 'unconfirmed';
+}
+interface Directory {
+  people: Person[];
+  locations: { id: number; name: string }[];
+}
+interface PeopleAction {
+  action: 'list' | 'invite' | 'resend' | 'set-role';
+  email?: string;
+  userId?: string;
+  role?: string;
+  homeLocationId?: number | null;
+}
+const STAFF_OPTIONS = ['admin', 'manager', 'cashier', 'baker'].map((value) => ({ value, label: value.charAt(0).toUpperCase() + value.slice(1) }));
+const EDIT_OPTIONS = [...STAFF_OPTIONS, { value: 'customer', label: 'Customer' }];
+const DEMO_KEY = 'glazed-demo-people-v1';
+const QUERY_KEY = ['people-directory', isDemo];
+
+function sampleDirectory(): Directory {
+  const roles = ['owner', 'admin', 'manager', 'cashier', 'baker', 'customer'] as AppRole[];
+  return {
+    people: roles.map((role) => ({ user_id: `demo-${role}`, email: `${role}@example.com`, full_name: `Demo ${role}`, role, home_location_id: role === 'customer' ? null : 1, invited_at: null, email_confirmed_at: '2026-11-10T00:00:00Z' })),
+    locations: [{ id: 1, name: 'Provo' }, { id: 2, name: 'Orem' }, { id: 3, name: 'Lehi' }, { id: 4, name: 'Central Kitchen' }],
+  };
+}
+
+function demoAction(input: PeopleAction): Directory & { message?: string } {
+  let directory = sampleDirectory();
+  const saved = sessionStorage.getItem(DEMO_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved) as Directory;
+      if (Array.isArray(parsed.people) && Array.isArray(parsed.locations)) directory = parsed;
+    } catch { /* An old demo session starts again with the sample directory. */ }
+  }
+  if (input.action === 'list') return directory;
+  if (input.action === 'invite') {
+    const email = input.email!.trim().toLowerCase();
+    const existing = directory.people.find((person) => person.email.toLowerCase() === email);
+    if (existing?.role === 'owner') throw new Error('The owner account cannot be changed here.');
+    if (existing) {
+      existing.role = input.role as AppRole;
+      existing.home_location_id = input.homeLocationId ?? null;
+    } else {
+      directory.people.push({ user_id: crypto.randomUUID(), email, full_name: null, role: input.role as AppRole, home_location_id: input.homeLocationId ?? null, invited_at: new Date().toISOString(), email_confirmed_at: null });
+    }
+  } else {
+    const person = directory.people.find((item) => item.user_id === input.userId);
+    if (!person || person.role === 'owner') throw new Error('Choose an account other than the owner.');
+    if (input.action === 'set-role') {
+      person.role = input.role as AppRole;
+      person.home_location_id = input.homeLocationId ?? null;
+    } else person.invited_at = new Date().toISOString();
+  }
+  sessionStorage.setItem(DEMO_KEY, JSON.stringify(directory));
+  return { ...directory, message: 'Demo change saved in this tab. No email was sent and no account permissions were changed.' };
+}
+
+async function peopleAction(input: PeopleAction): Promise<Directory & { message?: string }> {
+  if (isDemo) return demoAction(input);
+  const { data, error } = await supabase.functions.invoke('people', { body: {
+    action: input.action, email: input.email, user_id: input.userId,
+    role: input.role, home_location_id: input.homeLocationId,
+  } });
+  if (error) {
+    let message = 'Could not manage people. Check your connection and try again.';
+    try {
+      const body = await error.context?.json();
+      if (typeof body?.error === 'string') message = body.error;
+    } catch { /* Keep the actionable fallback if the server response is not JSON. */ }
+    throw new Error(message);
+  }
+  if (data?.error) throw new Error(data.error);
+  if (input.action === 'list') {
+    const locations = await supabase.from('locations').select('id, name').order('name');
+    if (locations.error) throw new Error('Could not load locations. Refresh the directory and try again.');
+    return { people: data.users, locations: locations.data };
+  }
+  return data;
+}
+
+export default function PeoplePage() {
+  const { profile } = useAuth();
+  const owner = profile?.role === 'owner';
+  const queryClient = useQueryClient();
+  const directory = useQuery({ queryKey: QUERY_KEY, queryFn: () => peopleAction({ action: 'list' }), enabled: owner });
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('manager');
+  const [location, setLocation] = useState('');
+  const [editing, setEditing] = useState<Person | null>(null);
+  const [editRole, setEditRole] = useState('manager');
+  const [editLocation, setEditLocation] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+
+  async function mutate(input: PeopleAction) {
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const result = await peopleAction(input);
+      setNotice(result.message ?? 'Access updated.');
+      setEditing(null);
+      if (input.action === 'invite') setEmail('');
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not save access. Try again.');
+    } finally { setBusy(false); }
+  }
+
+  function invite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void mutate({ action: 'invite', email: email.trim(), role, homeLocationId: location ? Number(location) : null });
+  }
+
+  const locationOptions = [{ value: '', label: 'No home location' }, ...(directory.data?.locations ?? []).map((item) => ({ value: String(item.id), label: item.name }))];
+  const columns: DataTableColumn<Person>[] = [
+    { key: 'email', header: 'Person', render: (person) => <><strong>{person.full_name || person.email}</strong>{person.full_name && <div className="gz-muted text-body-sm">{person.email}</div>}</> },
+    { key: 'role', header: 'Role', render: (person) => person.role.charAt(0).toUpperCase() + person.role.slice(1) },
+    { key: 'home_location_id', header: 'Home location', render: (person) => directory.data?.locations.find((item) => item.id === person.home_location_id)?.name ?? 'None' },
+    { key: 'status', header: 'Status', render: (person) => {
+      const status = person.status ?? (person.email_confirmed_at ? 'active' : person.invited_at ? 'invited' : 'unconfirmed');
+      return <Badge tone={status === 'active' ? 'success' : 'info'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+    } },
+    { key: 'actions', header: 'Actions', render: (person) => person.role === 'owner' ? <span className="gz-muted">Owner access is protected</span> : <div className="gz-row"><Button size="sm" disabled={busy} aria-label={`Edit access for ${person.email}`} onClick={() => { setEditing(person); setEditRole(person.role); setEditLocation(person.home_location_id === null ? '' : String(person.home_location_id)); }}>Edit access</Button>{(person.status === 'invited' || (person.invited_at && !person.email_confirmed_at)) && <Button size="sm" disabled={busy} aria-label={`Resend invitation to ${person.email}`} onClick={() => void mutate({ action: 'resend', userId: person.user_id })}>Resend invitation</Button>}</div> },
+  ];
+
+  if (!owner) return <Alert tone="warning" title="Owner access required">Ask the platform owner to manage invitations and staff roles.</Alert>;
+
+  return <>
+    <PageHeader title="People" breadcrumb={[{ label: 'Setup' }, { label: 'People' }]} subtitle="Invite people and manage staff access. Only the platform owner can change roles." />
+    <div className="gz-stack">
+      {isDemo && <Alert tone="info" title="Simulated access management">Try invitations and role changes using sample people. Changes stay in this browser tab; no emails are sent and no real or demo account permissions change.</Alert>}
+      {error && <Alert tone="danger" title="Access was not saved">{error}</Alert>}
+      {notice && <Alert tone="success" title="Access updated">{notice}</Alert>}
+      {directory.isError && <Alert tone="danger" title="Could not load people" action={<Button onClick={() => void directory.refetch()}>Try again</Button>}>{directory.error instanceof Error ? directory.error.message : 'Try loading the directory again.'}</Alert>}
+      <Card title="Invite a person" subtitle="New staff receive an email to set their password. Existing customers keep their account and customer records.">
+        <form className="gz-stack" onSubmit={invite}>
+          <div className="gz-form-grid">
+            <TextField label="Email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} disabled={busy} />
+            <Select label="Staff role" options={STAFF_OPTIONS} value={role} onChange={(event) => setRole(event.target.value)} disabled={busy} />
+            <Select label="Home location" options={locationOptions} value={location} onChange={(event) => setLocation(event.target.value)} disabled={busy || directory.isPending} />
+          </div>
+          <div><Button type="submit" variant="primary" disabled={busy || !email.trim() || !directory.data}>{busy ? 'Saving' : 'Invite person'}</Button></div>
+        </form>
+      </Card>
+      {editing && <Card title={`Edit access for ${editing.email}`}>
+        <form className="gz-stack" onSubmit={(event) => { event.preventDefault(); void mutate({ action: 'set-role', userId: editing.user_id, role: editRole, homeLocationId: editRole === 'customer' ? null : editLocation ? Number(editLocation) : null }); }}>
+          <div className="gz-form-grid">
+            <Select label="Role" options={EDIT_OPTIONS} value={editRole} onChange={(event) => setEditRole(event.target.value)} disabled={busy} />
+            <Select label="Home location" options={locationOptions} value={editLocation} onChange={(event) => setEditLocation(event.target.value)} disabled={busy || editRole === 'customer'} />
+          </div>
+          <div className="gz-row"><Button type="submit" disabled={busy}>Save access</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button></div>
+        </form>
+      </Card>}
+      <Card title="Platform accounts" padded={false}>
+        <DataTable columns={columns} rows={directory.data?.people ?? []} rowKey="user_id" loading={directory.isPending} empty="No accounts found. Invite a person above to get started." aria-label="Platform accounts and access" />
+      </Card>
+    </div>
+  </>;
+}

@@ -23,80 +23,91 @@ This file says **how the project works** and **how the user wants it built**. It
 
 ## 2. Project overview
 
-- **What:** **Glazed**, an ERP (Enterprise Resource Planning) system for a donut shop, built for the **GSCM 401** course. It's the software behind orders, catering, baking batches, inventory, staff and finance.
-- **Design:** Every screen uses the **Glazed design system** in `design-system/` (see §7 and `design-system/DESIGN_SYSTEM.md`).
-- **Repo:** https://github.com/skywalkerlb/ERP-GSCM-401 (public, branch `main`). After cloning, run `git config core.hooksPath .githooks` once to turn on the commit check.
-- **Goal / deliverables:** _TBD. Waiting on the user._
-- **Users of the system:** Donut shop staff (counter, bakers, shift leads, managers). Some screens are used on a tablet on the shop floor.
-- **Due dates:** _TBD._
+- **What:** **Glazed**, a donut-shop ERP built for the GSCM 401 final project and live demo. The instructor chooses the scenario; displayed numbers come from stored data.
+- **Design:** Every screen follows the Glazed design system in `design-system/` (see §7 and `design-system/DESIGN_SYSTEM.md`).
+- **Repo:** https://github.com/skywalkerlb/ERP-GSCM-401 (public, branch `main`). After cloning, run `git config core.hooksPath .githooks` once to enable the commit check.
+- **Goal:** Provide working sales, production, inventory, purchasing, reporting and finance workflows, with three demo features: forecast-driven bake planning, freshness/waste tracking and one-click replenishment.
+- **Users:** Owner, admin, manager, cashier, baker and customer roles, with isolated demo accounts. Staff screens support Provo, Orem and Lehi shops plus the Central Kitchen in Lindon.
+- **Business settings:** 7.25% starting sales tax, editable by location. The final due date has not been recorded.
 
 ## 3. Tech stack
 
 | Layer | Choice | Why |
 |---|---|---|
-| UI | **React + TypeScript** | The design system ships React reference components plus `index.d.ts` prop types to port as typed components. |
-| Build/dev | **Vite** | Simple and fast, and needs no extra framework. Works with the design system's plain CSS (`tokens.css`, `components.css`). |
-| Styling | Glazed `tokens.css` + `components.css` (CSS variables, `gz-` classes) | Defined by the design system. |
-| Icons | Glazed `Icon` starter set, then `lucide-react` at `strokeWidth={1.75}` | Defined by the design system. |
-| Data / backend / hosting | _TBD_ | Not decided yet. |
+| UI | **React + TypeScript** | Typed feature modules and shared UI components. |
+| Build/dev | **Vite** | Fast local development and static production output. |
+| Styling | Glazed `tokens.css` + `components.css` | Shared design tokens and `gz-` component classes. |
+| Icons/charts | `lucide-react`, Recharts | Icons and data-backed charts using design-system tokens. |
+| Data / backend | **Supabase** (Postgres, Auth, Realtime) | Transactional RPCs, row-level security and live invalidation. |
+| Hosting target | **Vercel** | Linked ERP project; Preview deployment configured. |
 
-Chosen 2026-11-09. The app hasn't been scaffolded yet (see PROGRESS Next Steps).
+Chosen 2026-11-09. The React app, database migrations, seed simulator and verification scripts are implemented. This repository is linked to the intended Supabase backend `ERP Project` (`eaphbcbklbcadokfcewc`) and Vercel project `erpprojectgscm401`. Persistent-backend migrations are pending a valid database password. The separate public demo backend is `Glazed Demo` (`wzsbtfzettxpczgulibd`), with migrated schema and six role accounts; see `PROGRESS.md` for seed and verification status.
 
 ## 4. Run / build / test
 
-_TBD._ List the exact commands and required environment variables here. Never put secrets in this file.
+Install dependencies and start the frontend:
+
+    npm install
+    npm run dev
+
+Available frontend checks:
+
+    npm run build
+    npm run typecheck
+    npm run lint:design
+
+The browser app reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the root `.env.local`. `VITE_DEMO_SUPABASE_URL`, `VITE_DEMO_SUPABASE_ANON_KEY` and `VITE_DEMO_PASSWORD` enable the demo selector against a separate sandbox project. Demo and real sessions use separate storage. Never point demo settings at the persistent backend. Copy `.env.example` as a starting point; do not commit `.env.local`.
+
+The deterministic 210-day seed and database verification scripts live under `scripts/seed/`:
+
+    cd scripts/seed
+    npm install
+    npm run simulate
+    npm run seed
+    npm run demo:prep
+    npm run check
+
+`npm run seed` resets business data before replaying history, so run it only against a confirmed disposable database; never reset the intended backend as part of routine deployment. Reset seeds enforce `DEMO_PROJECT_REF` and require a matching separate hosted demo connection. Database commands need `DATABASE_URL` or a linked Supabase project plus `SUPABASE_DB_PASSWORD` in `.env.local`. Demo-user creation also needs `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `DEMO_PASSWORD`. Keep credentials out of docs, source control and browser code.
 
 ## 5. Architecture & folder map
 
-Update this map whenever you add, rename, or remove a top-level folder.
+Update this map when a top-level folder is added, renamed or removed.
 
-```
-ERP Project (GSCM401)/
-├── README.md                  how it works + user preferences + AI protocol
-├── PROGRESS.md                status + recent changes
-├── CLAUDE.md / AGENTS.md / GEMINI.md   AI tool pointers
-├── design-system/              Glazed design system, the source of truth for all UI (§7)
-│   ├── DESIGN_SYSTEM.md        rules + guidance (required reading before any change)
-│   ├── tokens.json / tokens.css  design tokens (json is the source, css mirrors it)
-│   ├── components/             12 reference components: README per component, components.css,
-│   │                             reference-components.js (React reference), index.d.ts (props)
-│   └── reference-light.png / reference-dark.png   intended look
-├── scripts/ai-guard/guard.sh  shared enforcement script used by every tool's hooks (§9.5)
-├── scripts/check-design.sh    design lint: blocks hard-coded colors/sizes/fonts (§9.5)
-├── .claude/settings.json      Claude Code hooks  → guard.sh
-├── .codex/hooks.json          Codex hooks        → guard.sh
-├── .cursor/hooks.json         Cursor hooks       → guard.sh  (+ .cursor/rules/ pointer rule)
-├── .github/hooks/ai-guard.json Copilot hooks     → guard.sh  (+ copilot-instructions.md pointer)
-├── .githooks/pre-commit       git check: no commit without a new PROGRESS.md entry
-├── .ai-state/                 (gitignored) per-session read/pending flags written by guard.sh
-└── docs/progress-archive/     older changelog entries
-```
+- `README.md`, `PROGRESS.md`: stable project guide, preferences and current handoff.
+- `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.claude/`, `.codex/`, `.cursor/`, `.github/`: pointers and hooks for AI tools.
+- `design-system/`: Glazed tokens, components and UI guidance.
+- `docs/ARCHITECTURE.md`: approved ERP build contract.
+- `public/`: static frontend assets.
+- `src/app/`: routes, authentication, app shell and access rules.
+- `src/components/`, `src/hooks/`, `src/lib/`: shared UI and application helpers.
+- `src/features/`: dashboard, selling, stock, buying, production, reporting and settings modules.
+- `src/styles/`, `src/types/`: global styles and domain types.
+- `supabase/migrations/`, `supabase/functions/`, `supabase/bootstrap-owner.sql`, `supabase/CONTRACT.md`: database schema, RPCs, RLS and reporting contract.
+- `scripts/ai-guard/`, `scripts/seed/`, `scripts/demo/`, `scripts/verify/`: shared AI guard, deterministic demo-data simulation and database checks.
+- `scripts/check-design.sh`: design-system lint for app code.
+- `.ai-state/`: ignored per-session state used by the AI edit guard.
+- `.githooks/pre-commit`: design lint and PROGRESS entry check.
+- `docs/progress-archive/`: older changelog entries moved out of PROGRESS.md.
 
 ## 6. ERP domain model
 
-**Modules** (from the design system, and they share one layout): **Dashboard**, **Orders**, **Catering & delivery**, **Baking batches**, **Inventory**, **Staff**, **Finance** (Invoices, Reports), **Settings**.
+**Staff modules:** POS, sales and orders, returns, demand forecast and bake plan, production, freshness and waste, inventory and transfers, adjustments, receiving, labels, purchasing and auto-replenish, supplier scorecard, MRP, dashboard, reports, finance, items/BOM, customers and settings. The customer portal is at `/shop`.
 
-Shop units and formats (from the design system's voice rules): quantities in dozens/trays ("14 dozen"), money as `$342.75`, dates as `Nov 9, 2026`, pickup times as `9:00 AM`, order numbers like `ORD-00481` in mono.
+**Locations and roles:** Provo, Orem and Lehi shops plus the Lindon Central Kitchen. The app uses owner, admin, manager, cashier, baker and customer roles. Only the owner manages staff access. Starting sales tax is 7.25% and can be edited by location.
 
-_Still TBD:_
-- **Modules** beyond the ones listed above, if the assignment requires more (e.g. Purchasing/Suppliers).
-- **Core entities** and how they relate (e.g. Product, Supplier, Customer, Purchase Order, Sales Order, Warehouse, Stock Movement).
-- **Business rules and formulas** (e.g. reorder point, EOQ, safety stock, costing method), along with where each is implemented in code.
+Shop units and formats follow the design system: quantities in dozens/trays ("14 dozen"), money as "$342.75", dates as "Nov 9, 2026", pickup times as "9:00 AM", and order numbers like ORD-00481 in mono.
+
+The approved schema, RPCs, reporting views, seed model and security decisions are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [supabase/CONTRACT.md](supabase/CONTRACT.md). Inventory uses a transaction ledger and weighted-average cost; business actions go through transactional RPCs; accounting uses a double-entry GL-lite journal; forecast, reorder, supplier and production reporting are database-backed.
 
 ## 7. Conventions
 
 **UI: the Glazed design system is mandatory** (unless the user explicitly says otherwise for a specific change; see §8.1).
 - Load `design-system/tokens.css` and then `design-system/components/components.css` once at the app root. Set `data-theme="light"` or `"dark"` on `<html>`.
 - Every color, space, radius, shadow, font and size is a `var(--token)`. No raw hex, rgb or px values (0–2px hairlines and focus rings are allowed). `scripts/check-design.sh` enforces this.
-- Build UI from the 12 Glazed components: Button, TextField, Select, Checkbox, Badge, Alert, Card, StatCard, DataTable, Tabs, SidebarNav, Icon. They'll be ported to typed React in `src/components/` with the same props as `design-system/components/index.d.ts` and the same `gz-` class names. Read a component's README before using it.
-- Page anatomy, app shell, status colors, voice and number formats follow `DESIGN_SYSTEM.md`.
-- Don't edit `design-system/` unless the user asks for a design-system change. When they do, update `tokens.json` and `tokens.css` together.
+- Build UI from the Glazed components. Read `design-system/components/<Name>/README.md` before using or changing a component.
+- Page anatomy, status colors, voice, accessibility and number formats follow `design-system/DESIGN_SYSTEM.md`.
 
-**General:** put shared values in one place (tokens, components, labels, formulas). Then a user preference can be changed once and apply everywhere.
-
-_TBD after scaffolding:_ folder layout under `src/`, naming, and how to add a new module.
-
----
+**General:** keep shared values in one place (tokens, components, labels and formulas) so a user preference can be changed once and apply everywhere. Each `src/features/<area>/` folder owns its routes, queries, UI and styles. Shared controls belong in `src/components/`, backend helpers in `src/lib/`, and cross-cutting behavior in `src/hooks/`. Database changes belong in ordered Supabase migrations and must keep `supabase/CONTRACT.md` current.
 
 ## 8. User Preferences & Design Rules
 
@@ -118,6 +129,8 @@ _TBD after scaffolding:_ folder layout under `src/`, naming, and how to add a ne
 |---|---|---|---|
 | _none yet_ | | | |
 
+- **Show sign-in, public customer signup, and a demo role selector at the bottom of login.** Only the owner assigns staff access; admins operate the ERP. Anyone must be able to select a role and enter the demo without typing credentials or registering. Demo workflows use isolated sample data and simulated invitations; never imply missing configuration is being prepared automatically. Scope: authentication, permissions and demo. Source: 2026-11-10, user approved implementation plan.
+
 ### 8.2 Wording & content
 - _None recorded yet._
 
@@ -135,7 +148,7 @@ _TBD after scaffolding:_ folder layout under `src/`, naming, and how to add a ne
 - **Commits to the public repo use the GitHub noreply email** (`208742214+briggsamason@users.noreply.github.com`, set in this repo's local git config), never the user's personal or work email. Scope: all commits. Source: 2026-11-09.
 
 ### 8.5 ERP / domain
-- _None recorded yet._
+- **Use Supabase `ERP Project` as the intended persistent backend.** Do not treat it as a disposable demo database or run reset/replay seeds during deployment. Scope: hosted database and deployment workflow. Source: 2026-11-10, "the erp project is the entended database not just the demo".
 
 ---
 
@@ -189,3 +202,13 @@ All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior i
 - Hooks need `jq` (`/usr/bin/jq` on macOS). If it's missing they let everything through rather than blocking the project.
 - On a fresh clone, run `git config core.hooksPath .githooks` once to turn the commit check on.
 - `git commit --no-verify` skips the commit check. AIs must never use it.
+
+## 10. Access setup
+
+Apply migrations in order, then deploy the `people` Supabase Edge Function. Set its `APP_URL` to the approved frontend origin; allow `/login`, `/update-password` and `/accept-invite` redirects in Supabase Auth. Bootstrap one confirmed owner with `supabase/bootstrap-owner.sql` using a trusted psql connection and the `owner_email` variable; never expose owner assignment publicly. Public signup creates customers. The owner uses People to invite staff or change existing roles. Privileged keys belong only in server secrets.
+
+The separate disposable Glazed Demo project is provisioned. For a replacement demo project, apply the same migrations and configure `DEMO_MODE=true` on its People function. Use `node --env-file=.env.local scripts/demo/setup.mjs` from the repository root with `DEMO_PROJECT_REF`, `DEMO_DATABASE_URL`, `DEMO_SUPABASE_SERVICE_ROLE_KEY` and `DEMO_PASSWORD` in the process environment to populate and reset sample data and role accounts. The script refuses the persistent project. Owner demo access changes are simulated locally; no invitation emails are sent.
+
+Access tests: `node --test scripts/verify/people_endpoint.test.mjs` and `scripts/seed/node_modules/.bin/tsx --test scripts/verify/access.test.ts`. Run `scripts/verify/access_security.sql` inside its rollback transaction after applying migrations. These tests cover API authorization, frontend access and reset guards; connected email/browser checks are still required before release.
+
+Public demo Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Vercel hosting authentication is disabled so visitors can reach the login page; real ERP access still requires Glazed authentication. All six demo roles sign in automatically. The full history replay takes about 30 minutes over a stable remote connection (longer after reconnects); never run simultaneous reset seeds.

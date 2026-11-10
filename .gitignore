@@ -1,3 +1,14 @@
 # Local AI-guard session state (per tool/session read + pending flags)
 .ai-state/
 .DS_Store
+
+# App / secrets
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.vercel/
+supabase/.temp/
+supabase/.branches/
+.vercel

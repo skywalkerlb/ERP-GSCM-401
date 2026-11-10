@@ -1,0 +1,18 @@
+/* Returns and exchanges. Tokens only. */
+.ret-find { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.ret-find .gz-field { flex: 1; min-width: calc(var(--space-12) * 4); }
+.ret-sale { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: 0; }
+.ret-sale div { display: flex; flex-direction: column; gap: var(--space-1); }
+.ret-sale dt { color: var(--ink-muted); }
+.ret-sale dd { margin: 0; font-weight: 600; }
+.ret-cell-select { min-width: calc(var(--space-12) * 3); }
+.ret-sum { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; }
+.ret-sum div { display: flex; justify-content: space-between; gap: var(--space-3); }
+.ret-sum dt { color: var(--ink-muted); }
+.ret-sum dd { margin: 0; font-variant-numeric: tabular-nums; }
+.ret-sum .is-total { padding-top: var(--space-3); border-top: 1px solid var(--border); font-weight: 600; }
+.ret-sum .is-total dt { color: var(--ink); }
+.ret-result { display: flex; flex-direction: column; gap: var(--space-4); }
+.ret-explain { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.ret-explain li { display: grid; grid-template-columns: var(--space-6) minmax(0, 1fr); gap: var(--space-3); align-items: start; }
+.ret-explain__icon { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); border-radius: var(--radius-full); }

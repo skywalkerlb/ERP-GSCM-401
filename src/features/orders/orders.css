@@ -1,0 +1,28 @@
+/* Sales orders. Tokens only. */
+.ord-lines { display: flex; flex-direction: column; gap: var(--space-3); }
+.ord-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3); align-items: end; }
+.ord-hint { color: var(--ink-muted); }
+.ord-warn { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--butter-800); }
+.ord-totals { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; }
+.ord-totals div { display: flex; justify-content: space-between; gap: var(--space-3); }
+.ord-totals dt { color: var(--ink-muted); }
+.ord-totals dd { margin: 0; font-variant-numeric: tabular-nums; }
+.ord-totals .is-total { padding-top: var(--space-3); border-top: 1px solid var(--border); font-weight: 600; }
+.ord-totals .is-total dt { color: var(--ink); }
+.ord-facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-2) var(--space-4); margin: 0; }
+.ord-facts dt { color: var(--ink-muted); }
+.ord-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+.ord-timeline { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.ord-step { position: relative; display: grid; grid-template-columns: var(--space-6) minmax(0, 1fr); gap: var(--space-3); padding-bottom: var(--space-4); }
+.ord-step:last-child { padding-bottom: 0; }
+.ord-step::before { content: ""; position: absolute; top: var(--space-6); bottom: 0; left: calc(var(--space-3) - 1px); border-left: 2px solid var(--border); }
+.ord-step:last-child::before { display: none; }
+.ord-step.is-done::before { border-left-color: var(--mint-300); }
+.ord-step__dot { display: grid; place-items: center; width: var(--space-6); height: var(--space-6); border: 2px solid var(--border-strong); border-radius: var(--radius-full); background: var(--surface-raised); color: var(--ink-muted); }
+.ord-step.is-done .ord-step__dot { border-color: var(--mint-700); background: var(--mint-100); color: var(--mint-800); }
+.ord-step.is-current .ord-step__dot { border-color: var(--primary); background: var(--pink-50); color: var(--pink-800); }
+.ord-step.is-stopped .ord-step__dot { border-color: var(--cherry-600); background: var(--cherry-100); color: var(--cherry-800); }
+.ord-step__label { font-weight: 600; }
+.ord-step__when { color: var(--ink-muted); }
+.ord-step.is-pending .ord-step__label { color: var(--ink-muted); font-weight: 500; }

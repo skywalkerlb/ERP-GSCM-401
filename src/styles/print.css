@@ -1,0 +1,13 @@
+/* Print: hide the app shell so receipts, labels and purchase orders print alone.
+   Wrap print-only content in .print-only. Wrap anything that should not print in .no-print. */
+.print-only { display: none; }
+
+@media print {
+  .app-sidebar, .app-topbar, .app-scrim, .portal-header, .portal-footer, .gz-toast-region, .no-print { display: none !important; }
+  .app-main { margin-left: 0 !important; }
+  .app-content, .portal-main { max-width: none; padding: 0; }
+  .print-only { display: block; }
+  body { background: transparent; }
+  .gz-card, .gz-table-wrap { box-shadow: none; }
+  .gz-barcode { break-inside: avoid; }
+}

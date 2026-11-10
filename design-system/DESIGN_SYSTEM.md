@@ -99,6 +99,17 @@ Glazed is the design system for the Glazed donut shop's ERP — the software beh
 - Icons sit beside labels, not instead of them — except universally known toolbar actions (search, filter, more), which then need an `aria-label`.
 - Brand mark: **the official logo** is "Glazed" in Fredoka 600 beside the donut ring mark (a `primary` ring with a `cocoa-300` outline, as in `SidebarNav`). The project owner approved it on 2026-11-09. Use it wherever the brand appears, and don't swap it for another mark without asking.
 
+## Additions for the ERP build (approved by the project owner, 2026-11-09)
+
+These are part of the design system now. Use them like any other token or component.
+
+- **Layering:** use only `--z-base`, `--z-sticky` (sticky headers), `--z-sidebar` (shell), `--z-dropdown` (menus, popovers), `--z-overlay` (scrim), `--z-modal` (dialogs, drawers), `--z-toast` (notifications). Never use any other z-index number.
+- **Motion:** `--duration-fast` 120ms (hover), `--duration-base` 160ms (default), `--duration-slow` 200ms (menus, dialogs entering). Easing is `--ease-standard` for color and `--ease-out` for entering panels.
+- **Breakpoints:** `--bp-sm` 720px (one-column forms, phone/scanner layout), `--bp-md` 1024px (sidebar becomes a drawer), `--bp-lg` 1280px (StatCard rows go from 4 to 2). Media queries can't read CSS variables, so write the value and name the token in a comment: `@media (max-width: 720px) /* --bp-sm */`. This is the only allowed raw px in app CSS, and the lint skips lines that contain `--bp-`.
+- **Charts:** series colors `--chart-1` to `--chart-6` in that order, `--chart-grid` for gridlines, `--chart-axis` for axis text in the `caption` style. They follow the theme automatically.
+- **Dialog** (new component, `gz-dialog`): `--surface-raised` panel, `--radius-xl`, `--shadow-lg`, over an `--overlay` scrim at `--z-overlay`/`--z-modal`. Widths are `--dialog-sm`, `--dialog-md` (default) and `--dialog-lg`, padded `--space-6`. The title is `h2` with a ghost icon-only close button at the top right (`aria-label="Close"`), and actions are right-aligned in the footer, with at most one primary. It traps focus, closes on Esc, returns focus to the trigger, and uses `role="dialog"` with `aria-modal`.
+- **ChartCard** (new component): a `Card` with a title, an optional Tabs or Select for the range, and a chart that uses the chart tokens. Every chart also has a text or table equivalent (or a visible total) so meaning doesn't depend on color alone.
+
 ## Dark theme
 
 - Same structure, lower glare: deep chocolate surfaces (`surface` `#1c1513`), cream `ink`, and a brighter candy pink so it still pops. Primary buttons keep dark `on-primary` text.

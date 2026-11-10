@@ -1,0 +1,53 @@
+/* Shared styles for the stock and buying screens. Tokens only. */
+.stk-dl { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: var(--space-2) var(--space-4); margin: 0; }
+.stk-dl dt { color: var(--ink-muted); }
+.stk-dl dd { margin: 0; color: var(--ink); text-align: right; overflow-wrap: anywhere; }
+.stk-dl--left dd { text-align: left; }
+.stk-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 3), 1fr)); gap: var(--space-4); margin: 0; }
+.stk-facts dt { color: var(--ink-muted); margin-bottom: var(--space-1); }
+.stk-facts dd { margin: 0; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.stk-item { display: flex; flex-direction: column; gap: var(--space-0-5); min-width: 0; }
+.stk-item__name { font-weight: 600; color: var(--ink); }
+.stk-item__sub { color: var(--ink-muted); }
+.stk-cell-input { width: calc(var(--space-12) * 2); }
+.stk-cell-input .gz-input input { text-align: right; font-variant-numeric: tabular-nums; }
+.stk-cell-select { width: calc(var(--space-12) * 3); }
+.stk-sub { display: block; color: var(--ink-muted); font-size: inherit; }
+.stk-right { text-align: right; }
+.stk-toolbar-field { width: calc(var(--space-12) * 5); }
+.stk-toolbar-field--sm { width: calc(var(--space-12) * 3); }
+.stk-result { display: flex; flex-direction: column; gap: var(--space-3); }
+.stk-picker { position: relative; }
+.stk-picker .app-results { margin-top: var(--space-2); padding: var(--space-1); background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+.stk-formula { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-1); padding: var(--space-3) var(--space-4); background: var(--surface-sunken); border-radius: var(--radius-md); }
+.stk-formula__eq { font-family: var(--font-mono); color: var(--ink); overflow-wrap: anywhere; }
+.stk-formula__live { color: var(--ink-muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.stk-formula__out { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.stk-mrp-grid td:first-child, .stk-mrp-grid th:first-child { white-space: nowrap; }
+.stk-bar { height: var(--space-2); border-radius: var(--radius-full); background: var(--surface-sunken); overflow: hidden; min-width: calc(var(--space-12)); }
+.stk-bar > span { display: block; height: 100%; border-radius: var(--radius-full); background: var(--chart-3); }
+.stk-bar--warn > span { background: var(--chart-4); }
+.stk-bar--bad > span { background: var(--danger); }
+.stk-lines-add { margin-bottom: var(--space-4); }
+.stk-total-row { display: flex; justify-content: flex-end; gap: var(--space-6); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.stk-total-row strong { color: var(--ink); }
+
+/* Printable purchase order */
+.stk-doc { max-width: calc(var(--space-12) * 16); margin: 0 auto; padding: var(--space-8); background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--radius-lg); color: var(--ink); }
+.stk-doc__head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--space-6); padding-bottom: var(--space-6); border-bottom: 1px solid var(--border); }
+.stk-doc__title { margin: 0; }
+.stk-doc__parties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); padding: var(--space-6) 0; }
+.stk-doc__label { color: var(--ink-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: var(--space-1); }
+.stk-doc__party { margin: 0; line-height: 1.5; }
+.stk-doc__meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); padding: var(--space-4); margin-bottom: var(--space-6); background: var(--surface-sunken); border-radius: var(--radius-md); }
+.stk-doc__terms { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border); color: var(--ink-muted); }
+.stk-doc__sign { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-8); margin-top: var(--space-12); }
+.stk-doc__sign > div { padding-top: var(--space-2); border-top: 1px solid var(--border-strong); color: var(--ink-muted); }
+@media (max-width: 720px) /* --bp-sm */ {
+  .stk-doc { padding: var(--space-4); }
+  .stk-doc__parties, .stk-doc__meta, .stk-doc__sign { grid-template-columns: minmax(0, 1fr); }
+}
+@media print {
+  .stk-doc { max-width: none; padding: 0; border: 0; border-radius: 0; background: transparent; }
+  .stk-doc__meta { background: transparent; border: 1px solid var(--border); }
+}

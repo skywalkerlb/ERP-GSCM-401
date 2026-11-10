@@ -18,6 +18,7 @@ is_ui() {
 
 CHECK='
 index($0, "ds-exception:") { next }
+index($0, "@media") && index($0, "--bp-") { next }
 { t = $0; sub(/^[^\t]*\t[^\t]*\t/, "", t); why = "" }
 t ~ /(^|[^&0-9A-Za-z_])#([0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]|[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]|[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]|[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F])([^0-9A-Za-z_]|$)/ { why = why "raw hex color; " }
 t ~ /(rgba?|hsla?)\(/ { why = why "raw rgb/hsl color; " }

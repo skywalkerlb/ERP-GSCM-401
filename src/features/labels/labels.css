@@ -1,0 +1,54 @@
+/* Barcode label sheets. Tokens for the app; physical sheet sizes (Avery 5160) are in inches because paper is not a design value.
+   Labels use the browser's light system colors (Canvas / CanvasText) so bars print black on white in either theme. */
+.lbl-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.lbl-controls .gz-field { min-width: calc(var(--space-12) * 3); }
+.lbl-grow { flex: 1; }
+.lbl-pick { max-height: calc(var(--space-12) * 9); overflow-y: auto; }
+.lbl-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.lbl-scroll { overflow-x: auto; padding-bottom: var(--space-2); }
+.lbl-sheet { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+
+.lbl-page {
+  --lbl-w: 2.625in;
+  --lbl-h: 1in;
+  --lbl-gap: 0.125in;
+  flex: none;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(3, var(--lbl-w));
+  grid-auto-rows: var(--lbl-h);
+  column-gap: var(--lbl-gap);
+  align-content: start;
+  width: 8.5in;
+  height: 11in;
+  padding: 0.5in 0.2in;
+  color-scheme: light;
+  background: Canvas;
+  color: CanvasText;
+  box-shadow: var(--shadow-md);
+  break-after: page;
+  page-break-after: always;
+}
+.lbl-page:last-child { break-after: auto; page-break-after: auto; }
+
+.lbl { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; gap: 0.02in; min-width: 0; padding: 0.04in 0.12in; overflow: hidden; }
+.lbl--blank { visibility: hidden; }
+@media screen {
+  .lbl:not(.lbl--blank) { outline: 1px dashed var(--border-strong); outline-offset: -1px; }
+}
+.lbl__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.08in; min-width: 0; font-weight: 600; }
+.lbl__name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.lbl__price { flex: none; font-variant-numeric: tabular-nums; }
+.lbl .gz-barcode { --barcode-width: 2.1in; align-self: center; padding: 0; background: transparent; color: CanvasText; border-radius: 0; }
+.lbl__sku { text-align: center; color: CanvasText; font-family: var(--font-mono); }
+
+@media (max-width: 720px) /* --bp-sm */ {
+  .lbl-controls .gz-field { min-width: 0; flex: 1; }
+}
+
+@media print {
+  .lbl-scroll { overflow: visible; padding: 0; }
+  .lbl-sheet { display: block; }
+  .lbl-page { box-shadow: none; margin: 0; }
+}

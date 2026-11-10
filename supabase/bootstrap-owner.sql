@@ -1,0 +1,18 @@
+-- Trusted psql connection only, after migrations. Never expose this through an application endpoint.
+-- psql "$DATABASE_URL" -v owner_email='your verified signup email' -f supabase/bootstrap-owner.sql
+\set ON_ERROR_STOP on
+begin;
+select set_config('glazed.owner_email', :'owner_email', true);
+do $$
+declare v_id uuid;
+begin
+  if not public._is_system() then raise exception 'Trusted database connection required.'; end if;
+  select id into strict v_id from auth.users
+    where lower(email)=lower(current_setting('glazed.owner_email')) and email_confirmed_at is not null;
+  if exists(select 1 from public.profiles where role='owner' and user_id<>v_id) then
+    raise exception 'An owner already exists. Owner transfer requires a separate reviewed operation.';
+  end if;
+  update public.profiles set role='owner' where user_id=v_id;
+  if not found then raise exception 'Missing profile: apply all migrations first.'; end if;
+end $$;
+commit;

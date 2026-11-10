@@ -1,0 +1,65 @@
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { keysForTopic } from '@/lib/realtimeTopics';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { useToast } from '@/components/Toast';
+import { useAuth } from './useAuth';
+
+export type ConnectionStatus = 'connecting' | 'live' | 'offline';
+
+/** A row of `app_events`. */
+export interface AppEvent {
+  id: number;
+  topic: string;
+  entity: string | null;
+  entity_id: number | null;
+  location_id: number | null;
+  customer_id: number | null;
+  actor_id: string | null;
+  summary: string | null;
+  at: string;
+}
+
+/**
+ * One Supabase channel on INSERTs into `app_events`. Each event refreshes the query keys for its topic
+ * (see src/lib/realtimeTopics.ts) and, when someone else caused it, shows a toast with its summary.
+ * Call it once in a layout. The queryClient also refetches every 30 seconds as a fallback.
+ */
+export function useRealtimeInvalidation(options: { toasts?: boolean } = {}): { status: ConnectionStatus } {
+  const { toasts = true } = options;
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { user } = useAuth();
+  const [status, setStatus] = useState<ConnectionStatus>('connecting');
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+  const lastToast = useRef(0);
+  const userId = user?.id ?? null;
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !userId) return;
+    setStatus('connecting');
+    const channel = supabase
+      .channel(`app-events-${userId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_events' }, (payload) => {
+        const event = payload.new as AppEvent;
+        for (const queryKey of keysForTopic(event.topic)) {
+          void queryClient.invalidateQueries({ queryKey });
+        }
+        const now = Date.now();
+        if (toasts && event.summary && event.actor_id && event.actor_id !== userId && now - lastToast.current > 800) {
+          lastToast.current = now;
+          toastRef.current.info(event.summary);
+        }
+      })
+      .subscribe((s) => {
+        if (s === 'SUBSCRIBED') setStatus('live');
+        else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT' || s === 'CLOSED') setStatus('offline');
+      });
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, queryClient, toasts]);
+
+  return { status };
+}
