@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          { "type": "command", "command": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" codex pre", "timeout": 15 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          { "type": "command", "command": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" codex post", "timeout": 15 }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" codex stop", "timeout": 15 }
+        ]
+      }
+    ]
+  }
+}

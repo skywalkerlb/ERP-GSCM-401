@@ -1,0 +1,3 @@
+# Local AI-guard session state (per tool/session read + pending flags)
+.ai-state/
+.DS_Store

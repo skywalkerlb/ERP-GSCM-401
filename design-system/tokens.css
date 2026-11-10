@@ -1,0 +1,202 @@
+/* Glazed — design tokens. Source of truth: tokens.json. Do not hard-code these values anywhere else. */
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fredoka:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root, [data-theme="light"] {
+  --surface: #fbf5ef;
+  --surface-raised: #fffbf8;
+  --surface-sunken: #f4eae1;
+  --surface-hover: #f8eee6;
+  --border: #ecdcd0;
+  --border-strong: #9b8576;
+  --ink: #3b2418;
+  --ink-muted: #6f5446;
+  --ink-subtle: #7a6052;
+  --pink-50: #fff0f5;
+  --pink-100: #fddbe8;
+  --pink-300: #f7aac7;
+  --pink-500: #ee74a3;
+  --pink-600: #f388b1;
+  --pink-800: #8e2853;
+  --cocoa-50: #f7eee7;
+  --cocoa-100: #ecdacb;
+  --cocoa-300: #cda78d;
+  --cocoa-500: #8c5e42;
+  --cocoa-700: #5b3a27;
+  --cocoa-800: #3f2719;
+  --mint-100: #d9f0e3;
+  --mint-300: #a9d9bf;
+  --mint-700: #2f7050;
+  --mint-800: #265a40;
+  --butter-100: #fcf0c6;
+  --butter-300: #f4d882;
+  --butter-800: #6a5210;
+  --lilac-100: #e8e3f6;
+  --lilac-300: #c1b5e8;
+  --lilac-800: #4a3c7c;
+  --cherry-100: #f9ddd5;
+  --cherry-600: #b13a25;
+  --cherry-800: #84281a;
+  --primary: var(--pink-500);
+  --primary-hover: var(--pink-600);
+  --on-primary: #3b2418;
+  --accent: var(--cocoa-700);
+  --danger: var(--cherry-600);
+  --on-danger: #ffffff;
+  --focus-ring: #5b3a27;
+  --overlay: rgba(59,36,24,0.32);
+  --shadow-sm: 0 1px 2px rgba(42,38,33,0.06);
+  --shadow-md: 0 4px 12px rgba(42,38,33,0.08);
+  --shadow-lg: 0 16px 40px rgba(42,38,33,0.12);
+}
+
+[data-theme="dark"] {
+  --surface: #1c1513;
+  --surface-raised: #261d1a;
+  --surface-sunken: #140e0c;
+  --surface-hover: #30251f;
+  --border: #3e302a;
+  --border-strong: #86716a;
+  --ink: #f7ebe2;
+  --ink-muted: #c0aa9b;
+  --ink-subtle: #a28c7f;
+  --pink-50: #2e1a23;
+  --pink-100: #45222f;
+  --pink-300: #8c4664;
+  --pink-500: #f08bb2;
+  --pink-600: #f6a6c5;
+  --pink-800: #fbc9dc;
+  --cocoa-50: #2a201b;
+  --cocoa-100: #3b2d25;
+  --cocoa-300: #715242;
+  --cocoa-500: #c99a7a;
+  --cocoa-700: #ddb89d;
+  --cocoa-800: #eed4c1;
+  --mint-100: #1d3328;
+  --mint-300: #3f6b55;
+  --mint-700: #8fd0ad;
+  --mint-800: #b5e3c9;
+  --butter-100: #3a3119;
+  --butter-300: #7e6a2c;
+  --butter-800: #f0d78c;
+  --lilac-100: #262236;
+  --lilac-300: #594f86;
+  --lilac-800: #cfc5f0;
+  --cherry-100: #3e221d;
+  --cherry-600: #f08c76;
+  --cherry-800: #f6b6a7;
+  --primary: var(--pink-500);
+  --primary-hover: var(--pink-600);
+  --on-primary: #1c1513;
+  --accent: var(--cocoa-700);
+  --danger: var(--cherry-600);
+  --on-danger: #1c1513;
+  --focus-ring: #f6a6c5;
+  --overlay: rgba(0,0,0,0.55);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.45);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.55);
+}
+
+:root {
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  --control-sm: 30px;
+  --control-md: 38px;
+  --control-lg: 46px;
+  --row-compact: 40px;
+  --row-default: 48px;
+  --sidebar-width: 248px;
+  --topbar-height: 60px;
+  --content-max: 1440px;
+  --font-display: "Fredoka", "Figtree", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Type styles */
+.text-display {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.text-kpi {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.text-h1 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.text-h2 {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+}
+.text-h3 {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.text-body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.text-body-strong {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.text-body-sm {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
+}
+.text-label {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.text-caption {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+}
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "hooks": {
+    "PreToolUse": [
+      { "type": "command", "command": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" copilot pre", "bash": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" copilot pre", "timeout": 15, "timeoutSec": 15 }
+    ],
+    "PostToolUse": [
+      { "type": "command", "command": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" copilot post", "bash": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" copilot post", "timeout": 15, "timeoutSec": 15 }
+    ],
+    "Stop": [
+      { "type": "command", "command": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" copilot stop", "bash": "sh \"$(git rev-parse --show-toplevel)/scripts/ai-guard/guard.sh\" copilot stop", "timeout": 15, "timeoutSec": 15 }
+    ]
+  }
+}

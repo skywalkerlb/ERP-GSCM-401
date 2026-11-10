@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      { "command": "sh scripts/ai-guard/guard.sh cursor pre", "timeout": 15 }
+    ],
+    "postToolUse": [
+      { "command": "sh scripts/ai-guard/guard.sh cursor post", "timeout": 15 }
+    ],
+    "beforeReadFile": [
+      { "command": "sh scripts/ai-guard/guard.sh cursor read", "timeout": 15 }
+    ],
+    "afterFileEdit": [
+      { "command": "sh scripts/ai-guard/guard.sh cursor edited", "timeout": 15 }
+    ],
+    "stop": [
+      { "command": "sh scripts/ai-guard/guard.sh cursor stop", "timeout": 15, "loop_limit": 1 }
+    ]
+  }
+}
