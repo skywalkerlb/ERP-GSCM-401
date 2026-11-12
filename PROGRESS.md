@@ -5,7 +5,7 @@
 > Status, In-flight, Next Steps, and Open Questions are **snapshots**. Rewrite them; don't append to them.
 
 ## Current Status
-**As of 2026-11-10.** GitHub publication requested; build and design checks pass, and local credentials are excluded. Credential-free demo login is provisioned locally and hosted. Select a role and Enter demo; six role accounts verified after loading. Ready public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Separate demo backend: `wzsbtfzettxpczgulibd`; persistent backend and project link unchanged.
+**As of 2026-11-11.** Preparing all four local changed files for the requested GitHub push using verified Chris Shipp attribution. Vercel Git integration remains unconfirmed; the prior commit has no deployment status checks.  Shared sidebar rows now retain their height and long labels wrap; visual verification is blocked by unavailable browser access and the inaccessible user screenshot. No design exceptions. Local build cannot run because Node/npm are not installed.  Local main synced from GitHub at `23dc927` via fast-forward; prior build and design checks passed, and local credentials are excluded. Credential-free demo login is provisioned locally and hosted. Select a role and Enter demo; six role accounts verified after loading. Ready public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Separate demo backend: `wzsbtfzettxpczgulibd`; persistent backend and project link unchanged.
 
 - Build/typecheck/design lint, 38 entry/access/sign-out tests and 85 full database checks pass. Rollback-only owner access checks pass. Demo endpoint refuses real invitations (403). Public hosting has no Vercel login wall.
 - Loaded 5,381 sales, 57,352 sale lines, 1,308 production orders, 152 purchase orders and future pickup orders; shops have fresh stock. Inventory/GL/item costs reconcile to $34,672.89 at verification.
@@ -13,20 +13,50 @@
 - No design exceptions. Browser automation failed internally, so click-through and both-theme visual verification remain unverified.
 
 ## In-flight Work
-- No application edits or demo setup process running; repository publication is being finalized.
+- Sidebar fix and docs ready for commit/push; verified connected GitHub account chrisshipp19-web, with no Git identity changes from the interrupted command.
 - Seed recovery/reproducibility and browser visual verification remain follow-ups.
 
 ## Next Steps
-1. Review seed retry transaction/state handling before a future explicitly requested clean demo replay; preserve current usable dataset meanwhile.
-2. Complete browser click-through and both-theme visual checks when tooling works.
+1. Confirm Vercel Git integration and deployment of the pushed commit; review seed retry transaction/state handling before a future explicitly requested clean demo replay; preserve current usable dataset meanwhile.
+2. Verify sidebar scrolling and long labels on short desktop windows and mobile drawers in both themes once browser access works; install Node/npm to run the build. Complete remaining click-through checks.
 3. Persistent backend remains separate: correct its local password, apply migrations without resets, configure owner and Auth redirects.
 
 ## Open Questions for the User
 - Which confirmed signup email should own the persistent ERP account? Never send passwords in chat.
 - Has the persistent database password been corrected locally?
-- What is the project due date?
+- What is the final project due date? No identity question remains: Chris Shipp is verified against the connected GitHub account.
 
 ## Recent Changes
+### 2026-11-11: Prepared GitHub push with corrected Chris Shipp attribution (Codex)
+- **What:** Prepared sidebar fix and all local documentation changes for publication; corrected the current commit identity rule.
+- **Why:** The user requested pushing everything and clarified "no i am Chris Shipp".
+- **How:** Verified connected GitHub account ID/login and checked the interrupted config command made no changes. Use Chris Shipp with his GitHub noreply address and normal commit hooks. Design lint and diff checks pass; Node/npm and browser checks remain unavailable. Prior commit has no Vercel status checks; automatic deployment is unconfirmed.
+- **Files:** `README.md`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`, `src/styles/app.css`
+- **Preferences learned:** Use Chris Shipp's verified identity, not another contributor's (README §8.4).
+- **Correction sweep:** Searched README, PROGRESS, docs and Git config for Mason/Briggs/old noreply identity; corrected the one active identity rule. Historical records and actual Vercel URLs preserved; no Git config identity was set.
+- **Rework:** Corrected the mistaken attribution inherited from project docs before creating a commit.
+- **Follow-ups:** Commit/push and check deployment status; verify sidebar visually when browser access works.
+
+### 2026-11-11: Prevented sidebar navigation text overlap (Codex)
+- **What:** Prevented flex compression of navigation groups and brand; let long labels grow their rows and kept icons and badges from shrinking.
+- **Why:** The user reported the sidebar overlapping text.
+- **How:** Updated shared app navigation CSS using existing Glazed tokens; the staff sidebar keeps its vertical scroll, including the mobile drawer. No design-system source changes or design exceptions. Screenshot inaccessible; browser host unavailable; Node/npm absent, so build and visual checks could not run.
+- **Files:** `src/styles/app.css`, `README.md`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** Sidebar text must stay readable with scrolling and wrapping (README §8.1).
+- **Correction sweep:** Searched all sidebar, nav and shell styles and usages; fixed the shared nav rules in one place for all staff routes, roles and both desktop/drawer layouts. Portal uses separate horizontal navigation.
+- **Rework:** Corrected fixed-height navigation rows and shrinkable groups inherited from the reference layout.
+- **Follow-ups:** Build and both-theme browser verification when local tooling is available; confirm against the original screenshot.
+
+### 2026-11-10: Pulled latest main from GitHub (Codex)
+- **What:** Fast-forwarded local main from `6863d8a` to `23dc927` (one commit).
+- **Why:** The user requested a pull from GitHub.
+- **How:** Ran `git pull --ff-only`; confirmed main matches origin/main without conflicts. No application changes authored or tests rerun for this sync.
+- **Files:** Upstream implementation and documentation; `PROGRESS.md`, `docs/progress-archive/2026-11.md` for the required handoff.
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** None
+- **Follow-ups:** Existing seed, browser verification and persistent backend follow-ups remain above.
+
 ### 2026-11-10: Prepared ERP implementation for GitHub publication (Codex)
 - **What:** Prepared the current ERP app, migrations, access controls, demo setup and documentation for the user-requested GitHub push.
 - **Why:** The user requested publishing the working project to GitHub.
@@ -96,36 +126,6 @@
 - **Correction sweep:** Replaced quick-login setup guidance and manager-only role assumptions in shared frontend access helpers.
 - **Rework:** None
 - **Follow-ups:** Complete validation and hosted setup; current changes are in progress.
-
-### 2026-11-10: Added owner access migrations and trusted bootstrap (Codex)
-- **What:** Added owner/admin roles, manager permission inheritance, protected profile access, existing-account profile backfill, a trusted owner bootstrap script and the people Edge Function.
-- **Why:** Public signup must stay customer-only while the highest administrator manages staff access.
-- **How:** Separate enum migration, owner uniqueness index, protected profile writes, atomic service-only assignment/customer linkage and confirmed-owner bootstrap. All 15 executable endpoint tests pass; SQL tests await database access.
-- **Files:** `supabase/migrations/2026111000000*.sql`, `supabase/bootstrap-owner.sql`, `supabase/functions/people/index.ts`, `supabase/CONTRACT.md`, `scripts/verify/access_security.sql`, `scripts/verify/people_endpoint.test.mjs`, `PROGRESS.md`
-- **Preferences learned:** Owner alone manages staff access; public accounts are customers (parent updates README §8).
-- **Correction sweep:** Searched all SQL manager authorization gates; extended policies/helpers without rewriting historical migrations.
-- **Rework:** None
-- **Follow-ups:** Verify migrations and people endpoint on a connected backend, configure APP_URL, bootstrap the verified owner.
-
-### 2026-11-10: Finalized the deployment handoff snapshot (Codex)
-- **What:** Recorded the confirmed Ready frontend Preview and the exact remaining backend authentication step.
-- **Why:** Ensure the required handoff reflects the completed deployment work and the user action needed to continue.
-- **How:** Reconciled Current Status, In-flight Work, Next Steps and Open Questions with the Vercel inspection and Supabase authentication failure.
-- **Files:** `PROGRESS.md`
-- **Preferences learned:** None; the persistent backend rule is already recorded in README §8.5.
-- **Correction sweep:** N/A
-- **Rework:** None
-- **Follow-ups:** Receive the locally updated database password, inspect the database, apply migrations and verify the connected app.
-
-### 2026-11-10: Linked hosting and deployed the ERP frontend (Codex)
-- **What:** Linked the intended Supabase backend and existing Vercel project, configured public API settings, and submitted a Preview deployment.
-- **Why:** The user requested deployment of the actual ERP backend and frontend.
-- **How:** Used authenticated CLIs outside the sandbox; configured Vercel environment variables through MCP. Local build passed and Vercel inspection confirmed Ready. Supabase database inspection and migration dry run both failed on the saved database password; no migrations or resets ran.
-- **Files:** `README.md`, `PROGRESS.md`, `.gitignore`; ignored `.env.local`, `.vercel/`, `supabase/.temp/`
-- **Preferences learned:** ERP Project is the persistent backend, not a disposable demo database (README §8.5).
-- **Correction sweep:** Searched README and current PROGRESS snapshots for demo/disposable target assumptions and stale authentication blockers; corrected current guidance. Historical changelog entries preserved.
-- **Rework:** Corrected the prior assumption that the intended backend could be reset as demo data.
-- **Follow-ups:** Correct the saved database password, apply migrations, verify backend and frontend workflows, and complete the release.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

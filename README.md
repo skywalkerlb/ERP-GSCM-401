@@ -118,6 +118,7 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 > - Before building anything, re-read the rules whose scope covers it.
 
 ### 8.1 Visual design / UI
+- **Keep sidebar labels readable without overlap.** Navigation groups must scroll rather than compress on short windows, and long labels must wrap inside their own rows. Scope: shared staff sidebar, desktop and mobile drawer, both themes. Source: 2026-11-11, "the side bar overlaps with that text".
 - **Every UI/UX change uses the Glazed design system** (`design-system/`). Follow it unless the user explicitly says otherwise for that specific change. Scope: all screens, components, styles, charts, emails. Source: 2026-11-09, "all edits should follow the design system unless specifically specified otherwise".
 - **Read `design-system/DESIGN_SYSTEM.md` before making any change, and keep it in mind** so design updates stay consistent. Scope: every agent, every session. Source: 2026-11-09.
 - **Tokens only, Glazed components only, both themes, one candy-pink primary button per view (chocolate text), fixed status colors (mint/lilac/butter/cherry/cocoa/neutral), sentence case, no emoji or exclamation marks.** The full list is in DESIGN_SYSTEM.md > Rules for AI agents. Scope: all UI. Source: 2026-11-09 (design system).
@@ -145,7 +146,7 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 
 - **The read-first / update-after rules must be enforced, not just suggested,** for every AI tool. Keep the hooks in §9.5 working, and never bypass them. Scope: all tools, all sessions. Source: 2026-11-09, "make sure that all will update the progress.md file and that they will all read the progress.md file before editing".
 
-- **Commits to the public repo use the GitHub noreply email** (`208742214+briggsamason@users.noreply.github.com`, set in this repo's local git config), never the user's personal or work email. Scope: all commits. Source: 2026-11-09.
+- **Use Chris Shipp as the commit author and his GitHub noreply address** (`276119029+chrisshipp19-web@users.noreply.github.com`) for commits made for Chris. Verify identity against the connected account rather than copying another contributor's identity from history; never expose personal or work email. Scope: all commits for Chris (replaces: incorrectly identifying Chris as Mason Briggs). Source: 2026-11-11, "no i am Chris Shipp".
 
 ### 8.5 ERP / domain
 - **Use Supabase `ERP Project` as the intended persistent backend.** Do not treat it as a disposable demo database or run reset/replay seeds during deployment. Scope: hosted database and deployment workflow. Source: 2026-11-10, "the erp project is the entended database not just the demo".
