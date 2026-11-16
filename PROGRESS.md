@@ -4,36 +4,36 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** Username/password-only signup is implemented and verified locally, and prepared for the user-requested GitHub publication from main (base `a9bb412`). Signup has two fields, signs customers in immediately when hosted confirmation is disabled, and requires no contact email. Both login screens accept usernames and existing email accounts. People displays usernames and offers protected lower-level username password resets. Existing role hierarchy and isolated demo behavior remain in place.
+**As of 2026-11-16.** Username/password-only signup is implemented, verified and pushed to GitHub main in commit `530db86`. Signup has two fields, signs customers in immediately when hosted confirmation is disabled, and requires no contact email. Both login screens accept usernames and existing email accounts. People displays usernames and offers protected lower-level username password resets. Existing role hierarchy and isolated demo behavior remain in place.
 - Final verification: 326 JavaScript tests plus 4 TypeScript role/reset-guard tests pass; build/design lint/diff checks pass, and the final TypeScript check exited successfully after integration. Exact pending delegated-access and username migrations plus the complete signup/hierarchy/username/reset audit SQL suite pass against actual demo Postgres in one rolled-back transaction. No demo schema or data changes persisted.
 - Hosted rollout is blocked: persistent database rejects saved password (`28P01`), Supabase CLI has no login token, and hosted public settings still report email confirmation required. No persistent Auth settings, schema, accounts or deployments changed. Earlier missing persistent API schema remains unresolved.
 - Both-theme visual checks remain unavailable: CUA tab creation fails internally (`timeoutMs`). Components and theme tokens were reviewed against Glazed docs/reference images; no design exceptions were introduced.
 - Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Publishing the verified username signup changes to GitHub at the user's request. Hosted configuration, migrations, endpoint/frontend deployment and end-to-end signup verification await working Supabase credentials. The temporary verification server has been stopped.
+- GitHub publication is complete. Hosted configuration, migrations, endpoint/frontend deployment and end-to-end signup verification await working Supabase credentials. The temporary verification server has been stopped.
 
 ## Next Steps
-1. Finish the GitHub push and verify remote main matches the new commit. Restore hosted access by correcting the persistent database password locally and running `supabase login`; inspect hosted migration history without resetting data.
+1. Restore hosted access by correcting the persistent database password locally and running `supabase login`; inspect hosted migration history without resetting data.
 2. Apply ordered migrations, disable hosted Confirm email, bootstrap the owner if needed, deploy People, then deploy the frontend together with matching backend changes. Preserve existing accounts and demo data.
 3. Verify hosted username signup → immediate shop access → sign-out/login, existing email login/recovery and authorized username password reset; finish both-theme browser review once CUA works.
 4. Configure SMTP only for legacy recovery/staff email invitations; address seed reproducibility only under a future explicit request.
 
 ## Open Questions for the User
-- No input is needed for the GitHub push. Hosted rollout needs a working local persistent database password and completed `supabase login`. Never paste credentials in chat.
+- No input is needed for GitHub publication, which is complete. Hosted rollout needs a working local persistent database password and completed `supabase login`. Never paste credentials in chat.
 - Which existing account should own the persistent ERP if it has not been bootstrapped? Username signup needs no inbox.
 - What is the project due date?
 
 ## Recent Changes
 ### 2026-11-16: Publish simplified username signup to GitHub (Codex)
-- **What:** Prepared all 17 changed files for a commit and direct push to GitHub main.
+- **What:** Committed and pushed all 17 changed files to GitHub main in `530db86`.
 - **Why:** User requested pushing the completed work to GitHub.
-- **How:** Confirmed remote main matches local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
+- **How:** Confirmed remote main matched local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. GitHub accepted the main update to `530db86`. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
 - **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
 - **Preferences learned:** None.
 - **Correction sweep:** N/A.
 - **Rework:** None.
-- **Follow-ups:** Verify push; hosted rollout and browser visual checks remain pending backend access and working browser automation.
+- **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
 
 ### 2026-11-16: Add protected username password resets (Codex)
 - **What:** Added username display and authorized password resets to People; username accounts never receive invitation emails.
