@@ -4,28 +4,38 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** All pending changes are prepared for GitHub publication. Credential scan covered all 27 pending files with no findings; remote main matches the local base. Signup and delegated access implementation is complete locally; live rollout is blocked by credentials. Approved hierarchy: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer, across all shops. Confirmation is required for new customers. Existing public demo remains isolated and its data is preserved.
+**As of 2026-11-16.** GitHub main contains published implementation commit `4a9b815`, verified through GitHub API and git ls-remote. The repository is public, main is unprotected, rulesets are empty and the authenticated account has push permission. Git checks are advisory; pull is exempt from AI read gating. Signup and delegated access implementation is complete locally; live rollout is blocked by credentials. Approved hierarchy: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer, across all shops. Confirmation is required for new customers. Existing public demo remains isolated and its data is preserved.
 - Current checks: build/typecheck/design lint pass; 285 local auth/endpoint/demo/navigation/People UI/form tests pass. Exact migration, 35 non-data assertions, 6 browser sequence-permission probes and the complete signup/hierarchy/audit SQL suite pass against actual demo Postgres in one rolled-back transaction (5 data-dependent checks skipped). No demo data/schema changes persisted.
 - Persistent database rejects saved password (28P01); Supabase CLI has no login. Public hosted settings confirm signup enabled and confirmation required, but profiles/locations return PGRST205 (missing from API schema). Persistent signup/email remains unverified. CUA browser automation fails internally (`timeoutMs`), so both-theme visual checks remain unavailable.
 - Preserve existing local sidebar punctuation change and documentation history. Demo seed reproducibility remains a known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Publishing the completed local implementation and documentation to GitHub; hosted application/backend rollout remains pending.
+- Publishing the requested hook policy changes; hosted application/backend rollout remains pending.
 - Waiting for corrected local DB password, Supabase login and controlled inbox/owner email before live configuration and verification. No persistent changes have been made.
 
 ## Next Steps
-1. Confirm GitHub publication completes; restore persistent DB access and Supabase CLI login; then inspect migrations and apply without resets.
+1. Restore persistent DB access and Supabase CLI login; then inspect migrations and apply without resets.
 2. Inspect/configure hosted SMTP and exact Auth redirects, bootstrap the confirmed owner and deploy backend then frontend.
 3. Verify hosted signup, confirmation, recovery and invitations using a controlled inbox; complete both-theme browser checks once CUA works.
 4. Preserve existing demo data; address seed reproducibility only under a future explicit request.
 
 ## Open Questions for the User
-- No additional input is needed for the requested GitHub push. Existing rollout questions follow.
+- No input is needed for Git synchronization; contributors need their own authenticated account with write access. Existing rollout questions follow.
 - Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
 - Correct the persistent database password locally and run `supabase login`, then confirm readiness. Never paste credentials in chat.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Remove project hook barriers to Git synchronization (Codex)
+- **What:** Made commit checks advisory, exempted pull from AI read gating and aligned every AI instruction file with unblocked synchronization.
+- **Why:** The user explicitly requested that hooks never block GitHub pulls or pushes.
+- **How:** Verified GitHub main contains `4a9b815`, main is unprotected, rulesets are empty and current credentials allow push. Disable Git hooks locally via core.hooksPath=/dev/null; optional tracked commit hook always succeeds. Shell syntax checks and no-doc-read pull/push guard probes passed. No UI or design values changed.
+- **Files:** Git hook, shared AI guard, README.md, AI instruction pointers, design-system enforcement wording, PROGRESS.md and progress archive.
+- **Preferences learned:** Git synchronization has no project hook prerequisites; checks are advisory (README §8.4 and §9.5).
+- **Correction sweep:** Searched Git gating and setup guidance; updated shared guard, tracked hook, all five AI instruction pointers and design-system enforcement wording.
+- **Rework:** Replaced mandatory blocking commit policy with the user's requested advisory policy.
+- **Follow-ups:** GitHub still requires authentication and write permission for direct pushes; existing hosted rollout questions remain.
+
 ### 2026-11-16: Publish pending project changes to GitHub (Codex)
 - **What:** Prepared all pending signup, delegated access, sidebar wording, verification and documentation changes for one GitHub commit and push.
 - **Why:** The user requested pushing all changes to GitHub.
@@ -121,17 +131,6 @@
 - **Correction sweep:** Replaced legacy quick-login buttons on both staff and customer login screens; shared auth behavior applies throughout the app.
 - **Rework:** None
 - **Follow-ups:** Finish backend access setup, verify integrated build/browser behavior, configure Auth redirects and isolated demo credentials.
-
-
-### 2026-11-10: Implementing account access and isolated demos (Codex)
-- **What:** Added owner/admin access plumbing, recovery routes, People route and separate demo session/client selection.
-- **Why:** Users need self-service accounts, owner-controlled staff access and role demos.
-- **How:** Centralized access lists and isolated demo credentials/storage; no persistent reset.
-- **Files:** `src/app/`, `src/hooks/useRole.ts`, `src/types/domain.ts`, `src/lib/supabase.ts`, `.env.example`, `README.md`, `PROGRESS.md`
-- **Preferences learned:** Public signup is customer-only; owner controls staff; demo selector at bottom of login (README §8.1).
-- **Correction sweep:** Replaced quick-login setup guidance and manager-only role assumptions in shared frontend access helpers.
-- **Rework:** None
-- **Follow-ups:** Complete validation and hosted setup; current changes are in progress.
 
 
 ## Archive Index

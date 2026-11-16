@@ -45,7 +45,7 @@ rel() { case "$1" in "$ROOT"/*) echo "${1#"$ROOT"/}" ;; /*) echo "__outside__" ;
 # Does a shell command look like it changes files? (Redirects to /dev/null and fd dups don't count.)
 is_write() {
   printf '%s' "$CMD" | sed -E 's/[0-9&]?>+ *\/dev\/null//g; s/[0-9]>&[0-9]//g' |
-    grep -qE '>|(^|[;&|( ])(sed -i|perl -i|tee|mv|cp|rm|mkdir|touch|ln|unzip|npm|npx|yarn|pnpm|pip3?|git (apply|checkout|restore|reset|merge|pull|stash|rebase|mv|rm)|curl .*-o)( |$)'
+    grep -qE '>|(^|[;&|( ])(sed -i|perl -i|tee|mv|cp|rm|mkdir|touch|ln|unzip|npm|npx|yarn|pnpm|pip3?|git (apply|checkout|restore|reset|merge|stash|rebase|mv|rm)|curl .*-o)( |$)'
 }
 mentions() { printf '%s' "$CMD" | grep -q "$1"; }
 
