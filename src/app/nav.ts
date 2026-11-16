@@ -65,7 +65,7 @@ export const NAV: NavSection[] = [
     items: [
       { to: '/items', label: 'Items', icon: 'package', roles: ACCESS.manager },
       { to: '/customers', label: 'Customers', icon: 'users', roles: ACCESS.manager },
-      { to: '/people', label: 'People', icon: 'users', roles: ACCESS.owner },
+      { to: '/people', label: 'People', icon: 'users', roles: ACCESS.people },
       { to: '/settings', label: 'Settings', icon: 'settings', roles: ACCESS.manager },
       { to: '/about', label: 'About this system', icon: 'info', roles: ACCESS.staff },
     ],

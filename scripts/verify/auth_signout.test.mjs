@@ -21,6 +21,8 @@ function harness({ demo = false, signOutError = null, exitError = null } = {}) {
     },
     createContext: () => ({ Provider: 'AuthProvider' }),
     useCallback: fn => fn,
+    useRef: value => ({ current: value }),
+    queryClient: { clear: () => {} },
     useEffect: () => {},
     useMemo: fn => fn(),
     useState: initial => {

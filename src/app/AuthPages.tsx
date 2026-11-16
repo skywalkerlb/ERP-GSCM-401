@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -7,7 +7,7 @@ import { Logo } from '@/components/Logo';
 import { Skeleton } from '@/components/Skeleton';
 import { TextField } from '@/components/TextField';
 import { Select } from '@/components/Select';
-import { useAuth, friendlyAuthError, type AppRole, type Profile } from '@/hooks/useAuth';
+import { useAuth, friendlyAuthError, signupFieldErrors, type AppRole, type Profile } from '@/hooks/useAuth';
 import { homeFor } from '@/hooks/useRole';
 import { isDemoConfigured, enterDemo, isDemo, supabase } from '@/lib/supabase';
 import { ThemeToggle } from './ThemeToggle';
@@ -38,7 +38,14 @@ function DemoSelector() {
   </section>;
 }
 
+function hasAuthLinkError(): boolean {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    return query.has('error') || query.has('error_code') || hash.has('error') || hash.has('error_code');
+}
+
 function AuthFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+  const [linkError] = useState(hasAuthLinkError);
   return (
     <div className="auth-page">
       <div className="auth-page__theme">
@@ -54,7 +61,7 @@ function AuthFrame({ title, subtitle, children }: { title: string; subtitle: str
             {subtitle}
           </p>
         </div>
-        <Card>{children}</Card>
+        <Card>{linkError && <Alert tone="warning" title="This email link could not be used">The link may have expired or already been used. Request a new confirmation email from sign in, or request a new password reset link.</Alert>}{children}</Card>
       </div>
     </div>
   );
@@ -67,6 +74,7 @@ function destination(profile: Profile, from: string | undefined): string {
 }
 
 function useRedirectIfSignedIn(): ReactNode {
+  const [linkError] = useState(hasAuthLinkError);
   const { session, profile, loading } = useAuth();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
@@ -79,12 +87,14 @@ function useRedirectIfSignedIn(): ReactNode {
       </div>
     );
   }
-  if (session && profile) return <Navigate to={destination(profile, from)} replace />;
+  if (session && profile && !linkError) return <Navigate to={destination(profile, from)} replace />;
   return null;
 }
 
 function SignInForm() {
   const { signIn, profileError } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [notice, setNotice] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -98,6 +108,7 @@ function SignInForm() {
       const result = await signIn(nextEmail, nextPassword);
       if (result.error) setError(result.error);
       else if (result.profile === null) setError('You are signed in, but your account has no role yet. Ask the platform owner to set it up.');
+      else if (result.profile) navigate(destination(result.profile, (location.state as { from?: string } | null)?.from), { replace: true });
     } catch (cause) { setError(friendlyAuthError(cause)); }
     finally { setBusy(false); }
   }
@@ -141,7 +152,7 @@ export function LoginPage() {
   return (
     <AuthFrame title="Sign in to Glazed" subtitle="Orders, baking, stock and books for every shop.">
       <SignInForm />
-      <p className="auth-foot text-body-sm">New here? <Link className="gz-link" to="/shop/signup">Create an account</Link>. New accounts can order in the shop. The owner grants staff access.</p>
+      <p className="auth-foot text-body-sm">New here? <Link className="gz-link" to="/shop/signup">Create an account</Link>. New accounts can order in the shop. An administrator or manager can grant staff access.</p>
       <p className="auth-foot text-body-sm">
         Ordering donuts for pickup?{' '}
         <Link className="gz-link" to="/shop/login">
@@ -185,37 +196,37 @@ export function PortalSignupPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<ReturnType<typeof signupFieldErrors>>({});
   if (redirect) return <>{redirect}</>;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    if (password.length < 6) {
-      setError('Use a password with at least 6 characters.');
-      return;
-    }
+    const invalid = signupFieldErrors({ email, password, fullName });
+    setFieldErrors(invalid);
+    if (Object.keys(invalid).length) return;
     setBusy(true);
     try {
       const result = await signUp({ email, password, fullName });
       if (result.error) setError(result.error);
-      else if (result.needsConfirmation) setNotice('Check your email for a confirmation link, then sign in. Your account gives you customer access; the owner can grant staff access.');
+      else if (result.needsConfirmation) setNotice('If this is a new email address, check your inbox for a confirmation link, then sign in. If you already have an account, sign in or reset your password. New accounts receive customer access; an administrator or manager can grant staff access.');
     } catch (cause) { setError(friendlyAuthError(cause)); }
     finally { setBusy(false); }
   }
 
   return (
-    <AuthFrame title="Create your account" subtitle="Create a customer account to order ahead. The platform owner invites staff.">
+    <AuthFrame title="Create your account" subtitle="Create a customer account to order ahead. Administrators and managers grant staff access.">
       {notice ? (
-        <Alert tone="success" title="Account created">
+        <Alert tone="info" title="Check your email">
           {notice}
         </Alert>
       ) : (
         <form className="auth-form" onSubmit={onSubmit} noValidate>
           {error && <Alert tone="danger" title="Could not create the account">{error}</Alert>}
-          <TextField label="Full name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-          <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <TextField label="Password" type="password" autoComplete="new-password" hint="At least 6 characters." value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <Button type="submit" variant="primary" size="lg" disabled={busy || !fullName || !email || !password}>
+          <TextField label="Full name" autoComplete="name" error={fieldErrors.fullName} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+          <TextField label="Email" type="email" autoComplete="email" error={fieldErrors.email} value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <TextField label="Password" type="password" autoComplete="new-password" error={fieldErrors.password} hint="At least 6 characters." value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <Button type="submit" variant="primary" size="lg" disabled={busy || !fullName.trim() || !email.trim() || !password || isDemo}>
             {busy ? 'Creating account' : 'Create account'}
           </Button>
         </form>
@@ -258,6 +269,7 @@ export function PasswordRecoveryPage() {
 
 /** Handles password recovery and invited staff choosing their first password. */
 export function PasswordUpdatePage() {
+  const [linkError] = useState(hasAuthLinkError);
   const { session, loading, signOut } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -278,7 +290,7 @@ export function PasswordUpdatePage() {
     finally { setBusy(false); }
   }
   return <AuthFrame title="Choose your password" subtitle="Set a password to access your account.">
-    {loading ? <Skeleton variant="block" /> : saved ? <Alert tone="success" title="Password saved">Sign in with your new password to continue.</Alert> : !session ?
+    {loading ? <Skeleton variant="block" /> : saved ? <Alert tone="success" title="Password saved">Sign in with your new password to continue.</Alert> : !session || linkError ?
       <Alert tone="warning" title="Open your email link">Use the latest invitation or password reset link. If it has expired, request another link.</Alert> :
       <form className="auth-form" onSubmit={submit}>
         {error && <Alert tone="danger" title="Could not save password">{error}</Alert>}

@@ -1,32 +1,62 @@
 # PROGRESS.md: ERP Project (GSCM 401)
 
 > **Read this file, `README.md` and `design-system/DESIGN_SYSTEM.md` before any edit. Update this file after every edit.** Full rules: README.md §9.
-> **Size rules:** no more than 10 entries in Recent Changes and no more than 300 lines in this file. Move older entries to `docs/progress-archive/YYYY-MM.md`.
-> Status, In-flight, Next Steps, and Open Questions are **snapshots**. Rewrite them; don't append to them.
+> **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-10.** GitHub publication requested; build and design checks pass, and local credentials are excluded. Credential-free demo login is provisioned locally and hosted. Select a role and Enter demo; six role accounts verified after loading. Ready public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Separate demo backend: `wzsbtfzettxpczgulibd`; persistent backend and project link unchanged.
-
-- Build/typecheck/design lint, 38 entry/access/sign-out tests and 85 full database checks pass. Rollback-only owner access checks pass. Demo endpoint refuses real invitations (403). Public hosting has no Vercel login wall.
-- Loaded 5,381 sales, 57,352 sale lines, 1,308 production orders, 152 purchase orders and future pickup orders; shops have fresh stock. Inventory/GL/item costs reconcile to $34,672.89 at verification.
-- Sample-data limitation: interrupted connection caused 48 skipped historical events and 19 quantity differences from the simulator. Replay exited 2; it was not a clean deterministic replay. Accounts were provisioned independently and remain verified. No reset/replay process remains running.
-- No design exceptions. Browser automation failed internally, so click-through and both-theme visual verification remain unverified.
+**As of 2026-11-16.** All pending changes are prepared for GitHub publication. Credential scan covered all 27 pending files with no findings; remote main matches the local base. Signup and delegated access implementation is complete locally; live rollout is blocked by credentials. Approved hierarchy: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer, across all shops. Confirmation is required for new customers. Existing public demo remains isolated and its data is preserved.
+- Current checks: build/typecheck/design lint pass; 285 local auth/endpoint/demo/navigation/People UI/form tests pass. Exact migration, 35 non-data assertions, 6 browser sequence-permission probes and the complete signup/hierarchy/audit SQL suite pass against actual demo Postgres in one rolled-back transaction (5 data-dependent checks skipped). No demo data/schema changes persisted.
+- Persistent database rejects saved password (28P01); Supabase CLI has no login. Public hosted settings confirm signup enabled and confirmation required, but profiles/locations return PGRST205 (missing from API schema). Persistent signup/email remains unverified. CUA browser automation fails internally (`timeoutMs`), so both-theme visual checks remain unavailable.
+- Preserve existing local sidebar punctuation change and documentation history. Demo seed reproducibility remains a known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- No application edits or demo setup process running; repository publication is being finalized.
-- Seed recovery/reproducibility and browser visual verification remain follow-ups.
+- Publishing the completed local implementation and documentation to GitHub; hosted application/backend rollout remains pending.
+- Waiting for corrected local DB password, Supabase login and controlled inbox/owner email before live configuration and verification. No persistent changes have been made.
 
 ## Next Steps
-1. Review seed retry transaction/state handling before a future explicitly requested clean demo replay; preserve current usable dataset meanwhile.
-2. Complete browser click-through and both-theme visual checks when tooling works.
-3. Persistent backend remains separate: correct its local password, apply migrations without resets, configure owner and Auth redirects.
+1. Confirm GitHub publication completes; restore persistent DB access and Supabase CLI login; then inspect migrations and apply without resets.
+2. Inspect/configure hosted SMTP and exact Auth redirects, bootstrap the confirmed owner and deploy backend then frontend.
+3. Verify hosted signup, confirmation, recovery and invitations using a controlled inbox; complete both-theme browser checks once CUA works.
+4. Preserve existing demo data; address seed reproducibility only under a future explicit request.
 
 ## Open Questions for the User
-- Which confirmed signup email should own the persistent ERP account? Never send passwords in chat.
-- Has the persistent database password been corrected locally?
+- No additional input is needed for the requested GitHub push. Existing rollout questions follow.
+- Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
+- Correct the persistent database password locally and run `supabase login`, then confirm readiness. Never paste credentials in chat.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Publish pending project changes to GitHub (Codex)
+- **What:** Prepared all pending signup, delegated access, sidebar wording, verification and documentation changes for one GitHub commit and push.
+- **Why:** The user requested pushing all changes to GitHub.
+- **How:** Reviewed pending files, scanned 27 files for saved credentials with no findings, confirmed remote main matches local base and retained required commit hooks. Existing implementation checks and design review are recorded below; no new UI changes in this publication step.
+- **Files:** All pending project changes, including README.md and PROGRESS.md.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Hosted application/backend rollout remains pending credentials and controlled inbox details.
+
+### 2026-11-12: Implemented signup fixes and delegated access (Codex)
+- **What:** Replaced owner-only People management with the approved protected hierarchy; hardened signup, confirmation and live access refresh with routing to an allowed home screen after demotion.
+- **Why:** Users must create working customer accounts and admins/managers must manage lower-level access.
+- **How:** Shared role rules, service-only atomic assignment and audit (including protected audit sequence), Glazed controls in both themes; 237 endpoint tests and 48 other local checks pass; exact migration, 41 database assertions/probes and full SQL signup/hierarchy/audit suite pass in a rollback-only demo transaction (5 data-dependent checks skipped). Design checklist: full design lint passes; Glazed component props, visible labels, shared focus styles, action labels, one primary action, status tones and sentence case reviewed. Existing theme tokens cover light/dark; browser visual checks remain blocked by CUA. No new exceptions; preserved approved sidebar-only "Glazed!" punctuation (`ds-exception`, README §8.1).
+- **Files:** Authentication, People, access helpers, Supabase endpoint/migration, verification scripts (including People simulation/UI checks, realtime assertions and integrated rollback access suite), docs/ARCHITECTURE.md, README.md and PROGRESS.md.
+- **Preferences learned:** Confirm customer emails; owner grants admin, admins grant manager and below, managers grant cashier/baker/customer; all shops; no self/peer/superior changes (README §8.1).
+- **Correction sweep:** Replaced owner-only enforcement and wording across frontend routes/nav/People/auth, endpoint, contract, tests and current docs (including architecture/realtime publication rules); historical logs preserved.
+- **Rework:** None.
+- **Follow-ups:** Restore persistent DB password and Supabase login; configure SMTP/Auth redirects; deploy and verify hosted signup/email with a controlled inbox.
+
+### 2026-11-10: Added punctuation to the sidebar wordmark (Codex)
+- **What:** Changed the staff sidebar title to "Glazed!".
+- **Why:** The user explicitly requested an exclamation point after Glazed in the sidebar.
+- **How:** Updated the shared staff shell brand prop, covering desktop and mobile navigation; marked the approved punctuation exception. Existing Glazed components, theme tokens and accessibility remain in use. No layout or style values changed. Typecheck and design lint pass; browser verification remains unavailable.
+- **Files:** `src/app/AppShell.tsx`, `README.md`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** Sidebar wordmark uses "Glazed!"; explicit sidebar-only punctuation exception (README §8.1).
+- **Correction sweep:** Searched sidebar brand instances; one shared shell instance updated for all staff roles and viewport sizes.
+- **Rework:** None
+- **Follow-ups:** None for the wording change; existing browser verification remains in Next Steps.
+
+
 ### 2026-11-10: Prepared ERP implementation for GitHub publication (Codex)
 - **What:** Prepared the current ERP app, migrations, access controls, demo setup and documentation for the user-requested GitHub push.
 - **Why:** The user requested publishing the working project to GitHub.
@@ -36,6 +66,7 @@
 - **Correction sweep:** N/A
 - **Rework:** None
 - **Follow-ups:** Historical seed reproducibility and browser verification remain documented above.
+
 
 ### 2026-11-10: Published and verified public role demos (Codex)
 - **What:** Finished isolated demo provisioning, automatic role entry and public Preview deployment; protected other visitors during demo sign-out.
@@ -47,6 +78,7 @@
 - **Rework:** Seed connection failure left an orphan lock; closed only the confirmed stale demo connection. Replay completed with 48 skipped events, 19 simulator quantity differences and exit 2; dataset accounting checks pass.
 - **Follow-ups:** Browser verification and seed recovery/reproducibility improvement; persistent backend setup remains separate.
 
+
 ### 2026-11-10: Completing credential-free public demo entry (Codex)
 - **What:** Verified selected demo profile/role, direct landing screens, bounded demo requests, failure cleanup and retry; routed ordinary demo sign-out through tab-local exit to protect other visitors; removed misleading preparation wording.
 - **Why:** Visitors must enter role demos without credentials; existing demo infrastructure was not configured.
@@ -56,6 +88,7 @@
 - **Correction sweep:** Shared selector covers both login pages; role verification prevents incorrect account landing.
 - **Rework:** Previous demo selector existed without configured backend; provisioning now attempted.
 - **Follow-ups:** Finish provisioning, seed, verify all roles and deploy frontend settings.
+
 
 ### 2026-11-10: Integrated and verified account access implementation (Codex)
 - **What:** Completed local login choices, recovery/invitation routes, People access, owner/admin permissions and demo isolation/reset setup.
@@ -67,6 +100,7 @@
 - **Rework:** None
 - **Follow-ups:** Restore DB access, bootstrap owner, configure demo, deploy and complete connected verification.
 
+
 ### 2026-11-10: Added owner People screen and simulated access management (Codex)
 - **What:** Added owner-only directory, staff invitation form, role/location editing and invitation resend controls.
 - **Why:** The highest administrator must control who joins as admins, managers and other staff.
@@ -76,6 +110,7 @@
 - **Correction sweep:** N/A; new People screen uses the shared owner role and trusted endpoint.
 - **Rework:** None
 - **Follow-ups:** Deploy endpoint, verify invitations and access edits in browser, and complete backend setup.
+
 
 ### 2026-11-10: Added login choices and account recovery (Codex)
 - **What:** Added customer signup links, confirmation resend, password recovery/update screens and a demo role dropdown at the bottom of both login pages.
@@ -87,6 +122,7 @@
 - **Rework:** None
 - **Follow-ups:** Finish backend access setup, verify integrated build/browser behavior, configure Auth redirects and isolated demo credentials.
 
+
 ### 2026-11-10: Implementing account access and isolated demos (Codex)
 - **What:** Added owner/admin access plumbing, recovery routes, People route and separate demo session/client selection.
 - **Why:** Users need self-service accounts, owner-controlled staff access and role demos.
@@ -97,35 +133,6 @@
 - **Rework:** None
 - **Follow-ups:** Complete validation and hosted setup; current changes are in progress.
 
-### 2026-11-10: Added owner access migrations and trusted bootstrap (Codex)
-- **What:** Added owner/admin roles, manager permission inheritance, protected profile access, existing-account profile backfill, a trusted owner bootstrap script and the people Edge Function.
-- **Why:** Public signup must stay customer-only while the highest administrator manages staff access.
-- **How:** Separate enum migration, owner uniqueness index, protected profile writes, atomic service-only assignment/customer linkage and confirmed-owner bootstrap. All 15 executable endpoint tests pass; SQL tests await database access.
-- **Files:** `supabase/migrations/2026111000000*.sql`, `supabase/bootstrap-owner.sql`, `supabase/functions/people/index.ts`, `supabase/CONTRACT.md`, `scripts/verify/access_security.sql`, `scripts/verify/people_endpoint.test.mjs`, `PROGRESS.md`
-- **Preferences learned:** Owner alone manages staff access; public accounts are customers (parent updates README §8).
-- **Correction sweep:** Searched all SQL manager authorization gates; extended policies/helpers without rewriting historical migrations.
-- **Rework:** None
-- **Follow-ups:** Verify migrations and people endpoint on a connected backend, configure APP_URL, bootstrap the verified owner.
-
-### 2026-11-10: Finalized the deployment handoff snapshot (Codex)
-- **What:** Recorded the confirmed Ready frontend Preview and the exact remaining backend authentication step.
-- **Why:** Ensure the required handoff reflects the completed deployment work and the user action needed to continue.
-- **How:** Reconciled Current Status, In-flight Work, Next Steps and Open Questions with the Vercel inspection and Supabase authentication failure.
-- **Files:** `PROGRESS.md`
-- **Preferences learned:** None; the persistent backend rule is already recorded in README §8.5.
-- **Correction sweep:** N/A
-- **Rework:** None
-- **Follow-ups:** Receive the locally updated database password, inspect the database, apply migrations and verify the connected app.
-
-### 2026-11-10: Linked hosting and deployed the ERP frontend (Codex)
-- **What:** Linked the intended Supabase backend and existing Vercel project, configured public API settings, and submitted a Preview deployment.
-- **Why:** The user requested deployment of the actual ERP backend and frontend.
-- **How:** Used authenticated CLIs outside the sandbox; configured Vercel environment variables through MCP. Local build passed and Vercel inspection confirmed Ready. Supabase database inspection and migration dry run both failed on the saved database password; no migrations or resets ran.
-- **Files:** `README.md`, `PROGRESS.md`, `.gitignore`; ignored `.env.local`, `.vercel/`, `supabase/.temp/`
-- **Preferences learned:** ERP Project is the persistent backend, not a disposable demo database (README §8.5).
-- **Correction sweep:** Searched README and current PROGRESS snapshots for demo/disposable target assumptions and stale authentication blockers; corrected current guidance. Historical changelog entries preserved.
-- **Rework:** Corrected the prior assumption that the intended backend could be reset as demo data.
-- **Follow-ups:** Correct the saved database password, apply migrations, verify backend and frontend workflows, and complete the release.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

@@ -219,7 +219,7 @@ Weighted-average cost: inbound `value = round(qty * cost, 2)`; outbound `value =
 
 ## 5. Events (`app_events`)
 
-Realtime publication contains only `app_events`. Fields: `topic, entity, entity_id, location_id, customer_id, actor_id, summary, at`. Staff see all; customers see rows with their `customer_id` plus topic `inventory.changed`.
+Realtime publication contains `app_events` and `profiles`. Auth subscribes only to its own profile changes and refetches the authoritative profile; profile RLS still applies. Event fields: `topic, entity, entity_id, location_id, customer_id, actor_id, summary, at`. Staff see all; customers see rows with their `customer_id` plus topic `inventory.changed`.
 
 `sale.completed`, `return.processed`, `so.placed`, `so.fulfilled`, `so.closed`, `so.cancelled`, `po.created`, `po.sent`, `po.received`, `po.closed`, `po.paid`, `mo.created`, `mo.started`, `mo.completed`, `mo.cancelled`, `transfer.created`, `transfer.completed`, `transfer.cancelled`, `inventory.adjusted`, `inventory.changed`, `waste.logged`, `day.closed`, `forecast.generated`, `forecast.bakeplan_built`, `bakeplan.released`, `expense.recorded`, `settings.updated` (also written by a trigger when a manager edits `app_settings`).
 
@@ -239,7 +239,7 @@ Seed replays (`p_at` from a system session): `history_batch` sales emit no event
 
 Ledger, document and GL tables have **no INSERT/UPDATE/DELETE policies and no write grants** for `authenticated`; only RPCs write them. `anon` has no table or function privileges at all. Roles: enum `app_role` (`owner, admin, manager, cashier, baker, customer`); `auth_role()`, `is_staff()`, `my_customer_id()` are definer helpers (executable by signed-in users, they read `profiles`).
 
-**Accounts.** Staff users are created through the admin API with `app_metadata = {"role": "manager|cashier|baker", "home_location_code": "PRV"}` (and `user_metadata.full_name`); the signup trigger `on_auth_user_created` creates their `profiles` row. Any other signup becomes a `customer`: the trigger links an existing `customers` row with the same email (case-insensitive, not yet linked) or creates one, and creates the customer profile. Users cannot set `app_metadata`, so no one can self-assign a staff role.
+**Accounts.** Staff users are created through the admin API with `app_metadata = {"role": "admin|manager|cashier|baker", "home_location_code": "PRV"}` (and `user_metadata.full_name`); the signup trigger `on_auth_user_created` creates their `profiles` row. Any other signup becomes a `customer`: the trigger links an existing `customers` row with the same email (case-insensitive, not yet linked) or creates one, and creates the customer profile. Users cannot set `app_metadata`, so no one can self-assign a staff role.
 
 ## 7. Adding migrations (streams D-G)
 
@@ -249,19 +249,23 @@ Ledger, document and GL tables have **no INSERT/UPDATE/DELETE policies and no wr
 
 ## 8. Verification
 
-`node scripts/verify/run.mjs [--no-rls] [--skip-data]` runs `scripts/verify/assertions.sql` (one query per check, passes when it returns no rows) and `scripts/verify/rls_tests.sql` (role tests inside a rolled-back transaction). Checks cover: ledger = balances = `item_costs` = GL 1200; journals balance; no negative stock; AP = GL 2000; GL 4000/4100/4200/5000/2100/1000 tie to the document tables; WIP = value issued to in-progress orders; document totals; reference data; minimum data volumes; scorecard has keep/watch/replace; MRP has a planned order; RLS on every table; no write policies on protected tables; `anon`/`public` cannot execute; helpers not executable by users; functions pin `search_path`; views are `security_invoker`; realtime publishes only `app_events`.
+`node scripts/verify/run.mjs [--no-rls] [--skip-data]` runs `scripts/verify/assertions.sql` (one query per check, passes when it returns no rows), `scripts/verify/rls_tests.sql` and `scripts/verify/access_security.sql` (role/access tests inside rolled-back transactions). Checks cover: ledger = balances = `item_costs` = GL 1200; journals balance; no negative stock; AP = GL 2000; GL 4000/4100/4200/5000/2100/1000 tie to the document tables; WIP = value issued to in-progress orders; document totals; reference data; minimum data volumes; scorecard has keep/watch/replace; MRP has a planned order; RLS on every table; no write policies on protected tables; `anon`/`public` cannot execute; helpers not executable by users; functions pin `search_path`; views are `security_invoker`; realtime publishes only `app_events` and `profiles`.
 
 
-## 9. Owner-managed access (2026-11-10)
+## 9. Delegated account access (2026-11-12)
 
-`owner` and `admin` inherit all manager operational permissions. Only the single owner manages staff access. A partial unique index permits at most one owner; trusted setup assigns the first owner using `supabase/bootstrap-owner.sql` with a verified signup email. Owner assignment/transfer is never a public API action. All signed-in browser roles have profile UPDATE revoked; a trigger additionally protects role, identity, location and customer linkage. Public signup remains customer-only, and the migration backfills missing profiles without promoting historical metadata or deleting records.
+`owner` and `admin` inherit all manager operational permissions. Account management follows a strict hierarchy across all shops: owner manages admin/manager/cashier/baker/customer; admin manages manager/cashier/baker/customer; manager manages cashier/baker/customer. The same allowed set applies to both current target role and requested new role. No caller can change themselves, peers or superiors. Home location remains a default, not an authorization boundary. A partial unique index permits at most one owner; trusted setup assigns the first owner using `supabase/bootstrap-owner.sql` with a verified signup email. Owner assignment/transfer is never a public API action. All signed-in browser roles have profile UPDATE revoked; a trigger additionally protects role, identity, location and customer linkage. Public signup remains customer-only, and the migration backfills missing profiles without promoting historical metadata or deleting records.
 
-Deploy `supabase/functions/people/index.ts` and set server-only `APP_URL` to the canonical app origin. Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; never expose the latter in Vite variables. The endpoint verifies the JWT with Auth `getUser`, checks the current database profile for `owner`, and uses a fixed `/accept-invite` redirect. Add that exact URL to Supabase Auth's redirect allowlist. It accepts POST JSON:
+Deploy `supabase/functions/people/index.ts` and set server-only `APP_URL` to the canonical app origin. Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; never expose the latter in Vite variables. The endpoint verifies the JWT with Auth `getUser`, checks the current database profile for an account-management role, and uses a fixed `/accept-invite` redirect. Add that exact URL to Supabase Auth's redirect allowlist. It accepts POST JSON:
 
 - `{action:"list"}` returns `{users:[{user_id,email,full_name,role,home_location_id,status}]}`, with status `active`, `invited` or `unconfirmed`.
 - `{action:"invite",email,role,home_location_id:null|number}` invites a new account or grants access to an existing account without duplicating customer records.
 - `{action:"resend",user_id}` resends an unaccepted invitation; active users use password recovery.
-- `{action:"set-role",user_id,role,home_location_id:null|number}` updates an existing non-owner account. Assignable roles are admin, manager, cashier, baker and customer; owner changes are rejected.
+- `{action:"set-role",user_id,role,home_location_id:null|number}` updates an existing non-owner account. Assignable roles depend on the caller hierarchy; owner changes are rejected.
+
+The browser and endpoint share pure hierarchy helpers in `supabase/functions/_shared/account-access.ts`. `_set_account_access(p_actor uuid,p_user uuid,p_role app_role,p_home_location bigint = null)` is service-only; it locks actor and target profile rows in UUID order, checks their current database roles and applies the change in the same transaction. The old actor-free signature is removed. `_authorize_account_access(p_actor,p_user,p_role)` provides service-only preauthorization before invitation email, with null target allowed only for new users. Each successful assignment appends actor, target, old/new role and home location, and timestamp to `account_access_audit`; browser roles cannot read or write that audit table. Existing customer linkage is preserved.
+
+Invitation authorization happens before sending email. Auth email and database updates cannot share a transaction: if the email was sent but assignment fails, the endpoint returns 409 with `{error,invitation_sent:true}` and tells the operator to refresh and retry the role update. It never reports that partial outcome as success.
 
 Failures return `{error}` with an appropriate non-2xx status. Deploy the same endpoint to the isolated demo project with `DEMO_MODE=true`; it rejects all mutation actions even if a visitor knows the demo owner's credentials. The demo People UI simulates mutations locally. No real email is sent from demo account management.
 

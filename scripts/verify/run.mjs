@@ -117,6 +117,19 @@ if (!flag('--no-rls') && !only) {
       console.log(`${red('FAIL')}  rls tests crashed: ${e.message}`);
     }
   }
+
+  // The suite is also runnable directly in psql; keep its fixtures in this runner's rollback.
+  try {
+    await sql.begin(async (tx) => {
+      const accessSql = fs.readFileSync(path.join(here, 'access_security.sql'), 'utf8')
+        .replace(/^begin;\s*$/m, '').replace(/^rollback;\s*$/m, '');
+      await tx.unsafe(accessSql);
+      throw new Rollback();
+    });
+  } catch (e) {
+    if (e instanceof Rollback) { passes++; console.log(`${green('PASS')}  account signup, delegated hierarchy and audit security`); }
+    else { failures++; console.log(`${red('FAIL')}  account access tests crashed: ${e.message}`); }
+  }
 }
 
 await sql.end({ timeout: 5 });

@@ -247,14 +247,19 @@ select 'view not security_invoker' as label, c.relname
   from pg_class c join pg_namespace n on n.oid = c.relnamespace and n.nspname = 'public'
  where c.relkind = 'v' and not coalesce('security_invoker=true' = any (c.reloptions), false);
 
--- check: only app_events is in the realtime publication
+-- check: only app_events and profiles are in the realtime publication
 select 'unexpected realtime table' as label, schemaname, tablename
-  from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename <> 'app_events';
+  from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename not in ('app_events','profiles');
 
 -- check: app_events is in the realtime publication
 select 'app_events not published' as label
  where exists (select 1 from pg_publication where pubname = 'supabase_realtime')
    and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'app_events');
+
+-- check: profiles is in the realtime publication for access refresh
+select 'profiles not published' as label
+ where exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+   and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'profiles');
 
 -- check: new auth users get a profile (trigger present)
 select 'signup trigger missing' as label

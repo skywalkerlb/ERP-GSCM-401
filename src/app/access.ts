@@ -5,8 +5,9 @@ import type { AppRole } from '@/hooks/useAuth';
  * Managers can open everything. Customers only use /shop.
  */
 export const ACCESS = {
+  /** Account management follows the protected hierarchy. */
+  people: ['owner', 'admin', 'manager'],
   /** Any staff role. */
-  owner: ['owner'],
   staff: ['owner', 'admin', 'manager', 'cashier', 'baker'],
   /** Managers only: purchasing, suppliers, MRP, finance, reports, settings, items, customers, dashboard. */
   manager: ['owner', 'admin', 'manager'],

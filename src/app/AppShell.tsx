@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useMatches, useNavigate, Navigate } from 'react-router-dom';
-import { EmptyState } from '@/components/EmptyState';
 import { RequireRole } from '@/components/RequireRole';
-import { Button } from '@/components/Button';
 import { SidebarNav } from '@/components/SidebarNav';
 import { useAuth } from '@/hooks/useAuth';
 import { LocationProvider, useSelectedLocation } from '@/hooks/useLocations';
@@ -52,8 +50,9 @@ function ShellFrame({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <aside id="app-sidebar" className={cx('app-sidebar', drawer && 'is-open')}>
+        {/* ds-exception: user requested an exclamation point in the sidebar wordmark only. */}
         <SidebarNav
-          brand="Glazed"
+          brand="Glazed!"
           active={active}
           onSelect={(to) => navigate(to)}
           sections={sections.map((s) => ({
@@ -77,24 +76,11 @@ function ShellFrame({ children }: { children: ReactNode }) {
 function RouteRoleGate({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
   const matches = useMatches();
-  const { pathname } = useLocation();
   const role = profile?.role;
   const restrictions = matches.map((m) => (m.handle as RouteHandle | undefined)?.roles).filter((r): r is NonNullable<typeof r> => Boolean(r));
   const allowed = !role || restrictions.every((r) => r.includes(role));
   if (allowed) return <>{children}</>;
-  if (pathname === '/') return <Navigate to={homeFor(role)} replace />;
-  return (
-    <EmptyState
-      icon="user"
-      title="This screen is for another role"
-      description={`Your ${role} account cannot open this page. Ask the platform owner if you need access.`}
-      action={
-        <Button variant="primary" onClick={() => window.history.back()}>
-          Go back
-        </Button>
-      }
-    />
-  );
+  return <Navigate to={homeFor(role)} replace />;
 }
 
 /** Layout route for every staff screen: requires a staff sign-in, then checks the route's roles. */

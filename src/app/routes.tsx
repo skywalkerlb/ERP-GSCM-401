@@ -62,7 +62,7 @@ export const routes: RouteObject[] = [
       ...itemsRoutes,
       ...customersRoutes,
       ...settingsRoutes,
-      { path: 'people', element: <PeoplePage />, handle: { roles: ACCESS.owner } },
+      { path: 'people', element: <PeoplePage />, handle: { roles: ACCESS.people } },
     ],
   },
   { path: '/portal', element: <Navigate to="/shop" replace /> },

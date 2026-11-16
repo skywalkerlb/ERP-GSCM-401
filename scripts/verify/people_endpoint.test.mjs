@@ -5,11 +5,12 @@ import test from 'node:test';
 import ts from 'typescript';
 
 const source = readFileSync(new URL('../../supabase/functions/people/index.ts', import.meta.url), 'utf8');
-const js = ts.transpileModule(source.replace(/^import .*from 'npm:.*';$/m, ''), {
+const shared = readFileSync(new URL('../../supabase/functions/_shared/account-access.ts', import.meta.url), 'utf8').replace(/export /g, '');
+const js = ts.transpileModule(shared + '\n' + source.replace(/^import .*from .*;$/gm, ''), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
 }).outputText;
 
-function harness({ role = 'owner', demo = false, targetRole = 'customer', confirmed = true } = {}) {
+function harness({ role = 'owner', demo = false, targetRole = 'customer', confirmed = true, rpcError = null, authorizationError = null, throwUpdate = false } = {}) {
   let handler;
   const calls = [];
   const users = [
@@ -38,7 +39,7 @@ function harness({ role = 'owner', demo = false, targetRole = 'customer', confir
   }
   const client = {
     from,
-    rpc: async (name, args) => { calls.push({ name, args }); return { error: null }; },
+    rpc: async (name, args) => { calls.push({ name, args }); if (name === '_set_account_access' && throwUpdate) throw Error('Network failure'); return { error: name === '_set_account_access' ? rpcError : authorizationError }; },
     auth: {
       getUser: async token => ({ data: { user: token === 'valid' ? users[0] : null }, error: token === 'valid' ? null : Error('invalid') }),
       admin: {
@@ -74,7 +75,7 @@ test('missing and invalid JWTs cannot manage people', async () => {
   assert.equal((await h.request({ action: 'list' }, { token: 'invalid' })).status, 401);
   assert.equal(h.calls.length, 0);
 });
-for (const role of ['admin', 'manager', 'cashier', 'baker', 'customer']) {
+for (const role of ['cashier', 'baker', 'customer']) {
   test(`${role} cannot access owner endpoint`, async () => {
     const h = harness({ role });
     assert.equal((await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'admin' })).status, 403);
@@ -108,15 +109,15 @@ test('demo rejects every mutation even for owner JWT', async () => {
 test('existing confirmed customer is promoted without duplicate invite', async () => {
   const h = harness();
   assert.equal((await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'manager', home_location_id: 1 })).status, 200);
-  assert.deepEqual(h.calls.map(c => c.name), ['_set_account_access']);
-  assert.equal(h.calls[0].args.p_user, 'target');
-  assert.equal(h.calls[0].args.p_role, 'manager');
+  assert.deepEqual(h.calls.map(c => c.name), ['_authorize_account_access', '_set_account_access']);
+  assert.equal(h.calls[1].args.p_user, 'target');
+  assert.equal(h.calls[1].args.p_role, 'manager');
 });
 test('existing unconfirmed account receives the invitation', async () => {
   const h = harness({ confirmed: false });
   assert.equal((await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'admin' })).status, 200);
-  assert.deepEqual(h.calls.map(c => c.name), ['invite', '_set_account_access']);
-  assert.equal(h.calls[0].opts.redirectTo, 'https://glazed.example/accept-invite');
+  assert.deepEqual(h.calls.map(c => c.name), ['_authorize_account_access', 'invite', '_set_account_access']);
+  assert.equal(h.calls[1].opts.redirectTo, 'https://glazed.example/accept-invite');
 });
 test('negative location IDs cannot reach access assignment', async () => {
   const h = harness();
@@ -127,4 +128,54 @@ test('active accounts use password recovery rather than invitation resend', asyn
   const h = harness();
   assert.equal((await h.request({ action: 'resend', user_id: 'target' })).status, 400);
   assert.equal(h.calls.length, 0);
+});
+
+const roles = ['owner','admin','manager','cashier','baker','customer'];
+const grants = { owner: roles.slice(1), admin: roles.slice(2), manager: roles.slice(3), cashier: [], baker: [], customer: [] };
+for (const role of roles) for (const targetRole of roles) for (const destination of roles) {
+  test(`${role} changing ${targetRole} to ${destination}`, async () => {
+    const h = harness({ role, targetRole });
+    const result = await h.request({ action: 'set-role', user_id: 'target', role: destination });
+    const allowed = grants[role].includes(targetRole) && grants[role].includes(destination);
+    assert.equal(result.status === 200, allowed);
+    assert.equal(h.calls.some(c => c.name === '_set_account_access'), allowed);
+    if (allowed) assert.equal(h.calls.at(-1).args.p_actor, 'caller');
+  });
+}
+for (const role of ['owner','admin','manager']) {
+  test(`${role} cannot change self`, async () => {
+    const h = harness({ role });
+    assert.equal((await h.request({ action: 'set-role', user_id: 'caller', role: 'cashier' })).status, 403);
+    assert.equal(h.calls.length, 0);
+  });
+}
+test('manager cannot invite or resend a peer before sending email', async () => {
+  const h = harness({ role: 'manager', targetRole: 'manager', confirmed: false });
+  assert.equal((await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'cashier' })).status, 403);
+  assert.equal((await h.request({ action: 'resend', user_id: 'target' })).status, 403);
+  assert.equal(h.calls.length, 0);
+});
+test('invitation sent but failed role update reports partial result', async () => {
+  const h = harness({ role: 'admin', confirmed: false, rpcError: { code: '42501' } });
+  const result = await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'manager' });
+  assert.equal(result.status, 409);
+  assert.equal(result.body.invitation_sent, true);
+  assert.match(result.body.error, /email was sent, but access was not assigned/);
+});
+test('atomic access denial is returned as forbidden', async () => {
+  const h = harness({ role: 'admin', rpcError: { code: '42501' } });
+  assert.equal((await h.request({ action: 'set-role', user_id: 'target', role: 'manager' })).status, 403);
+});
+
+test('database preauthorization denial prevents invitation email', async () => {
+  const h = harness({ role: 'admin', confirmed: false, authorizationError: { code: '42501' } });
+  assert.equal((await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'manager' })).status, 403);
+  assert.deepEqual(h.calls.map(c => c.name), ['_authorize_account_access']);
+});
+test('thrown failure after email honestly reports uncertain assignment', async () => {
+  const h = harness({ role: 'admin', confirmed: false, throwUpdate: true });
+  const result = await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'manager' });
+  assert.equal(result.status, 409);
+  assert.equal(result.body.invitation_sent, true);
+  assert.match(result.body.error, /could not be confirmed/);
 });
