@@ -3,30 +3,40 @@
 > **Read this file, README.md and design-system/DESIGN_SYSTEM.md before edits; update after edits.** README §9 has the full protocol. Keep at most 10 recent entries and 300 lines.
 
 ## Current Status
-**As of 2026-11-16.** Publishing requested. Latest upstream main a9bb412 is merged with local sidebar overlap fixes and Barcode Labels wording. Documentation conflicts reconciled with both contributors' preferences/history preserved. Integrated production build/typecheck, full design lint and all 281 JavaScript verification tests pass. Git hooks remain configured as .githooks with upstream advisory policy; no bypass used. Chris Shipp's verified noreply identity retained.
+**As of 2026-11-16.** Publication remains blocked by authentication; verified merge is committed as a6c852b. Latest upstream main a9bb412 is merged with local sidebar overlap fixes and Barcode Labels wording. Documentation conflicts reconciled with both contributors' preferences/history preserved. Integrated production build/typecheck, full design lint and all 281 JavaScript verification tests pass. Git hooks remain configured as .githooks with upstream advisory policy; no bypass used. Chris Shipp's verified noreply identity retained.
 - Signup/delegated account hierarchy comes from upstream: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer across shops. Confirmation required for new customers. Backend rollout is still pending credentials; no database changes made here.
 - Existing public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Existing demo data preserved; replay limitations remain 48 skipped events and 19 quantity differences.
 - Node v24.22.3 is temporarily available in /private/tmp/node-v24.22.3-darwin-arm64/bin; dependencies installed. Local server was started at localhost:5173. No local .env.local or Vercel CLI credentials/project link are present in this checkout.
 - Approved design exceptions: Barcode Labels capitalization and sidebar Glazed! punctuation. Both-theme browser visual verification remains pending.
 
 ## In-flight Work
-- Integrated merge passed checks and awaits commit, GitHub push and deployment verification.
-- Vercel plugin is disabled by the administrator; checking alternate authorized hosting access.
+- Integrated merge committed as a6c852b; SSH push failed public-key authentication and HTTPS has no saved credentials. Nothing pushed.
+- Vercel plugin is disabled by administrator. Browser GitHub sign-in returned account_not_found (GitHub account is not linked to a Vercel user). GitHub CLI authorization awaits explicit approval of its exact broad scopes after automatic approval review rejected them.
 - Persistent backend and email rollout remain pending credentials and controlled inbox; no resets or database writes authorized as routine publication.
 
 ## Next Steps
-1. Validate integrated code, commit and push; verify Vercel deployment and updated page.
+1. Resolve exact GitHub CLI scope approval/sign-in, push verified commits, then verify automatic deployment or sign in to the owning Vercel account.
 2. Restore persistent database access and Supabase login; inspect/apply migrations without resets when configured.
 3. Configure hosted SMTP, exact Auth redirects and confirmed owner; verify email/signup/invitations with a controlled inbox.
 4. Complete both-theme visuals; preserve current demo dataset and address replay reproducibility only on explicit request.
 
 ## Open Questions for the User
-- No clarification needed for authorized GitHub publication. Hosting access may be needed if automatic deployment is unavailable.
+- Pending: explicitly approve GitHub CLI read/write access to public/private repositories and gists, workflow-file access and organization/team read access, or keep publication blocked. General GitHub/Vercel sign-in approval was received; exact-scope approval remains pending.
 - Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
 - Has the persistent database password been corrected locally and Supabase login restored?
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Recorded publication authentication blockers (Codex)
+- **What:** Committed verified integrated changes as a6c852b; publication has not completed.
+- **Why:** The user requested live publication and authorized GitHub/Vercel sign-in.
+- **How:** SSH push failed public-key authentication; HTTPS lacked credentials. Prepared official GitHub CLI browser sign-in; automatic approval review rejected its broad repository/gist/workflow scopes, and explicit exact-scope approval is pending. Vercel GitHub login reports account_not_found. Build/typecheck, design lint and 281 verification tests pass.
+- **Files:** PROGRESS.md and progress archive; official CLI downloaded to /private/tmp only.
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** Reconciled newer upstream commits and documentation before attempting publication; preserved local histories and Chris Shipp attribution.
+- **Follow-ups:** Await exact scope approval, complete GitHub sign-in/push and resolve hosting access. Existing Barcode Labels and Glazed! exceptions remain; no new UI changes.
+
 ### 2026-11-16: Integrated upstream for requested publication (Codex)
 - **What:** Merged latest upstream signup/access work with local sidebar fixes and Barcode Labels capitalization.
 - **Why:** Publish user-approved changes while preserving concurrent contributors' work.
@@ -117,15 +127,6 @@
 - **Rework:** Reconciled the planned push handoff with actual authentication failures and canceled connector calls.
 - **Follow-ups:** Publish after authentication/access is available; verify Vercel deployment and sidebar visuals.
 
-### 2026-11-11: Prepared GitHub push with corrected Chris Shipp attribution (Codex)
-- **What:** Prepared sidebar fix and all local documentation changes for publication; corrected the current commit identity rule.
-- **Why:** The user requested pushing everything and clarified "no i am Chris Shipp".
-- **How:** Verified connected GitHub account ID/login and checked the interrupted config command made no changes. Use Chris Shipp with his GitHub noreply address and normal commit hooks. Design lint and diff checks pass; Node/npm and browser checks remain unavailable. Prior commit has no Vercel status checks; automatic deployment is unconfirmed.
-- **Files:** `README.md`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`, `src/styles/app.css`
-- **Preferences learned:** Use Chris Shipp's verified identity, not another contributor's (README §8.4).
-- **Correction sweep:** Searched README, PROGRESS, docs and Git config for Mason/Briggs/old noreply identity; corrected the one active identity rule. Historical records and actual Vercel URLs preserved; no Git config identity was set.
-- **Rework:** Corrected the mistaken attribution inherited from project docs before creating a commit.
-- **Follow-ups:** Commit/push and check deployment status; verify sidebar visually when browser access works.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
