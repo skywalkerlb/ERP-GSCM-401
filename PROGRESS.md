@@ -1,32 +1,72 @@
 # PROGRESS.md: ERP Project (GSCM 401)
 
-> **Read this file, README.md and design-system/DESIGN_SYSTEM.md before edits; update after edits.** README §9 has the full protocol. Keep at most 10 recent entries and 300 lines.
+> **Read this file, `README.md` and `design-system/DESIGN_SYSTEM.md` before any edit. Update this file after every edit.** Full rules: README.md §9.
+> **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** Publication remains blocked by authentication; verified merge is committed as a6c852b. Latest upstream main a9bb412 is merged with local sidebar overlap fixes and Barcode Labels wording. Documentation conflicts reconciled with both contributors' preferences/history preserved. Integrated production build/typecheck, full design lint and all 281 JavaScript verification tests pass. Git hooks remain configured as .githooks with upstream advisory policy; no bypass used. Chris Shipp's verified noreply identity retained.
-- Signup/delegated account hierarchy comes from upstream: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer across shops. Confirmation required for new customers. Backend rollout is still pending credentials; no database changes made here.
-- Existing public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Existing demo data preserved; replay limitations remain 48 skipped events and 19 quantity differences.
-- Node v24.22.3 is temporarily available in /private/tmp/node-v24.22.3-darwin-arm64/bin; dependencies installed. Local server was started at localhost:5173. No local .env.local or Vercel CLI credentials/project link are present in this checkout.
-- Approved design exceptions: Barcode Labels capitalization and sidebar Glazed! punctuation. Both-theme browser visual verification remains pending.
+**As of 2026-11-16.** GitHub CLI sign-in as chrisshipp19-web is complete after explicit user approval of exact scopes. Publication integration includes upstream ff265ec plus local sidebar fixes and Barcode Labels capitalization; integrated build/typecheck, full design lint, diff checks and all 326 JavaScript tests pass. Username/password-only signup is implemented, verified and pushed to GitHub main in commit `530db86`. Signup has two fields, signs customers in immediately when hosted confirmation is disabled, and requires no contact email. Both login screens accept usernames and existing email accounts. People displays usernames and offers protected lower-level username password resets. Existing role hierarchy and isolated demo behavior remain in place.
+- Current publication verification: 326 JavaScript tests pass. Previously recorded 4 TypeScript role/reset-guard tests passed; build/design lint/diff checks pass, and the final TypeScript check exited successfully after integration. Exact pending delegated-access and username migrations plus the complete signup/hierarchy/username/reset audit SQL suite pass against actual demo Postgres in one rolled-back transaction. No demo schema or data changes persisted.
+- Hosted rollout is blocked: persistent database rejects saved password (`28P01`), Supabase CLI has no login token, and hosted public settings still report email confirmation required. No persistent Auth settings, schema, accounts or deployments changed. Earlier missing persistent API schema remains unresolved.
+- Both-theme visuals have not been rechecked for publication. Browser access now works for sign-in; prior visual attempts had CUA errors. Components and theme tokens were reviewed against Glazed docs/reference images; preserved approved Barcode Labels capitalization and Glazed! sidebar punctuation exceptions.
+- Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Integrated merge committed as a6c852b; SSH push failed public-key authentication and HTTPS has no saved credentials. Nothing pushed.
-- Vercel plugin is disabled by administrator. Browser GitHub sign-in returned account_not_found (GitHub account is not linked to a Vercel user). GitHub CLI authorization awaits explicit approval of its exact broad scopes after automatic approval review rejected them.
-- Persistent backend and email rollout remain pending credentials and controlled inbox; no resets or database writes authorized as routine publication.
+- Publishing merged local changes; GitHub authorization is restored. Vercel plugin is disabled; browser GitHub sign-in reports account_not_found, so hosting needs the owning Vercel account if automatic deployment is unavailable.
+- Upstream username-signup publication is complete; local label/sidebar publication is in progress. Hosted configuration, migrations, endpoint/frontend deployment and end-to-end signup verification await working Supabase credentials. The temporary verification server has been stopped.
 
 ## Next Steps
-1. Resolve exact GitHub CLI scope approval/sign-in, push verified commits, then verify automatic deployment or sign in to the owning Vercel account.
-2. Restore persistent database access and Supabase login; inspect/apply migrations without resets when configured.
-3. Configure hosted SMTP, exact Auth redirects and confirmed owner; verify email/signup/invitations with a controlled inbox.
-4. Complete both-theme visuals; preserve current demo dataset and address replay reproducibility only on explicit request.
+1. Push integrated frontend changes and check automatic deployment status; use the owning Vercel account if needed.
+2. Restore hosted access by correcting the persistent database password locally and running `supabase login`; inspect hosted migration history without resetting data.
+3. Apply ordered migrations, disable hosted Confirm email, bootstrap the owner if needed, deploy People, then deploy the frontend together with matching backend changes. Preserve existing accounts and demo data.
+4. Verify hosted username signup → immediate shop access → sign-out/login, existing email login/recovery and authorized username password reset; finish both-theme browser review once CUA works.
+5. Configure SMTP only for legacy recovery/staff email invitations; address seed reproducibility only under a future explicit request.
 
 ## Open Questions for the User
-- Pending: explicitly approve GitHub CLI read/write access to public/private repositories and gists, workflow-file access and organization/team read access, or keep publication blocked. General GitHub/Vercel sign-in approval was received; exact-scope approval remains pending.
-- Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
-- Has the persistent database password been corrected locally and Supabase login restored?
+- GitHub access is ready for this publication. Access to the existing Vercel project may still be needed. Hosted rollout needs a working local persistent database password and completed `supabase login`. Never paste credentials in chat.
+- Which existing account should own the persistent ERP if it has not been bootstrapped? Username signup needs no inbox.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Restored publishing access and integrated latest signup work (Codex)
+- **What:** Completed GitHub CLI sign-in with explicit exact-scope approval and integrated upstream ff265ec with local label/sidebar changes.
+- **Why:** Complete the user's requested website publication without overwriting concurrent work.
+- **How:** Verified browser device-success page and CLI login as chrisshipp19-web; retained Chris Shipp's noreply commit identity and configured hooks. Resolved documentation conflicts while preserving both histories and current username signup requirements. Integrated build/typecheck, full design lint, diff checks and all 326 JavaScript tests pass; GitHub push follows this edit.
+- **Files:** Merged source and documentation; PROGRESS.md and progress archive.
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** New upstream commits arrived during authorization; preserved them in a second merge. Earlier automatic approval rejection was resolved by explicit approval of its exact scopes.
+- **Follow-ups:** Push and verify hosting. Backend rollout is still credential-blocked; Vercel GitHub login reports account_not_found. Approved Barcode Labels and Glazed! wording exceptions remain; no new design changes.
+
+### 2026-11-16: Publish simplified username signup to GitHub (Codex)
+- **What:** Committed and pushed all 17 changed files to GitHub main in `530db86`.
+- **Why:** User requested pushing the completed work to GitHub.
+- **How:** Confirmed remote main matched local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. GitHub accepted the main update to `530db86`. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
+- **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
+
+### 2026-11-16: Add protected username password resets (Codex)
+- **What:** Added username display and authorized password resets to People; username accounts never receive invitation emails.
+- **Why:** Username-only accounts need a recovery path without email verification.
+- **How:** Shared identity helper; existing hierarchy checks; service-only reset-attempt authorization/audit before Auth updates. Passwords stay out of storage and audit. 286 People tests pass within 330 total local tests; final typecheck, build, design lint and diff checks pass. Existing Glazed components and theme tokens only; no design exceptions. Browser visual review is blocked by the CUA tab-creation error; integrated rollback SQL security checks pass. Final handoff reconciled after the documentation reminder.
+- **Files:** People endpoint/UI, shared identity helper, People endpoint/UI tests, PROGRESS.md and progress archive.
+- **Preferences learned:** Username accounts require no email verification; record centrally in README with the main signup change.
+- **Correction sweep:** Checked People invitations, resend, directory labels, reset controls and demo simulation; updated two runtime surfaces and shared identity handling.
+- **Rework:** None.
+- **Follow-ups:** Complete hosted rollout and browser verification when access is restored.
+
+### 2026-11-16: Simplify account creation to username and password (Codex)
+- **What:** Replaced email-confirmed signup with username/password signup and immediate customer access; retained existing email logins.
+- **Why:** User requested simple account creation without email verification and approved implementation.
+- **How:** Shared normalized identity, Glazed two-field form and immediate sessions; immutable usernames and no matching-email customer claims. 330 local tests, build/typecheck/design lint and exact migration/security SQL checks pass (demo transaction rolled back). Fixed test fixture owner collision. Visible labels, one primary action, standard focus styles/status tones and both-theme tokens reviewed; no design exceptions. Browser visuals blocked by CUA. Hosted DB password rejected; confirmation remains enabled.
+- **Files:** Auth pages/provider, shared identity, Supabase configuration/migration, People reset controls, verification tests and current documentation.
+- **Preferences learned:** Signup requires only username/password; no email verification (README §8.1).
+- **Correction sweep:** Swept confirmation/signup/name requirements across shared auth, both logins, signup, local config, People, current backend functions, tests and 3 current docs; historical logs/migrations preserved.
+- **Rework:** Replaces the previously approved email-confirmation flow.
+- **Follow-ups:** Restore Supabase access, apply migrations/settings, deploy backend and frontend, and finish hosted/browser checks.
+
 ### 2026-11-16: Recorded publication authentication blockers (Codex)
 - **What:** Committed verified integrated changes as a6c852b; publication has not completed.
 - **Why:** The user requested live publication and authorized GitHub/Vercel sign-in.
@@ -86,47 +126,6 @@
 - **Correction sweep:** Reviewed all four AI hook configurations and Git hooks; fixed the one shared classifier used by every adapter.
 - **Rework:** Corrected the false edit reminder after an already-up-to-date pull.
 - **Follow-ups:** Existing backend, publishing and visual follow-ups remain; hook work is complete.
-
-### 2026-11-16: Remove project hook barriers to Git synchronization (Codex)
-- **What:** Made commit checks advisory, exempted pull from AI read gating and aligned every AI instruction file with unblocked synchronization.
-- **Why:** The user explicitly requested that hooks never block GitHub pulls or pushes.
-- **How:** Verified GitHub main contains `4a9b815`, main is unprotected, rulesets are empty and current credentials allow push. Disable Git hooks locally via core.hooksPath=/dev/null; optional tracked commit hook always succeeds. Shell syntax checks and no-doc-read pull/push guard probes passed. No UI or design values changed.
-- **Files:** Git hook, shared AI guard, README.md, AI instruction pointers, design-system enforcement wording, PROGRESS.md and progress archive.
-- **Preferences learned:** Git synchronization has no project hook prerequisites; checks are advisory (README §8.4 and §9.5).
-- **Correction sweep:** Searched Git gating and setup guidance; updated shared guard, tracked hook, all five AI instruction pointers and design-system enforcement wording.
-- **Rework:** Replaced mandatory blocking commit policy with the user's requested advisory policy.
-- **Follow-ups:** GitHub still requires authentication and write permission for direct pushes; existing hosted rollout questions remain.
-
-### 2026-11-16: Publish pending project changes to GitHub (Codex)
-- **What:** Prepared all pending signup, delegated access, sidebar wording, verification and documentation changes for one GitHub commit and push.
-- **Why:** The user requested pushing all changes to GitHub.
-- **How:** Reviewed pending files, scanned 27 files for saved credentials with no findings, confirmed remote main matches local base and retained required commit hooks. Existing implementation checks and design review are recorded below; no new UI changes in this publication step.
-- **Files:** All pending project changes, including README.md and PROGRESS.md.
-- **Preferences learned:** None.
-- **Correction sweep:** N/A.
-- **Rework:** None.
-- **Follow-ups:** Hosted application/backend rollout remains pending credentials and controlled inbox details.
-
-### 2026-11-12: Implemented signup fixes and delegated access (Codex)
-- **What:** Replaced owner-only People management with the approved protected hierarchy; hardened signup, confirmation and live access refresh with routing to an allowed home screen after demotion.
-- **Why:** Users must create working customer accounts and admins/managers must manage lower-level access.
-- **How:** Shared role rules, service-only atomic assignment and audit (including protected audit sequence), Glazed controls in both themes; 237 endpoint tests and 48 other local checks pass; exact migration, 41 database assertions/probes and full SQL signup/hierarchy/audit suite pass in a rollback-only demo transaction (5 data-dependent checks skipped). Design checklist: full design lint passes; Glazed component props, visible labels, shared focus styles, action labels, one primary action, status tones and sentence case reviewed. Existing theme tokens cover light/dark; browser visual checks remain blocked by CUA. No new exceptions; preserved approved sidebar-only "Glazed!" punctuation (`ds-exception`, README §8.1).
-- **Files:** Authentication, People, access helpers, Supabase endpoint/migration, verification scripts (including People simulation/UI checks, realtime assertions and integrated rollback access suite), docs/ARCHITECTURE.md, README.md and PROGRESS.md.
-- **Preferences learned:** Confirm customer emails; owner grants admin, admins grant manager and below, managers grant cashier/baker/customer; all shops; no self/peer/superior changes (README §8.1).
-- **Correction sweep:** Replaced owner-only enforcement and wording across frontend routes/nav/People/auth, endpoint, contract, tests and current docs (including architecture/realtime publication rules); historical logs preserved.
-- **Rework:** None.
-- **Follow-ups:** Restore persistent DB password and Supabase login; configure SMTP/Auth redirects; deploy and verify hosted signup/email with a controlled inbox.
-
-### 2026-11-11: Recorded local commit and blocked GitHub publication (Codex)
-- **What:** Created local commit `3f20b4b` as Chris Shipp; nothing was pushed to GitHub.
-- **Why:** The user requested publishing all changes and clarified the correct identity.
-- **How:** Configured verified noreply identity and enabled normal project hooks; commit checks passed. SSH push failed host verification; HTTPS lacked credentials; GitHub blob calls were canceled, with no remote commit/ref update. Vercel auto-deploy remains unconfirmed.
-- **Files:** `PROGRESS.md`, `docs/progress-archive/2026-11.md`; prior commit contains sidebar CSS and identity rule.
-- **Preferences learned:** None beyond the Chris Shipp identity rule already in README §8.4.
-- **Correction sweep:** Verified local commit author is Chris Shipp with the connected account's noreply email.
-- **Rework:** Reconciled the planned push handoff with actual authentication failures and canceled connector calls.
-- **Follow-ups:** Publish after authentication/access is available; verify Vercel deployment and sidebar visuals.
-
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

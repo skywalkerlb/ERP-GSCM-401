@@ -272,7 +272,7 @@ Result: Σ`value_total` equals Σ ledger `value_delta`, which equals GL account 
 | Baker | Production, bake plan, kitchen receiving, adjustments, transfers, waste |
 | Customer | Customer portal only |
 
-All account-management changes target lower-level accounts only: no self, peer, superior or owner changes. Management spans all shops; home location is a default. Public signup requires email confirmation and creates customers.
+All account-management changes target lower-level accounts only: no self, peer, superior or owner changes. Management spans all shops; home location is a default. Public signup requires only username/password, signs in immediately without email verification, and creates customers. Usernames are case-insensitive, 3–30 letters, digits or underscores. Existing email logins remain valid. Reserved internal username identities are never contact addresses; customer records are not automatically linked by an unverified email match.
 
 **Demo accounts** are created by the seed through the admin API with `email_confirm: true`:
 - owner@example.com

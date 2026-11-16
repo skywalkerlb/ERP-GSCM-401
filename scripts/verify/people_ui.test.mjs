@@ -6,7 +6,8 @@ import ts from 'typescript';
 
 const source = readFileSync(new URL('../../src/features/people/PeoplePage.tsx', import.meta.url), 'utf8');
 const shared = readFileSync(new URL('../../supabase/functions/_shared/account-access.ts', import.meta.url), 'utf8');
-const js = ts.transpileModule(shared.replace(/export /g, '') + '\n' + source.replace(/^import .*;$/gm, '') + '\nexport const testing = { demoAction, sampleDirectory };', {
+const identity = readFileSync(new URL('../../supabase/functions/_shared/identity.ts', import.meta.url), 'utf8').replace(/export /g, '');
+const js = ts.transpileModule(identity + '\n' + shared.replace(/export /g, '') + '\n' + source.replace(/^import .*;$/gm, '') + '\nexport const testing = { demoAction, sampleDirectory };', {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
 function harness(role) {
@@ -41,6 +42,7 @@ for (const [role, expected] of [['owner',['admin','manager','cashier','baker']],
       const buttons = find(actionColumn.render(person), 'Button');
       const grantable = [...expected, 'customer'].includes(person.role) && person.role !== role;
       assert.equal(buttons.some(button => button.props.children === 'Edit access'), grantable);
+      assert.equal(buttons.some(button => button.props.children === 'Reset password'), grantable && Boolean(person.username));
     }
   });
 }
@@ -66,4 +68,26 @@ test('manager demo changes stay local and reject peer changes and privilege esca
   assert.equal(invited.people.find(person => person.email === 'new@example.com').role, 'baker');
   app.action({ action:'set-role', userId:'invited-account', role:'customer', homeLocationId:null });
   assert.equal(app.action({ action:'list' }).people.find(person => person.email === 'new@example.com').role, 'customer');
+});
+
+test('username reset is simulated without persisting the entered password or contacting Auth', () => {
+  const app = harness('manager');
+  const result = app.action({ action: 'reset-password', userId: 'demo-customer', password: 'test-reset-password-only' });
+  assert.match(result.message, /no passwords or account permissions were changed/);
+  assert.doesNotMatch(JSON.stringify([...app.stored.values()]), /test-reset-password-only/);
+  assert.throws(() => app.action({ action: 'reset-password', userId: 'demo-customer', password: 'short' }), /at least 6/);
+  assert.throws(() => app.action({ action: 'reset-password', userId: 'demo-baker', password: 'test-reset-password-only' }), /email password recovery/);
+});
+test('username resets reject self, peers, superiors and ordinary users', () => {
+  for (const [actor, target] of [['manager','manager'], ['manager','admin'], ['owner','owner'], ['customer','baker']]) {
+    assert.throws(() => harness(actor).action({ action: 'reset-password', userId: `demo-${target}`, password: 'test-reset-password-only' }), /cannot|access is required/);
+  }
+});
+test('demo invitations reject reserved username addresses and username display hides internal identifiers', () => {
+  assert.throws(() => harness('owner').action({ action: 'invite', email: 'someone@users.glazed.invalid', role: 'cashier' }), /do not use invitation emails/);
+  const tree = harness('manager').render();
+  const table = find(tree, 'DataTable')[0];
+  const personColumn = table.props.columns.find(column => column.key === 'email');
+  const row = personColumn.render({ email: 'someone@users.glazed.invalid', full_name: null });
+  assert.equal(find(row, 'strong')[0].props.children, 'someone');
 });
