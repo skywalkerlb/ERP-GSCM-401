@@ -1,5 +1,5 @@
 // A replica of the database's `mrp_weekly(start, 4, false)` (confirmed sales orders only), used to size the scripted
-// future orders and to preview the dry run. Mirrors migration 20261116000001_mrp_receipt_timing.sql:
+// future orders and to preview the dry run. Mirrors migration 20261116000101_mrp_receipt_timing.sql:
 //   gross  = open sales-order qty x BOM (plus purchasable parents themselves), bucketed by requested date (past dates count in week 1)
 //   SR     = remaining qty on sent POs, bucketed by expected date (overdue receipts count in week 1)
 //   net_w  = peak dated shortage after beginning stock and receipts due by each day; planned supply is pack-rounded

@@ -10,11 +10,13 @@ import { Select } from '@/components/Select';
 import { TextField } from '@/components/TextField';
 import { useAuth, type AppRole } from '@/hooks/useAuth';
 import { isDemo, supabase } from '@/lib/supabase';
+import { usernameFromEmail, USERNAME_DOMAIN } from '../../../supabase/functions/_shared/identity';
 import { assignableRoles, canManageAccount, canAssignAccountRole, type AccountRole } from '../../../supabase/functions/_shared/account-access';
 
 interface Person {
   user_id: string;
   email: string;
+  username?: string | null;
   full_name: string | null;
   role: AppRole;
   home_location_id: number | null;
@@ -28,19 +30,21 @@ interface Directory {
   locations: { id: number; name: string }[];
 }
 interface PeopleAction {
-  action: 'list' | 'invite' | 'resend' | 'set-role';
+  action: 'list' | 'invite' | 'resend' | 'set-role' | 'reset-password';
   email?: string;
+  password?: string;
   userId?: string;
   role?: string;
   homeLocationId?: number | null;
 }
 const DEMO_KEY = 'glazed-demo-people-v1';
 const QUERY_KEY = ['people-directory', isDemo];
+function accountName(person: Person): string { return person.username || usernameFromEmail(person.email) || person.email; }
 
 function sampleDirectory(): Directory {
   const roles = ['owner', 'admin', 'manager', 'cashier', 'baker', 'customer'] as AppRole[];
   return {
-    people: roles.map((role) => ({ user_id: `demo-${role}`, email: `${role}@example.com`, full_name: `Demo ${role}`, role, home_location_id: role === 'customer' ? null : 1, invited_at: null, email_confirmed_at: '2026-11-10T00:00:00Z' })),
+    people: roles.map((role) => ({ user_id: `demo-${role}`, email: `${role}@example.com`, username: role === 'customer' ? 'demo_customer' : null, full_name: `Demo ${role}`, role, home_location_id: role === 'customer' ? null : 1, invited_at: null, email_confirmed_at: '2026-11-10T00:00:00Z' })),
     locations: [{ id: 1, name: 'Provo' }, { id: 2, name: 'Orem' }, { id: 3, name: 'Lehi' }, { id: 4, name: 'Central Kitchen' }],
   };
 }
@@ -58,6 +62,7 @@ function demoAction(input: PeopleAction, actor: Actor): Directory & { message?: 
   if (input.action === 'list') return directory;
   if (input.action === 'invite') {
     const email = input.email!.trim().toLowerCase();
+    if (email.endsWith(`@${USERNAME_DOMAIN}`)) throw new Error('Username accounts do not use invitation emails. Edit their access in the directory.');
     const existing = directory.people.find((person) => person.email.toLowerCase() === email);
     if (!canAssignAccountRole(actor.role, existing?.role ?? 'customer', input.role as AccountRole, actor.user_id, existing?.user_id)) throw new Error('You cannot assign this account or role.');
     if (existing) {
@@ -73,16 +78,20 @@ function demoAction(input: PeopleAction, actor: Actor): Directory & { message?: 
     if (input.action === 'set-role') {
       person.role = input.role as AppRole;
       person.home_location_id = input.homeLocationId ?? null;
+    } else if (input.action === 'reset-password') {
+      if (!person.username && !usernameFromEmail(person.email)) throw new Error('This account uses email password recovery.');
+      if (!input.password || input.password.length < 6) throw new Error('Use a password with at least 6 characters.');
+      // Never persist passwords, even in the demo directory.
     } else person.invited_at = new Date().toISOString();
   }
   sessionStorage.setItem(DEMO_KEY, JSON.stringify(directory));
-  return { ...directory, message: 'Demo change saved in this tab. No email was sent and no account permissions were changed.' };
+  return { ...directory, message: 'Demo change saved in this tab. No email was sent and no passwords or account permissions were changed.' };
 }
 
 async function peopleAction(input: PeopleAction, actor: Actor): Promise<Directory & { message?: string }> {
   if (isDemo) return demoAction(input, actor);
   const { data, error } = await supabase.functions.invoke('people', { body: {
-    action: input.action, email: input.email, user_id: input.userId,
+    action: input.action, email: input.email, user_id: input.userId, password: input.password,
     role: input.role, home_location_id: input.homeLocationId,
   } });
   if (error) {
@@ -116,6 +125,8 @@ export default function PeoplePage() {
   const [role, setRole] = useState<string>(staffOptions[0]?.value ?? 'cashier');
   const [location, setLocation] = useState('');
   const [editing, setEditing] = useState<Person | null>(null);
+  const [resetting, setResetting] = useState<Person | null>(null);
+  const [newPassword, setNewPassword] = useState('');
   const [editRole, setEditRole] = useState<string>(staffOptions[0]?.value ?? 'cashier');
   const [editLocation, setEditLocation] = useState('');
   const [busy, setBusy] = useState(false);
@@ -125,7 +136,9 @@ export default function PeoplePage() {
   useEffect(() => {
     setRole(assignableRoles(profile?.role ?? 'customer').find((value) => value !== 'customer') ?? 'cashier');
     setEditing(null);
-  }, [profile?.role]);
+    setResetting(null);
+    setNewPassword('');
+  }, [profile?.role, profile?.user_id]);
 
   async function mutate(input: PeopleAction) {
     setBusy(true);
@@ -135,6 +148,8 @@ export default function PeoplePage() {
       const result = await peopleAction(input, actor);
       setNotice(result.message ?? 'Access updated.');
       setEditing(null);
+      setResetting(null);
+      setNewPassword('');
       if (input.action === 'invite') setEmail('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not save access. Try again.');
@@ -152,22 +167,22 @@ export default function PeoplePage() {
 
   const locationOptions = [{ value: '', label: 'No home location' }, ...(directory.data?.locations ?? []).map((item) => ({ value: String(item.id), label: item.name }))];
   const columns: DataTableColumn<Person>[] = [
-    { key: 'email', header: 'Person', render: (person) => <><strong>{person.full_name || person.email}</strong>{person.full_name && <div className="gz-muted text-body-sm">{person.email}</div>}</> },
+    { key: 'email', header: 'Person', render: (person) => <><strong>{person.full_name || accountName(person)}</strong>{person.full_name && <div className="gz-muted text-body-sm">{accountName(person)}</div>}</> },
     { key: 'role', header: 'Role', render: (person) => person.role.charAt(0).toUpperCase() + person.role.slice(1) },
     { key: 'home_location_id', header: 'Home location', render: (person) => directory.data?.locations.find((item) => item.id === person.home_location_id)?.name ?? 'None' },
     { key: 'status', header: 'Status', render: (person) => {
       const status = person.status ?? (person.email_confirmed_at ? 'active' : person.invited_at ? 'invited' : 'unconfirmed');
       return <Badge tone={status === 'active' ? 'success' : 'info'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     } },
-    { key: 'actions', header: 'Actions', render: (person) => !canManageAccount(actor.role, person.role, actor.user_id, person.user_id) ? <span className="gz-muted">Access is protected</span> : <div className="gz-row"><Button size="sm" disabled={busy} aria-label={`Edit access for ${person.email}`} onClick={() => { setEditing(person); setEditRole(person.role); setEditLocation(person.home_location_id === null ? '' : String(person.home_location_id)); }}>Edit access</Button>{(person.status === 'invited' || (person.invited_at && !person.email_confirmed_at)) && <Button size="sm" disabled={busy} aria-label={`Resend invitation to ${person.email}`} onClick={() => void mutate({ action: 'resend', userId: person.user_id })}>Resend invitation</Button>}</div> },
+    { key: 'actions', header: 'Actions', render: (person) => !canManageAccount(actor.role, person.role, actor.user_id, person.user_id) ? <span className="gz-muted">Access is protected</span> : <div className="gz-row"><Button size="sm" disabled={busy} aria-label={`Edit access for ${accountName(person)}`} onClick={() => { setResetting(null); setNewPassword(''); setEditing(person); setEditRole(person.role); setEditLocation(person.home_location_id === null ? '' : String(person.home_location_id)); }}>Edit access</Button>{(person.username || usernameFromEmail(person.email)) && <Button size="sm" disabled={busy} aria-label={`Reset password for ${accountName(person)}`} onClick={() => { setEditing(null); setResetting(person); setNewPassword(''); }}>Reset password</Button>}{(person.status === 'invited' || (person.invited_at && !person.email_confirmed_at)) && <Button size="sm" disabled={busy} aria-label={`Resend invitation to ${accountName(person)}`} onClick={() => void mutate({ action: 'resend', userId: person.user_id })}>Resend invitation</Button>}</div> },
   ];
 
   if (!canManage) return <Alert tone="warning" title="Staff management access required">Ask an owner, admin or manager to manage invitations and staff roles.</Alert>;
 
   return <>
-    <PageHeader title="People" breadcrumb={[{ label: 'Setup' }, { label: 'People' }]} subtitle="Invite people and manage staff access. You can manage accounts and assign roles below your own level." />
+    <PageHeader title="People" breadcrumb={[{ label: 'Setup' }, { label: 'People' }]} subtitle="Manage access and username passwords for accounts below your own level. New users can create an account from sign in." />
     <div className="gz-stack">
-      {isDemo && <Alert tone="info" title="Simulated access management">Try invitations and role changes using sample people. Changes stay in this browser tab; no emails are sent and no real or demo account permissions change.</Alert>}
+      {isDemo && <Alert tone="info" title="Simulated access management">Try invitations and role changes using sample people. Changes stay in this browser tab; no emails are sent and no real or demo passwords or account permissions change.</Alert>}
       {error && <Alert tone="danger" title="Access was not saved">{error}</Alert>}
       {notice && <Alert tone="success" title="Access updated">{notice}</Alert>}
       {directory.isError && <Alert tone="danger" title="Could not load people" action={<Button onClick={() => void directory.refetch()}>Try again</Button>}>{directory.error instanceof Error ? directory.error.message : 'Try loading the directory again.'}</Alert>}
@@ -181,13 +196,19 @@ export default function PeoplePage() {
           <div><Button type="submit" variant="primary" disabled={busy || !email.trim() || !directory.data}>{busy ? 'Saving' : 'Invite person'}</Button></div>
         </form>
       </Card>
-      {editing && <Card title={`Edit access for ${editing.email}`}>
+      {editing && <Card title={`Edit access for ${accountName(editing)}`}>
         <form className="gz-stack" onSubmit={(event) => { event.preventDefault(); void mutate({ action: 'set-role', userId: editing.user_id, role: editRole, homeLocationId: editRole === 'customer' ? null : editLocation ? Number(editLocation) : null }); }}>
           <div className="gz-form-grid">
             <Select label="Role" options={options} value={editRole} onChange={(event) => setEditRole(event.target.value)} disabled={busy} />
             <Select label="Home location" options={locationOptions} value={editLocation} onChange={(event) => setEditLocation(event.target.value)} disabled={busy || editRole === 'customer'} />
           </div>
           <div className="gz-row"><Button type="submit" disabled={busy}>Save access</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button></div>
+        </form>
+      </Card>}
+      {resetting && <Card title={`Reset password for ${accountName(resetting)}`} subtitle="Confirm the account holder's identity before setting a new password. Share the new password privately.">
+        <form className="gz-stack" onSubmit={(event) => { event.preventDefault(); void mutate({ action: 'reset-password', userId: resetting.user_id, password: newPassword }); }}>
+          <TextField label="New password" type="password" autoComplete="new-password" required minLength={6} hint="At least 6 characters." value={newPassword} onChange={(event) => setNewPassword(event.target.value)} disabled={busy} />
+          <div className="gz-row"><Button type="submit" disabled={busy || newPassword.length < 6}>{busy ? 'Saving password' : 'Save password'}</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => { setResetting(null); setNewPassword(''); }}>Cancel</Button></div>
         </form>
       </Card>}
       <Card title="Platform accounts" padded={false} actions={<Button variant="ghost" disabled={busy || directory.isFetching} onClick={() => void directory.refetch()}>Refresh people</Button>}>

@@ -4,15 +4,17 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import ts from 'typescript';
 
+const identity = {};
+vm.runInNewContext(ts.transpileModule(readFileSync(new URL('../../supabase/functions/_shared/identity.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, { exports: identity });
 const source = readFileSync(new URL('../../src/hooks/useAuth.tsx', import.meta.url), 'utf8');
 const js = ts.transpileModule(source.replace(/^import .*;$/gm, ''), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
-function harness({ demo = false, session = null, profile = null, signupResult = { data: { session: null }, error: null } } = {}) {
+function harness({ demo = false, session = null, profile = { user_id: 'new-user', role: 'customer' }, signupResult = { data: { session: { user: { id: 'new-user' } }, user: { id: 'new-user' } }, error: null } } = {}) {
   const exported = {}, effects = [], calls = [], states = [], timers = [], listeners = {};
   let stateIndex = 0, nextProfile = profile, profileFailure = null, clears = 0;
   vm.runInNewContext(js, {
-    exports: exported,
+    exports: exported, ...identity,
     require: () => ({ jsx: (type, props) => ({ type, props }) }),
     createContext: () => ({ Provider: 'AuthProvider' }),
     useCallback: fn => fn, useRef: current => ({ current }), useMemo: fn => fn(),
@@ -31,7 +33,7 @@ function harness({ demo = false, session = null, profile = null, signupResult = 
         return { subscribe: () => ({}) };
       } }),
       removeChannel: async () => { calls.push('removeChannel'); },
-      auth: { signUp: async input => { calls.push(input); return signupResult; } },
+      auth: { signUp: async input => { calls.push(input); return signupResult; }, signInWithPassword: async input => { calls.push(input); return signupResult; } },
       from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: nextProfile, error: profileFailure }) }) }) }),
     },
     setTimeout, Error,
@@ -40,27 +42,42 @@ function harness({ demo = false, session = null, profile = null, signupResult = 
   return { exported, value, effects, calls, states, timers, listeners, clears: () => clears,
     setProfile: next => { nextProfile = next; }, failProfile: error => { profileFailure = error; } };
 }
-const valid = { email: ' jane@example.com ', password: 'secret123', fullName: ' Jane Doe ' };
-test('signup rejects invalid values before sending a request', async () => {
+const valid = { username: ' Jane_Doe ', password: 'secret123' };
+test('signup rejects invalid usernames and passwords before sending a request', async () => {
   const app = harness();
-  for (const input of [{ ...valid, fullName: '   ' }, { ...valid, email: 'bad-email' }, { ...valid, password: 'short' }]) {
-    assert.ok((await app.value.signUp(input)).error);
+  for (const username of ['', 'ab', 'a'.repeat(31), 'jane@example.com', 'jane doe', 'a-b', 'éclair']) {
+    assert.ok((await app.value.signUp({ ...valid, username })).error);
   }
+  assert.ok((await app.value.signUp({ ...valid, password: 'short' })).error);
   assert.equal(app.calls.length, 0);
 });
-test('signup normalizes name/email, uses deployed confirmation origin and requests no role', async () => {
+test('signup normalizes username, requests no role or email callback and loads immediate profile', async () => {
   const app = harness();
-  assert.equal((await app.value.signUp(valid)).needsConfirmation, true);
-  assert.equal(app.calls[0].email, 'jane@example.com');
-  assert.equal(app.calls[0].options.data.full_name, 'Jane Doe');
-  assert.equal(app.calls[0].options.emailRedirectTo, 'https://glazed.example/login');
+  assert.equal((await app.value.signUp(valid)).profile.role, 'customer');
+  assert.equal(app.calls[0].email, 'jane_doe@users.glazed.invalid');
+  assert.equal(app.calls[0].options.data.username, 'jane_doe');
+  assert.equal(Object.hasOwn(app.calls[0].options, 'emailRedirectTo'), false);
   assert.equal(Object.hasOwn(app.calls[0].options.data, 'role'), false);
+  assert.equal(app.states.filter(s => s.index === 0).at(-1).value.user.id, 'new-user');
 });
-test('signup supports immediate sessions and actionable backend failures', async () => {
-  const immediate = harness({ signupResult: { data: { session: {} }, error: null } });
-  assert.equal((await immediate.value.signUp(valid)).needsConfirmation, false);
+test('signup reports configuration, duplicate and profile failures without a check-email step', async () => {
+  const misconfigured = harness({ signupResult: { data: { session: null }, error: null } });
+  assert.match((await misconfigured.value.signUp(valid)).error, /finish account setup/);
   const failed = harness({ signupResult: { data: {}, error: { code: 'email_exists' } } });
   assert.match((await failed.value.signUp(valid)).error, /Sign in instead/);
+  const profileFailure = harness(); profileFailure.failProfile({ code: '42501' });
+  assert.match((await profileFailure.value.signUp(valid)).error, /profile could not be loaded/);
+  assert.equal(profileFailure.states.filter(s => s.index === 0).at(-1).value.user.id, 'new-user');
+});
+test('username login normalizes case and existing email login is preserved', async () => {
+  for (const [input, expected] of [[' Jane_Doe ', 'jane_doe@users.glazed.invalid'], [' legacy@example.com ', 'legacy@example.com']]) {
+    const app = harness();
+    assert.equal((await app.value.signIn(input, 'secret123')).profile.role, 'customer');
+    assert.equal(app.calls[0].email, expected);
+  }
+  const app = harness();
+  assert.ok((await app.value.signIn('bad name', 'secret123')).error);
+  assert.equal(app.calls.length, 0);
 });
 test('demo mode never creates real signup accounts', async () => {
   const app = harness({ demo: true });

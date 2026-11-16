@@ -4,38 +4,67 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** MRP and customer-facing ERP implementations completed for the requested rubrics. The four-week confirmed-order planner now nets components by requirement/receipt date, carries stock forward, rounds suggested quantities to packs and offsets order-by dates by component lead times. The Material planning screen lists parent BOMs, per-unit quantities and lead times; the seed catalog has nine parents. Production and kit-sale guards prevent missing recipes from bypassing component consumption. The customer portal supports sign-in, inventory quantities by shop and pickup ordering; checkout handles unavailable data/items explicitly, and the server enforces shop hours, closed days and aggregate per-item limits.
+**As of 2026-11-16.** The release branch combines username/password signup from main with four-week MRP, parent BOMs, component consumption guards, fresh inventory by shop and customer pickup ordering. Username signup requires no email verification; legacy email login and delegated account access are preserved.
 
-- New migrations and rollback SQL tests pass on an isolated PostgreSQL 17 database with all repository migrations applied. 293 TypeScript/Node MRP/catalog/access/auth tests pass; frontend build/typecheck and design lint pass. Browser integration checks with mocked API responses pass for both themes, MRP drivers and customer sign-in → stock locations → pickup confirmation, plus availability failure and stale-cart handling. All 36 applicable existing non-data SQL assertions pass; six data-dependent checks were not run on the empty fixture database. No new design exceptions; the approved sidebar punctuation exception is retained.
-- Integrated upstream `a9bb412` signup/delegated-access and advisory Git-hook changes. Owner/admin/manager account hierarchy and customer email confirmation remain intact. Hosted SMTP, Auth redirect and controlled-inbox checks remain pending as recorded upstream.
-- Hosted changes have not been deployed or migrated. Existing demo/persistent backends were not modified or reset. Persistent backend credential and owner setup remain unresolved from the prior handoff.
-- Existing demo data remains subject to the previously recorded interrupted replay: 48 skipped historical events and 19 simulator quantity differences. No replay is running.
+- Deployment is authorized but blocked by access. The environment has no deployment secrets/runtime variables. Plugin discovery reports both Vercel and Supabase as `DISABLED_BY_ADMIN` / `NOT_AVAILABLE`; neither connected service can be used here. No local deployment credentials are configured. Prior hosted DB password/CLI login blockers remain unresolved.
+- Integrated main through `ff265ec`; three unpublished MRP/customer migrations are renumbered to `20261116000101..103`, after username migration `20261116000001`. Combined verification passes: 338 TS/Node tests, both-theme mocked browser flows, four rollback SQL suites (including signup/access security) and 36 non-data assertions. All 24 migrations apply in order on a fresh local PostgreSQL 17 database with minimal Supabase Auth stubs; six data-dependent volume checks remain skipped.
+- No hosted schema, data, Auth settings or deployments changed. Existing demo data is preserved, including its known historical replay limitations (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Implementation and local verification complete; draft pull request prepared for review.
-- No seed replay or hosted database change in progress.
+- Combined release verification complete; draft PR #1 updated. Hosted release remains blocked by missing service access.
+- Waiting for Vercel/Supabase connections to be enabled or securely configured CLI access; no hosted mutations in progress.
 
 ## Next Steps
-1. Apply all three `20261116` migrations to the chosen hosted backend and deploy the reviewed frontend; no data reset is needed.
-2. Verify hosted Material planning and customer sign-in/pickup against the selected backend, including Auth email confirmation and realtime updates.
-3. Preserve the current demo dataset; review seed retry/state handling before any separately requested clean replay.
-4. Complete persistent-backend credential, owner and Auth redirect setup when configured access is available.
+1. Restore deployment access. Inspect hosted migration history and apply all pending migrations in order without resets.
+2. Disable hosted Confirm email per username-signup preference; deploy the matching People endpoint and frontend with the existing project configuration.
+3. Verify live username signup/login, customer inventory locations/pickup, order ownership and MRP with confirmed sales orders/open POs.
+4. Preserve existing demo data; only replay seeds under a separate explicit request.
 
 ## Open Questions for the User
-- Which confirmed signup email should own the persistent ERP account? Never send passwords in chat.
-- Has the persistent database password been corrected locally and Supabase login restored? Which controlled inbox can verify hosted confirmation/recovery?
+- Can your administrator enable Vercel/Supabase connections, or can authenticated CLI access be configured through secure environment settings? Never paste credentials in chat.
+- Which existing account should own the persistent ERP if it has not been bootstrapped?
 - What is the project due date?
 
 ## Recent Changes
-### 2026-11-16: Completed MRP and customer pickup workflows (Codex)
-- **What:** Extended four-week MRP with dated netting/BOM overview and consumption guards; completed customer pickup validation, fresh-stock reservations and checkout availability safeguards.
-- **Why:** Meet both requested ERP rubrics: component planning/consumption and customer login, inventory locations and pickup ordering.
-- **How:** Added three forward-only migrations; preserved RPC shapes/security; aligned seed preview; validated pickup hours/limits and prevented silent partial checkout. Three PostgreSQL rollback suites, 36 existing non-data SQL assertions, 293 TS/Node regressions, build/typecheck, design lint and both-theme browser checks pass. Browser uses mocked APIs; hosted verification pending. No new design exceptions; preserved the approved sidebar punctuation.
-- **Files:** `src/features/mrp/`, `src/features/portal/`, `src/lib/realtimeTopics.ts`, `scripts/seed/mrp.ts`, `scripts/verify/`, three `20261116` migrations, `package*.json`, `supabase/CONTRACT.md`, `README.md`, `PROGRESS.md`, progress archive.
-- **Preferences learned:** None; existing Glazed and database-preservation rules retained.
-- **Correction sweep:** N/A; new feature request.
-- **Rework:** Existing recipe, consumption and planning infrastructure reused; corrected same-week receipt timing, stale MRP caches and day-old/shared-kit reservation overstatements; integrated concurrent signup/access changes.
-- **Follow-ups:** Hosted migrations/deployment and connected verification; persistent backend setup and seed replay limitations above.
+### 2026-11-16: Prepare combined release and verify deployment access (Codex)
+- **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
+- **Why:** The user authorized hosted migration/deployment of both feature sets.
+- **How:** Preserved username/password signup and existing access hierarchy; assigned unique ordered versions to the three unpublished MRP/customer migrations. Combined build/typecheck, design lint, 338 TS/Node tests, both-theme browser flows, four SQL suites and 36 assertions pass; 24 migrations apply on a fresh local database. No new design exceptions. Environment status has no deployment secrets; Vercel/Supabase plugins report DISABLED_BY_ADMIN. No hosted changes made.
+- **Files:** Three renamed migrations, seed MRP reference, browser test label, README, contract, PROGRESS and archive; integrated upstream auth changes.
+- **Preferences learned:** None; existing username-only signup preference retained.
+- **Correction sweep:** N/A.
+- **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
+- **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
+
+### 2026-11-16: Publish simplified username signup to GitHub (Codex)
+- **What:** Committed and pushed all 17 changed files to GitHub main in `530db86`.
+- **Why:** User requested pushing the completed work to GitHub.
+- **How:** Confirmed remote main matched local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. GitHub accepted the main update to `530db86`. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
+- **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
+
+### 2026-11-16: Add protected username password resets (Codex)
+- **What:** Added username display and authorized password resets to People; username accounts never receive invitation emails.
+- **Why:** Username-only accounts need a recovery path without email verification.
+- **How:** Shared identity helper; existing hierarchy checks; service-only reset-attempt authorization/audit before Auth updates. Passwords stay out of storage and audit. 286 People tests pass within 330 total local tests; final typecheck, build, design lint and diff checks pass. Existing Glazed components and theme tokens only; no design exceptions. Browser visual review is blocked by the CUA tab-creation error; integrated rollback SQL security checks pass. Final handoff reconciled after the documentation reminder.
+- **Files:** People endpoint/UI, shared identity helper, People endpoint/UI tests, PROGRESS.md and progress archive.
+- **Preferences learned:** Username accounts require no email verification; record centrally in README with the main signup change.
+- **Correction sweep:** Checked People invitations, resend, directory labels, reset controls and demo simulation; updated two runtime surfaces and shared identity handling.
+- **Rework:** None.
+- **Follow-ups:** Complete hosted rollout and browser verification when access is restored.
+
+### 2026-11-16: Simplify account creation to username and password (Codex)
+- **What:** Replaced email-confirmed signup with username/password signup and immediate customer access; retained existing email logins.
+- **Why:** User requested simple account creation without email verification and approved implementation.
+- **How:** Shared normalized identity, Glazed two-field form and immediate sessions; immutable usernames and no matching-email customer claims. 330 local tests, build/typecheck/design lint and exact migration/security SQL checks pass (demo transaction rolled back). Fixed test fixture owner collision. Visible labels, one primary action, standard focus styles/status tones and both-theme tokens reviewed; no design exceptions. Browser visuals blocked by CUA. Hosted DB password rejected; confirmation remains enabled.
+- **Files:** Auth pages/provider, shared identity, Supabase configuration/migration, People reset controls, verification tests and current documentation.
+- **Preferences learned:** Signup requires only username/password; no email verification (README §8.1).
+- **Correction sweep:** Swept confirmation/signup/name requirements across shared auth, both logins, signup, local config, People, current backend functions, tests and 3 current docs; historical logs/migrations preserved.
+- **Rework:** Replaces the previously approved email-confirmation flow.
+- **Follow-ups:** Restore Supabase access, apply migrations/settings, deploy backend and frontend, and finish hosted/browser checks.
 
 ### 2026-11-16: Remove project hook barriers to Git synchronization (Codex)
 - **What:** Made commit checks advisory, exempted pull from AI read gating and aligned every AI instruction file with unblocked synchronization.
@@ -98,39 +127,6 @@
 - **Correction sweep:** Both login pages share demo entry; all auth sign-out paths preserve shared-account sessions through tab-local exit.
 - **Rework:** Seed connection failure left an orphan lock; closed only the confirmed stale demo connection. Replay completed with 48 skipped events, 19 simulator quantity differences and exit 2; dataset accounting checks pass.
 - **Follow-ups:** Browser verification and seed recovery/reproducibility improvement; persistent backend setup remains separate.
-
-
-### 2026-11-10: Completing credential-free public demo entry (Codex)
-- **What:** Verified selected demo profile/role, direct landing screens, bounded demo requests, failure cleanup and retry; routed ordinary demo sign-out through tab-local exit to protect other visitors; removed misleading preparation wording.
-- **Why:** Visitors must enter role demos without credentials; existing demo infrastructure was not configured.
-- **How:** Kept automatic account sign-in in an isolated project/tab; 19 demo-entry tests, typecheck and design lint pass. Provisioned and migrated Glazed Demo using current CLI; six accounts verified, Preview Ready and public, demo mutation endpoint returns 403. Full history replay in progress; 75 database checks pass. Fixed URL-encoded path in setup script for folder names with spaces. No design exceptions; visual checks pending.
-- **Files:** `src/lib/supabase.ts`, `src/app/AuthPages.tsx`, `scripts/verify/demo_entry.test.mjs`, `scripts/demo/setup.mjs`, ignored `.env.local`, `README.md`, `PROGRESS.md`
-- **Preferences learned:** No visitor credentials or registration for demos; accurate setup states (README §8.1).
-- **Correction sweep:** Shared selector covers both login pages; role verification prevents incorrect account landing.
-- **Rework:** Previous demo selector existed without configured backend; provisioning now attempted.
-- **Follow-ups:** Finish provisioning, seed, verify all roles and deploy frontend settings.
-
-
-### 2026-11-10: Integrated and verified account access implementation (Codex)
-- **What:** Completed local login choices, recovery/invitation routes, People access, owner/admin permissions and demo isolation/reset setup.
-- **Why:** Implement the approved plan while preserving the persistent backend.
-- **How:** Separate demo project/storage; guarded reset tools; owner-only service endpoint and database protection. Build/typecheck/design lint passed; 15 endpoint tests and 4 access/reset tests passed. Database check failed on password authentication; browser tools unavailable. No design exceptions.
-- **Files:** `src/`, `supabase/`, `scripts/demo/`, `scripts/seed/run.ts`, `scripts/verify/`, `.env.example`, `README.md`, `PROGRESS.md`
-- **Preferences learned:** Owner controls staff; customer signup; bottom demo selector uses isolated interactive data (README §8.1).
-- **Correction sweep:** Updated shared role types, operation checks, route/nav access, both login pages and legacy quick-login setup guidance.
-- **Rework:** None
-- **Follow-ups:** Restore DB access, bootstrap owner, configure demo, deploy and complete connected verification.
-
-
-### 2026-11-10: Added owner People screen and simulated access management (Codex)
-- **What:** Added owner-only directory, staff invitation form, role/location editing and invitation resend controls.
-- **Why:** The highest administrator must control who joins as admins, managers and other staff.
-- **How:** Trusted people endpoint for real accounts; demo directory and mutations remain in tab-local storage without emails or permission changes. Shared Glazed components provide loading, error, retry, empty and status states. Typecheck and design lint passed; connected browser checks remain pending. No design exceptions.
-- **Files:** `src/features/people/PeoplePage.tsx`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
-- **Preferences learned:** Owner controls staff access; interactive demos must not alter real permissions (README updates coordinated with parent).
-- **Correction sweep:** N/A; new People screen uses the shared owner role and trusted endpoint.
-- **Rework:** None
-- **Follow-ups:** Deploy endpoint, verify invitations and access edits in browser, and complete backend setup.
 
 
 ## Archive Index

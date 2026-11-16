@@ -1,4 +1,5 @@
 import { createClient, type User } from 'npm:@supabase/supabase-js@2.119.0';
+import { usernameFromEmail, USERNAME_DOMAIN } from '../_shared/identity.ts';
 import { assignableRoles, canManageAccount, canAssignAccountRole } from '../_shared/account-access.ts';
 
 // Service credentials never leave this function. Every request verifies a user JWT and the
@@ -47,7 +48,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     if (!body || typeof body !== 'object') return reply(400, { error: 'Provide an account action.' });
     const { action } = body;
-    if (!['list','invite','resend','set-role'].includes(action)) return reply(400, { error: 'Choose a supported account action.' });
+    if (!['list','invite','resend','set-role','reset-password'].includes(action)) return reply(400, { error: 'Choose a supported account action.' });
     if (action !== 'list' && Deno.env.get('DEMO_MODE') === 'true') {
       return reply(403, { error: 'Demo account changes are simulated in your browser. No real invitations are sent.' });
     }
@@ -56,10 +57,26 @@ Deno.serve(async (req: Request) => {
       if (profiles.error) throw profiles.error;
       const byId = new Map((profiles.data ?? []).map(p => [p.user_id, p]));
       return reply(200, { users: users.map(u => ({
-        ...byId.get(u.id), user_id: u.id, email: u.email ?? '',
+        ...byId.get(u.id), user_id: u.id, email: usernameFromEmail(u.email) ? '' : u.email ?? '', username: usernameFromEmail(u.email),
         role: byId.get(u.id)?.role ?? 'customer',
         status: u.email_confirmed_at ? 'active' : u.invited_at ? 'invited' : 'unconfirmed',
       })) });
+    }
+    if (action === 'reset-password') {
+      if (typeof body.user_id !== 'string') return reply(400, { error: 'Choose an account.' });
+      if (typeof body.password !== 'string' || body.password.length < 6) return reply(400, { error: 'Use a password with at least 6 characters.' });
+      const { data, error } = await admin.auth.admin.getUserById(body.user_id);
+      if (error || !data.user) return reply(404, { error: 'Account not found.' });
+      const profile = await admin.from('profiles').select('role').eq('user_id', body.user_id).single();
+      if (profile.error || !profile.data || !canManageAccount(caller.role, profile.data.role, identity.user.id, body.user_id)) return reply(403, { error: 'Your role cannot manage this account.' });
+      if (!usernameFromEmail(data.user.email)) return reply(400, { error: 'This account uses an email address. Request a password reset from sign in.' });
+      // Recheck access and record a reset attempt without secrets before contacting Auth.
+      // This authorization and the Auth update are separate transactions, as with invitations.
+      const authorized = await admin.rpc('_authorize_password_reset', { p_actor: identity.user.id, p_user: body.user_id });
+      if (authorized.error) return reply(403, { error: 'Your access changed. Refresh the directory and try again.' });
+      const updated = await admin.auth.admin.updateUserById(body.user_id, { password: body.password });
+      if (updated.error) return reply(400, { error: 'The password could not be saved. Choose another password and try again.' });
+      return reply(200, { message: 'Password saved. Share it privately with the account holder.' });
     }
     const redirectTo = new URL('/accept-invite', appUrl).toString();
     if (action === 'resend') {
@@ -68,6 +85,7 @@ Deno.serve(async (req: Request) => {
       if (error || !data.user?.email) return reply(404, { error: 'Account not found.' });
       const { data: profile, error: profileError } = await admin.from('profiles').select('role').eq('user_id', body.user_id).single();
       if (profileError || !profile || !canManageAccount(caller.role, profile.role, identity.user.id, body.user_id)) return reply(403, { error: 'Your role cannot manage this account.' });
+      if (usernameFromEmail(data.user.email)) return reply(400, { error: 'Username accounts do not use invitation emails. Edit their access in the directory.' });
       if (data.user.email_confirmed_at) return reply(400, { error: 'This account is already active. Use password recovery from sign in if needed.' });
       const authorized = await admin.rpc('_authorize_account_access', { p_actor: identity.user.id, p_user: body.user_id, p_role: profile.role });
       if (authorized.error) return reply(403, { error: 'Your access changed. Refresh the directory and try again.' });
@@ -88,6 +106,7 @@ Deno.serve(async (req: Request) => {
     if (action === 'invite') {
       if (typeof body.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) return reply(400, { error: 'Enter a valid email address.' });
       const email = body.email.trim().toLowerCase();
+      if (email.endsWith(`@${USERNAME_DOMAIN}`)) return reply(400, { error: 'Username accounts do not use invitation emails. Edit their access in the directory.' });
       target = (await allUsers()).find(u => u.email?.toLowerCase() === email);
       // Existing targets must be checked before any invitation email is sent.
       if (target) {

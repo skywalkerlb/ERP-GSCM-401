@@ -6,16 +6,17 @@ import ts from 'typescript';
 
 const source = readFileSync(new URL('../../supabase/functions/people/index.ts', import.meta.url), 'utf8');
 const shared = readFileSync(new URL('../../supabase/functions/_shared/account-access.ts', import.meta.url), 'utf8').replace(/export /g, '');
-const js = ts.transpileModule(shared + '\n' + source.replace(/^import .*from .*;$/gm, ''), {
+const identity = readFileSync(new URL('../../supabase/functions/_shared/identity.ts', import.meta.url), 'utf8').replace(/export /g, '');
+const js = ts.transpileModule(identity + '\n' + shared + '\n' + source.replace(/^import .*from .*;$/gm, ''), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
 }).outputText;
 
-function harness({ role = 'owner', demo = false, targetRole = 'customer', confirmed = true, rpcError = null, authorizationError = null, throwUpdate = false } = {}) {
+function harness({ role = 'owner', demo = false, targetRole = 'customer', confirmed = true, rpcError = null, authorizationError = null, throwUpdate = false, username = false, passwordError = null, throwPasswordUpdate = false } = {}) {
   let handler;
   const calls = [];
   const users = [
     { id: 'caller', email: 'owner@example.invalid', email_confirmed_at: '2026-11-10' },
-    { id: 'target', email: 'staff@example.invalid', email_confirmed_at: confirmed ? '2026-11-10' : null },
+    { id: 'target', email: username ? 'sample_user@users.glazed.invalid' : 'staff@example.invalid', email_confirmed_at: confirmed ? '2026-11-10' : null },
   ];
   const profiles = [
     { user_id: 'caller', role, full_name: 'Owner', home_location_id: null },
@@ -43,6 +44,7 @@ function harness({ role = 'owner', demo = false, targetRole = 'customer', confir
     auth: {
       getUser: async token => ({ data: { user: token === 'valid' ? users[0] : null }, error: token === 'valid' ? null : Error('invalid') }),
       admin: {
+        updateUserById: async (id, attributes) => { calls.push({ name: 'update-password', id, attributes }); if (throwPasswordUpdate) throw Error('Network failure'); return { error: passwordError }; },
         listUsers: async () => ({ data: { users }, error: null }),
         getUserById: async id => ({ data: { user: users.find(u => u.id === id) }, error: null }),
         inviteUserByEmail: async (email, opts) => {
@@ -103,7 +105,7 @@ test('existing owner cannot be modified', async () => {
 });
 test('demo rejects every mutation even for owner JWT', async () => {
   const h = harness({ demo: true });
-  for (const action of ['invite','resend','set-role']) assert.equal((await h.request({ action })).status, 403);
+  for (const action of ['invite','resend','set-role','reset-password']) assert.equal((await h.request({ action })).status, 403);
   assert.equal(h.calls.length, 0);
 });
 test('existing confirmed customer is promoted without duplicate invite', async () => {
@@ -178,4 +180,60 @@ test('thrown failure after email honestly reports uncertain assignment', async (
   assert.equal(result.status, 409);
   assert.equal(result.body.invitation_sent, true);
   assert.match(result.body.error, /could not be confirmed/);
+});
+
+test('username directory exposes username rather than internal Auth address', async () => {
+  const result = await harness({ username: true }).request({ action: 'list' });
+  assert.equal(result.body.users[1].username, 'sample_user');
+  assert.equal(result.body.users[1].email, '');
+});
+for (const role of roles) for (const targetRole of roles) {
+  test(`${role} resetting password for ${targetRole} follows the access hierarchy`, async () => {
+    const h = harness({ role, targetRole, username: true });
+    const result = await h.request({ action: 'reset-password', user_id: 'target', password: 'test-password-only' });
+    const allowed = grants[role].includes(targetRole);
+    assert.equal(result.status === 200, allowed);
+    assert.equal(h.calls.some(c => c.name === 'update-password'), allowed);
+    if (allowed) {
+      assert.deepEqual(h.calls.map(c => c.name), ['_authorize_password_reset', 'update-password']);
+      assert.equal(h.calls[0].args.p_actor, 'caller');
+      assert.equal(h.calls[0].args.p_user, 'target');
+      assert.equal(Object.hasOwn(h.calls[0].args, 'password'), false);
+      assert.equal(h.calls[1].attributes.password, 'test-password-only');
+    }
+  });
+}
+test('password reset rejects self, malformed input, legacy email and unknown target without changes', async () => {
+  for (const [input, status] of [
+    [{ user_id: 'caller', password: 'test-password-only' }, 403],
+    [{ user_id: 'target', password: 'short' }, 400],
+    [{ user_id: 'target', password: 123456 }, 400],
+    [{ password: 'test-password-only' }, 400],
+    [{ user_id: 'missing', password: 'test-password-only' }, 404],
+  ]) {
+    const h = harness({ username: true });
+    assert.equal((await h.request({ action: 'reset-password', ...input })).status, status);
+    assert.equal(h.calls.length, 0);
+  }
+  const legacy = harness();
+  assert.equal((await legacy.request({ action: 'reset-password', user_id: 'target', password: 'test-password-only' })).status, 400);
+  assert.equal(legacy.calls.length, 0);
+});
+test('password reset reauthorizes in the database before touching Auth', async () => {
+  const h = harness({ username: true, authorizationError: { code: '42501' } });
+  assert.equal((await h.request({ action: 'reset-password', user_id: 'target', password: 'test-password-only' })).status, 403);
+  assert.deepEqual(h.calls.map(c => c.name), ['_authorize_password_reset']);
+});
+test('failed and thrown Auth password changes never report success or echo secrets', async () => {
+  for (const options of [{ passwordError: { message: 'weak password' } }, { throwPasswordUpdate: true }]) {
+    const result = await harness({ username: true, ...options }).request({ action: 'reset-password', user_id: 'target', password: 'test-password-only' });
+    assert.equal(result.status, 400);
+    assert.doesNotMatch(JSON.stringify(result.body), /test-password-only/);
+  }
+});
+test('reserved username identifiers cannot receive invitation or resend emails', async () => {
+  const h = harness({ username: true, confirmed: false });
+  assert.equal((await h.request({ action: 'invite', email: 'sample_user@users.glazed.invalid', role: 'cashier' })).status, 400);
+  assert.equal((await h.request({ action: 'resend', user_id: 'target' })).status, 400);
+  assert.equal(h.calls.length, 0);
 });

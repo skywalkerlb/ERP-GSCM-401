@@ -288,7 +288,7 @@ try {
     });
     await page.goto(`${origin}/${role === "manager" ? "mrp" : "shop"}`);
     if (role === "customer") {
-      await page.getByLabel(/^Email/).fill("test@example.invalid");
+      await page.getByLabel(/^Username or email/).fill("test@example.invalid");
       await page.getByLabel(/^Password/).fill("test-only-password");
       await page.getByRole("button", { name: "Sign in", exact: true }).click();
     }
