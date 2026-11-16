@@ -1,6 +1,6 @@
 # Glazed ERP database contract (workstream B)
 
-The exact surface that the UI (`src/lib/rpc.ts`, `src/types/domain.ts`), the seed runner (`scripts/seed`) and the verify scripts code against. It describes what is in `supabase/migrations/20261109000001..16_*.sql`. If this file and the SQL disagree, the SQL wins; fix this file in the same change.
+The exact surface that the UI (`src/lib/rpc.ts`, `src/types/domain.ts`), the seed runner (`scripts/seed`) and the verify scripts code against. It describes the schema and RPCs in `supabase/migrations/`, including the dated MRP, BOM-consumption guard and customer-pickup migrations. If this file and the SQL disagree, the SQL wins; fix this file in the same change.
 
 Typed wrappers: `src/lib/rpc.ts` (`rpc.*`, `views.*`, `reports.*`) and `src/types/domain.ts`. Generated Postgres types: `src/types/db.ts` (after the project is linked).
 
@@ -83,7 +83,7 @@ Behavior notes
 - `complete_sale`/`fulfill_sales_order`: only at `kind = 'shop'` locations. Stock out per line at weighted average cost; `sale_lines.unit_cost/cogs_total` stored; journal Dr 1000 total, Dr 4200 discounts, Cr 4000 gross, Cr 2100 tax, Dr 5000 / Cr 1200 cogs. `channel = 'history_batch'` (with `ticket_count`) is honored only for system sessions; everyone else gets `pos`.
 - `fulfill_sales_order` uses the unit prices stored on the order, fails with the shortage list if stock is missing, sets `so_lines.qty_fulfilled`, status `fulfilled`, `sale_id`. Only `placed` orders.
 - `process_return`: location = the sale's shop. Restock puts stock back at the original sale cost (reverses the original ledger rows proportionally, so kits restore their components). Exchange creates a `channel='exchange'` sale in the same call; cash is netted by `net_due`.
-- `place_pickup_order`: `my_customer_id()` is the customer; pickup must be in the future and within 60 days; max 500 per line; prices read on the server; no stock is moved (allocation shows in `v_item_availability`).
+- `place_pickup_order`: `my_customer_id()` is the customer; pickup must be in the future and within 60 days at an active shop, on an open weekday and during opening hours in America/Denver (opening inclusive, closing exclusive; defaults 06:00–18:00 when unset). Maximum 500 units per item after aggregating duplicate item IDs; prices read on the server; no stock is moved (allocation shows in `v_item_availability`).
 
 ### 2.2 Stock
 | RPC | Params | Returns | Roles | Events |
@@ -141,7 +141,7 @@ Behavior notes
 Every table in section 6 is readable by staff. PostgREST embeds follow the foreign keys (for example `purchase_orders?select=*,suppliers(name),po_lines(*,items(name))`). Costs live in `item_costs` and `inventory_transactions`, so customers cannot see them.
 
 ### 3.2 `get_catalog_availability()` (definer function; customers use this)
-Columns: `location_id, location_code, location_name, item_id, sku, name, category, list_price, available_qty, in_stock, est_available_date`. Shops only, sellable active items, fresh stock minus open sales-order allocation (never negative; kits = scarcest component). No costs.
+Columns: `location_id, location_code, location_name, item_id, sku, name, category, list_price, available_qty, in_stock, est_available_date`. Shops only, sellable active items, fresh stock minus outstanding confirmed reservations (never negative). Direct non-kit orders reserve the item; kit orders reserve each BOM component, shared across every kit and direct component sale. Kit availability is the floored capacity of the scarcest free fresh component. Day-old stock is excluded from pickup availability; unavailable items show an estimated date no earlier than tomorrow. No costs.
 
 ### 3.3 Inventory
 **`v_item_availability`** (item x active location, all items): `item_id, sku, name, category, item_type, uom, location_id, location_code, location_name, location_kind, on_hand, on_hand_fresh, on_hand_day_old, allocated, available, backordered, on_order, reorder_point, est_available_date`.
@@ -168,8 +168,8 @@ Columns: `location_id, location_code, location_name, item_id, sku, name, categor
 
 **`mrp_weekly(p_start date = today, p_weeks int = 4 (1..26), p_include_forecast boolean = false)`** (invoker; long format, one row per item x week, only items with gross demand in the horizon): `item_id, sku, item_name, uom, supplier_id, supplier_name, lead_time_days, pack_size, week_no, week_start, week_end, beginning_on_hand, gross_req, scheduled_receipts, net_req, planned_order_qty, projected_on_hand, requirement_date, order_by_date, is_expedite`.
 - Items: purchasable items, from `placed` sales-order qty (BOM-exploded; past-due orders count in week 1) plus, optionally, the newest forecast run x qty_per. `beginning_on_hand` of week 1 = company-wide on hand.
-- `net_req = max(0, gross - (beginning_on_hand + scheduled_receipts))`; `planned_order_qty = ceil_pack(net_req)`; `projected_on_hand = beginning + receipts + planned - gross` (carries into the next week). Scheduled receipts = remaining qty on `sent` POs by `expected_on` week (overdue lines land in week 1).
-- `requirement_date` = first demand date in the week not covered by carried-in stock and receipts; `order_by_date = requirement_date - lead_time_days`; `is_expedite` when `order_by_date < today`.
+- `net_req = max(0, max_d(cumulative_gross_through_d - cumulative_receipts_through_d) - beginning_on_hand)` within each week; `planned_order_qty = ceil_pack(net_req)`; `projected_on_hand = beginning + receipts + planned - gross` carries into the next week. This preserves shortages before late same-week receipts. Scheduled receipts are `qty_ordered - qty_received - qty_cancelled` on `sent` POs, using the line expected date (header fallback); overdue dates land on the horizon start. Undated receipts are not assumed available.
+- `requirement_date` = first demand date in the week not covered by carried-in stock and receipts due by that date; `order_by_date = requirement_date - items.lead_time_days` (calendar days); `is_expedite` when `order_by_date < today`. Planned supply is assumed available by the first shortage. This is single-level, company-wide planning; it does not schedule transfers or nested assemblies. Forecast is opt-in; PO creation on the Material planning screen requires confirmed-demand mode.
 
 **`replenish_suggestions(p_use_rop = true, p_use_mrp = true, p_horizon_days = 7)`** (invoker, what `auto_replenish` would order): `item_id, sku, name, uom, supplier_id, supplier_name, qty, unit_cost, line_total, source ('rop'|'mrp'|'rop+mrp'), rop_qty, mrp_qty, order_by_date, urgency, has_open_draft`.
 
@@ -249,7 +249,10 @@ Ledger, document and GL tables have **no INSERT/UPDATE/DELETE policies and no wr
 
 ## 8. Verification
 
+MRP regressions: `scripts/seed/node_modules/.bin/tsx --test scripts/verify/mrp.test.ts`. On a migrated disposable PostgreSQL database, run `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/verify/mrp_planning.sql` and the same command with `scripts/verify/bom_consumption.sql`. These SQL suites create transaction-local fixtures and roll back. Also run the same psql command with `scripts/verify/customer_portal.sql` for customer signup role isolation, location-specific catalog allocations, owned pickup orders feeding MRP, future backorders, business hours, aggregate limits and anonymous denial. `npm run test:browser` exercises the UI against mocked API responses, including customer sign-in, per-shop stock, pickup confirmation, failed availability and stale cart items in both themes. They cover five BOM parents, partial fulfillment, receipt timing/status, lead-time offsets, four-week boundaries, stock carryover, atomic production/kit consumption, missing-recipe rejection and function permissions. Trigger guards reject kit sale lines without a BOM and production transitions to `in_progress` without a current recipe. Internal guard functions are not API-callable.
+
 `node scripts/verify/run.mjs [--no-rls] [--skip-data]` runs `scripts/verify/assertions.sql` (one query per check, passes when it returns no rows), `scripts/verify/rls_tests.sql` and `scripts/verify/access_security.sql` (role/access tests inside rolled-back transactions). Checks cover: ledger = balances = `item_costs` = GL 1200; journals balance; no negative stock; AP = GL 2000; GL 4000/4100/4200/5000/2100/1000 tie to the document tables; WIP = value issued to in-progress orders; document totals; reference data; minimum data volumes; scorecard has keep/watch/replace; MRP has a planned order; RLS on every table; no write policies on protected tables; `anon`/`public` cannot execute; helpers not executable by users; functions pin `search_path`; views are `security_invoker`; realtime publishes only `app_events` and `profiles`.
+
 
 
 ## 9. Delegated account access (2026-11-12)

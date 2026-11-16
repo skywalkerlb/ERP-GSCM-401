@@ -4,28 +4,39 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** GitHub main contains published implementation commit `4a9b815`, verified through GitHub API and git ls-remote. The repository is public, main is unprotected, rulesets are empty and the authenticated account has push permission. Git checks are advisory; pull is exempt from AI read gating. Signup and delegated access implementation is complete locally; live rollout is blocked by credentials. Approved hierarchy: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer, across all shops. Confirmation is required for new customers. Existing public demo remains isolated and its data is preserved.
-- Current checks: build/typecheck/design lint pass; 285 local auth/endpoint/demo/navigation/People UI/form tests pass. Exact migration, 35 non-data assertions, 6 browser sequence-permission probes and the complete signup/hierarchy/audit SQL suite pass against actual demo Postgres in one rolled-back transaction (5 data-dependent checks skipped). No demo data/schema changes persisted.
-- Persistent database rejects saved password (28P01); Supabase CLI has no login. Public hosted settings confirm signup enabled and confirmation required, but profiles/locations return PGRST205 (missing from API schema). Persistent signup/email remains unverified. CUA browser automation fails internally (`timeoutMs`), so both-theme visual checks remain unavailable.
-- Preserve existing local sidebar punctuation change and documentation history. Demo seed reproducibility remains a known follow-up (48 skipped events, 19 quantity differences).
+**As of 2026-11-16.** MRP and customer-facing ERP implementations completed for the requested rubrics. The four-week confirmed-order planner now nets components by requirement/receipt date, carries stock forward, rounds suggested quantities to packs and offsets order-by dates by component lead times. The Material planning screen lists parent BOMs, per-unit quantities and lead times; the seed catalog has nine parents. Production and kit-sale guards prevent missing recipes from bypassing component consumption. The customer portal supports sign-in, inventory quantities by shop and pickup ordering; checkout handles unavailable data/items explicitly, and the server enforces shop hours, closed days and aggregate per-item limits.
+
+- New migrations and rollback SQL tests pass on an isolated PostgreSQL 17 database with all repository migrations applied. 293 TypeScript/Node MRP/catalog/access/auth tests pass; frontend build/typecheck and design lint pass. Browser integration checks with mocked API responses pass for both themes, MRP drivers and customer sign-in → stock locations → pickup confirmation, plus availability failure and stale-cart handling. All 36 applicable existing non-data SQL assertions pass; six data-dependent checks were not run on the empty fixture database. No new design exceptions; the approved sidebar punctuation exception is retained.
+- Integrated upstream `a9bb412` signup/delegated-access and advisory Git-hook changes. Owner/admin/manager account hierarchy and customer email confirmation remain intact. Hosted SMTP, Auth redirect and controlled-inbox checks remain pending as recorded upstream.
+- Hosted changes have not been deployed or migrated. Existing demo/persistent backends were not modified or reset. Persistent backend credential and owner setup remain unresolved from the prior handoff.
+- Existing demo data remains subject to the previously recorded interrupted replay: 48 skipped historical events and 19 simulator quantity differences. No replay is running.
 
 ## In-flight Work
-- Publishing the requested hook policy changes; hosted application/backend rollout remains pending.
-- Waiting for corrected local DB password, Supabase login and controlled inbox/owner email before live configuration and verification. No persistent changes have been made.
+- Implementation and local verification complete; draft pull request prepared for review.
+- No seed replay or hosted database change in progress.
 
 ## Next Steps
-1. Restore persistent DB access and Supabase CLI login; then inspect migrations and apply without resets.
-2. Inspect/configure hosted SMTP and exact Auth redirects, bootstrap the confirmed owner and deploy backend then frontend.
-3. Verify hosted signup, confirmation, recovery and invitations using a controlled inbox; complete both-theme browser checks once CUA works.
-4. Preserve existing demo data; address seed reproducibility only under a future explicit request.
+1. Apply all three `20261116` migrations to the chosen hosted backend and deploy the reviewed frontend; no data reset is needed.
+2. Verify hosted Material planning and customer sign-in/pickup against the selected backend, including Auth email confirmation and realtime updates.
+3. Preserve the current demo dataset; review seed retry/state handling before any separately requested clean replay.
+4. Complete persistent-backend credential, owner and Auth redirect setup when configured access is available.
 
 ## Open Questions for the User
-- No input is needed for Git synchronization; contributors need their own authenticated account with write access. Existing rollout questions follow.
-- Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
-- Correct the persistent database password locally and run `supabase login`, then confirm readiness. Never paste credentials in chat.
+- Which confirmed signup email should own the persistent ERP account? Never send passwords in chat.
+- Has the persistent database password been corrected locally and Supabase login restored? Which controlled inbox can verify hosted confirmation/recovery?
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Completed MRP and customer pickup workflows (Codex)
+- **What:** Extended four-week MRP with dated netting/BOM overview and consumption guards; completed customer pickup validation, fresh-stock reservations and checkout availability safeguards.
+- **Why:** Meet both requested ERP rubrics: component planning/consumption and customer login, inventory locations and pickup ordering.
+- **How:** Added three forward-only migrations; preserved RPC shapes/security; aligned seed preview; validated pickup hours/limits and prevented silent partial checkout. Three PostgreSQL rollback suites, 36 existing non-data SQL assertions, 293 TS/Node regressions, build/typecheck, design lint and both-theme browser checks pass. Browser uses mocked APIs; hosted verification pending. No new design exceptions; preserved the approved sidebar punctuation.
+- **Files:** `src/features/mrp/`, `src/features/portal/`, `src/lib/realtimeTopics.ts`, `scripts/seed/mrp.ts`, `scripts/verify/`, three `20261116` migrations, `package*.json`, `supabase/CONTRACT.md`, `README.md`, `PROGRESS.md`, progress archive.
+- **Preferences learned:** None; existing Glazed and database-preservation rules retained.
+- **Correction sweep:** N/A; new feature request.
+- **Rework:** Existing recipe, consumption and planning infrastructure reused; corrected same-week receipt timing, stale MRP caches and day-old/shared-kit reservation overstatements; integrated concurrent signup/access changes.
+- **Follow-ups:** Hosted migrations/deployment and connected verification; persistent backend setup and seed replay limitations above.
+
 ### 2026-11-16: Remove project hook barriers to Git synchronization (Codex)
 - **What:** Made commit checks advisory, exempted pull from AI read gating and aligned every AI instruction file with unblocked synchronization.
 - **Why:** The user explicitly requested that hooks never block GitHub pulls or pushes.
@@ -120,17 +131,6 @@
 - **Correction sweep:** N/A; new People screen uses the shared owner role and trusted endpoint.
 - **Rework:** None
 - **Follow-ups:** Deploy endpoint, verify invitations and access edits in browser, and complete backend setup.
-
-
-### 2026-11-10: Added login choices and account recovery (Codex)
-- **What:** Added customer signup links, confirmation resend, password recovery/update screens and a demo role dropdown at the bottom of both login pages.
-- **Why:** Users need clear account creation and role preview options, with useful sign-in errors.
-- **How:** Extended roles with owner/admin, separated profile failures from missing profiles, handled thrown errors and loading completion, and reused Glazed components. No design exceptions.
-- **Files:** `src/app/AuthPages.tsx`, `src/hooks/useAuth.tsx`, `PROGRESS.md`
-- **Preferences learned:** Public signup creates customers; staff access comes from the owner; login includes a bottom demo selector (README §8.1).
-- **Correction sweep:** Replaced legacy quick-login buttons on both staff and customer login screens; shared auth behavior applies throughout the app.
-- **Rework:** None
-- **Follow-ups:** Finish backend access setup, verify integrated build/browser behavior, configure Auth redirects and isolated demo credentials.
 
 
 ## Archive Index

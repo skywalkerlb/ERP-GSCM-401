@@ -22,7 +22,7 @@ function Availability({ row, shopName }: { row: CatalogRow | undefined; shopName
       ) : (
         <span className="gz-row" style={{ gap: 'var(--space-2)', flexWrap: 'nowrap' }}>
           <Badge tone="warning">Sold out</Badge>
-          <span className="text-caption gz-muted">ready {formatDate(row.est_available_date)}</span>
+          <span className="text-caption gz-muted">estimated restock {formatDate(row.est_available_date)}</span>
         </span>
       )}
     </li>
@@ -93,7 +93,7 @@ export default function PortalHomePage() {
             <Skeleton key={i} variant="block" />
           ))}
         </div>
-      ) : shown.length === 0 ? (
+      ) : catalogQ.isError ? null : shown.length === 0 ? (
         <EmptyState
           icon="store"
           title={items.length === 0 ? 'The shelves are being stocked' : 'Nothing matches that'}
@@ -138,7 +138,7 @@ export default function PortalHomePage() {
                       <span className="text-body-sm gz-muted">in your cart</span>
                     </>
                   ) : (
-                    <Button icon="plus" onClick={() => pickup(item)} aria-label={`Add ${item.name} to cart`}>
+                    <Button icon="plus" disabled={catalogQ.isError} onClick={() => pickup(item)} aria-label={`Add ${item.name} to cart`}>
                       Add to cart
                     </Button>
                   )}
