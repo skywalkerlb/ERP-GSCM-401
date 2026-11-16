@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase, isDemo, exitDemo } from '@/lib/supabase';
 import { queryClient } from '@/lib/queryClient';
+import { USERNAME_PATTERN, normalizeUsername, usernameEmail } from '../../supabase/functions/_shared/identity';
 
 export type AppRole = 'owner' | 'admin' | 'manager' | 'cashier' | 'baker' | 'customer';
 export interface Profile {
@@ -12,14 +13,13 @@ export interface Profile {
   customer_id: number | null;
 }
 export interface AuthResult { error?: string }
-export function signupFieldErrors(input: { email: string; password: string; fullName: string }): Partial<Record<'email' | 'password' | 'fullName', string>> {
+export function signupFieldErrors(input: { username: string; password: string }): Partial<Record<'username' | 'password', string>> {
   return {
-    ...(!input.fullName.trim() ? { fullName: 'Enter your full name.' } : {}),
-    ...(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim()) ? { email: 'Enter a valid email address.' } : {}),
+    ...(!USERNAME_PATTERN.test(normalizeUsername(input.username)) ? { username: 'Use 3–30 letters, numbers or underscores.' } : {}),
     ...(input.password.length < 6 ? { password: 'Use a password with at least 6 characters.' } : {}),
   };
 }
-export function validateSignup(input: { email: string; password: string; fullName: string }): string | null {
+export function validateSignup(input: { username: string; password: string }): string | null {
   return Object.values(signupFieldErrors(input))[0] ?? null;
 }
 export interface AuthContextValue {
@@ -28,8 +28,8 @@ export interface AuthContextValue {
   profile: Profile | null;
   profileError: string | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<AuthResult & { profile?: Profile | null }>;
-  signUp: (input: { email: string; password: string; fullName: string }) => Promise<AuthResult & { needsConfirmation?: boolean }>;
+  signIn: (identifier: string, password: string) => Promise<AuthResult & { profile?: Profile | null }>;
+  signUp: (input: { username: string; password: string }) => Promise<AuthResult & { profile?: Profile | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<Profile | null>;
 }
@@ -40,18 +40,18 @@ export function friendlyAuthError(error: unknown): string {
   const value = error as { code?: string; message?: string } | null;
   const message = value?.message ?? '';
   switch (value?.code) {
-    case 'invalid_credentials': return 'That email and password do not match. Check both or reset your password.';
-    case 'email_not_confirmed': return 'Confirm your email first. Check your inbox for the confirmation link.';
-    case 'user_already_exists': case 'email_exists': return 'An account with that email already exists. Sign in instead.';
+    case 'invalid_credentials': return 'That username or email and password do not match. Check both or reset your password.';
+    case 'email_not_confirmed': return 'Account setup is incomplete. Ask the platform owner to finish account setup, then try signing in again.';
+    case 'user_already_exists': case 'email_exists': return 'That account already exists. Sign in instead or choose another username.';
     case 'over_request_rate_limit': case 'over_email_send_rate_limit': return 'Too many attempts. Wait a minute and try again.';
     case 'weak_password': return 'Use a password with at least 6 characters.';
     case 'PGRST205': case '42P01': return 'Account setup is unavailable. Ask the platform owner to finish backend setup, then try again.';
     case '42501': return 'Your account profile could not be loaded. Ask the platform owner to check your access.';
   }
   const m = message.toLowerCase();
-  if (m.includes('invalid login')) return 'That email and password do not match. Check both or reset your password.';
-  if (m.includes('email not confirmed')) return 'Confirm your email first. Check your inbox for the confirmation link.';
-  if (m.includes('already registered')) return 'An account with that email already exists. Sign in instead.';
+  if (m.includes('invalid login')) return 'That username or email and password do not match. Check both or reset your password.';
+  if (m.includes('email not confirmed')) return 'Account setup is incomplete. Ask the platform owner to finish account setup, then try signing in again.';
+  if (m.includes('already registered')) return 'That account already exists. Sign in instead or choose another username.';
   if (m.includes('rate limit')) return 'Too many attempts. Wait a minute and try again.';
   if (m.includes('fetch') || m.includes('network')) return 'Could not reach the server. Check your connection and try again.';
   return 'The request could not be completed. Try again, or ask the platform owner for help.';
@@ -140,9 +140,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { active = false; window.clearInterval(interval); window.removeEventListener('focus', onFocus); void supabase.removeChannel(channel); };
   }, [userId, applyProfile]);
 
-  const signIn = useCallback<AuthContextValue['signIn']>(async (email, password) => {
+  const signIn = useCallback<AuthContextValue['signIn']>(async (identifier, password) => {
+    const value = identifier.trim();
+    if (!value || !password) return { error: 'Enter your username and password.' };
+    if (!value.includes('@') && !USERNAME_PATTERN.test(normalizeUsername(value))) return { error: 'Enter your username or existing account email.' };
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: value.includes('@') ? value : usernameEmail(value), password });
       if (error) return { error: friendlyAuthError(error) };
       const next = data.user ? await fetchProfileWithRetry(data.user.id) : null;
       setSession(data.session);
@@ -152,17 +155,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { profile: next };
     } catch (error) { return { error: friendlyAuthError(error) }; }
   }, [applyProfile]);
-  const signUp = useCallback<AuthContextValue['signUp']>(async ({ email, password, fullName }) => {
-    const invalid = validateSignup({ email, password, fullName });
+  const signUp = useCallback<AuthContextValue['signUp']>(async ({ username, password }) => {
+    const invalid = validateSignup({ username, password });
     if (invalid) return { error: invalid };
     if (isDemo) return { error: 'Exit the demo before creating your account.' };
     try {
-      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password,
-        options: { emailRedirectTo: `${window.location.origin}/login`, data: { full_name: fullName.trim() } } });
+      const normalized = normalizeUsername(username);
+      const { data, error } = await supabase.auth.signUp({ email: usernameEmail(normalized), password,
+        options: { data: { username: normalized, full_name: normalized } } });
       if (error) return { error: friendlyAuthError(error) };
-      return { needsConfirmation: !data.session };
+      if (!data.session || !data.user) return { error: 'Account setup is incomplete. Ask the platform owner to finish account setup, then try signing in again.' };
+      // Establish the session even if profile loading fails, so account setup can be retried.
+      setSession(data.session);
+      const next = await fetchProfileWithRetry(data.user.id);
+      applyProfile(next);
+      setCheckedUserId(data.user.id);
+      setProfileError(next ? null : 'Your account was created, but its profile is unavailable. Try signing in again.');
+      return next ? { profile: next } : { error: 'Your account was created, but its profile is unavailable. Try signing in again.' };
     } catch (error) { return { error: friendlyAuthError(error) }; }
-  }, []);
+  }, [applyProfile]);
   const signOut = useCallback(async () => {
     if (isDemo) { await exitDemo(); return; }
     const { error } = await supabase.auth.signOut();

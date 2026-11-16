@@ -61,7 +61,7 @@ function AuthFrame({ title, subtitle, children }: { title: string; subtitle: str
             {subtitle}
           </p>
         </div>
-        <Card>{linkError && <Alert tone="warning" title="This email link could not be used">The link may have expired or already been used. Request a new confirmation email from sign in, or request a new password reset link.</Alert>}{children}</Card>
+        <Card>{linkError && <Alert tone="warning" title="This email link could not be used">The link may have expired or already been used. Sign in with your username and password, or request a new password reset link for an existing email account.</Alert>}{children}</Card>
       </div>
     </div>
   );
@@ -95,7 +95,6 @@ function SignInForm() {
   const { signIn, profileError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [notice, setNotice] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -113,16 +112,6 @@ function SignInForm() {
     finally { setBusy(false); }
   }
 
-  async function resendConfirmation() {
-    setBusy(true); setError(''); setNotice('');
-    try {
-      const { error: failure } = await supabase.auth.resend({ type: 'signup', email: email.trim(), options: { emailRedirectTo: `${window.location.origin}/login` } });
-      if (failure) throw failure;
-      setNotice('If your account needs confirmation, a link has been sent. Check your inbox.');
-    } catch (cause) { setError(friendlyAuthError(cause)); }
-    finally { setBusy(false); }
-  }
-
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     void submit(email, password);
@@ -132,15 +121,13 @@ function SignInForm() {
     <>
       <form className="auth-form" onSubmit={onSubmit} noValidate>
         {(error || profileError) && <Alert tone="danger" title="Could not sign in">{error || profileError}</Alert>}
-        {notice && <Alert tone="info" title="Check your email">{notice}</Alert>}
-        <TextField label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <TextField label="Username or email" autoComplete="username" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} required />
         <TextField label="Password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <Button type="submit" variant="primary" size="lg" disabled={busy || !email || !password}>
           {busy ? 'Signing in' : 'Sign in'}
         </Button>
       </form>
       <p className="auth-foot text-body-sm"><Link className="gz-link" to="/forgot-password">Reset your password</Link></p>
-      <Button variant="ghost" disabled={busy || !email.trim() || isDemo} onClick={() => void resendConfirmation()}>Resend confirmation email</Button>
     </>
   );
 }
@@ -186,15 +173,14 @@ export function PortalLoginPage() {
   );
 }
 
-/** Customer sign up at /shop/signup. A database trigger gives the new account a customer profile. */
+/** Username signup creates a customer and immediately opens the shop. */
 export function PortalSignupPage() {
   const { signUp } = useAuth();
   const redirect = useRedirectIfSignedIn();
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ReturnType<typeof signupFieldErrors>>({});
   if (redirect) return <>{redirect}</>;
@@ -202,41 +188,30 @@ export function PortalSignupPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
-    const invalid = signupFieldErrors({ email, password, fullName });
+    const invalid = signupFieldErrors({ username, password });
     setFieldErrors(invalid);
     if (Object.keys(invalid).length) return;
     setBusy(true);
     try {
-      const result = await signUp({ email, password, fullName });
+      const result = await signUp({ username, password });
       if (result.error) setError(result.error);
-      else if (result.needsConfirmation) setNotice('If this is a new email address, check your inbox for a confirmation link, then sign in. If you already have an account, sign in or reset your password. New accounts receive customer access; an administrator or manager can grant staff access.');
+      else if (result.profile) navigate(destination(result.profile, undefined), { replace: true });
     } catch (cause) { setError(friendlyAuthError(cause)); }
     finally { setBusy(false); }
   }
 
   return (
-    <AuthFrame title="Create your account" subtitle="Create a customer account to order ahead. Administrators and managers grant staff access.">
-      {notice ? (
-        <Alert tone="info" title="Check your email">
-          {notice}
-        </Alert>
-      ) : (
-        <form className="auth-form" onSubmit={onSubmit} noValidate>
-          {error && <Alert tone="danger" title="Could not create the account">{error}</Alert>}
-          <TextField label="Full name" autoComplete="name" error={fieldErrors.fullName} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-          <TextField label="Email" type="email" autoComplete="email" error={fieldErrors.email} value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <TextField label="Password" type="password" autoComplete="new-password" error={fieldErrors.password} hint="At least 6 characters." value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <Button type="submit" variant="primary" size="lg" disabled={busy || !fullName.trim() || !email.trim() || !password || isDemo}>
-            {busy ? 'Creating account' : 'Create account'}
-          </Button>
-        </form>
-      )}
-      <p className="auth-foot text-body-sm">
-        Already have an account?{' '}
-        <Link className="gz-link" to="/shop/login">
-          Sign in
-        </Link>
-      </p>
+    <AuthFrame title="Create your account" subtitle="Choose a username and password. No email needed.">
+      <form className="auth-form" onSubmit={onSubmit} noValidate>
+        {error && <Alert tone="danger" title="Could not create the account">{error}</Alert>}
+        <TextField label="Username" autoComplete="username" autoCapitalize="none" spellCheck={false} error={fieldErrors.username} hint="3–30 letters, numbers or underscores. Uppercase and lowercase count as the same username." value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <TextField label="Password" type="password" autoComplete="new-password" error={fieldErrors.password} hint="At least 6 characters." value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Button type="submit" variant="primary" size="lg" disabled={busy || !username.trim() || !password || isDemo}>
+          {busy ? 'Creating account' : 'Create account'}
+        </Button>
+      </form>
+      <p className="auth-foot text-body-sm">Your account starts with customer access. An administrator or manager can grant staff access.</p>
+      <p className="auth-foot text-body-sm">Already have an account? <Link className="gz-link" to="/shop/login">Sign in</Link></p>
     </AuthFrame>
   );
 }
@@ -256,7 +231,8 @@ export function PasswordRecoveryPage() {
     } catch (cause) { setError(friendlyAuthError(cause)); }
     finally { setBusy(false); }
   }
-  return <AuthFrame title="Reset your password" subtitle="We will send you a link to choose a new password.">
+  return <AuthFrame title="Reset your password" subtitle="For a username account, ask your manager or administrator to reset your password.">
+    <p className="gz-muted text-body-sm">Already have an email account? Enter its email below to receive a reset link.</p>
     {sent ? <Alert tone="info" title="Check your email">If an account exists for that email, a reset link has been sent.</Alert> :
       <form className="auth-form" onSubmit={submit}>
         {error && <Alert tone="danger" title="Could not send the link">{error}</Alert>}

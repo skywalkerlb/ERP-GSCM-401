@@ -4,28 +4,57 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** GitHub main contains published implementation commit `4a9b815`, verified through GitHub API and git ls-remote. The repository is public, main is unprotected, rulesets are empty and the authenticated account has push permission. Git checks are advisory; pull is exempt from AI read gating. Signup and delegated access implementation is complete locally; live rollout is blocked by credentials. Approved hierarchy: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer, across all shops. Confirmation is required for new customers. Existing public demo remains isolated and its data is preserved.
-- Current checks: build/typecheck/design lint pass; 285 local auth/endpoint/demo/navigation/People UI/form tests pass. Exact migration, 35 non-data assertions, 6 browser sequence-permission probes and the complete signup/hierarchy/audit SQL suite pass against actual demo Postgres in one rolled-back transaction (5 data-dependent checks skipped). No demo data/schema changes persisted.
-- Persistent database rejects saved password (28P01); Supabase CLI has no login. Public hosted settings confirm signup enabled and confirmation required, but profiles/locations return PGRST205 (missing from API schema). Persistent signup/email remains unverified. CUA browser automation fails internally (`timeoutMs`), so both-theme visual checks remain unavailable.
-- Preserve existing local sidebar punctuation change and documentation history. Demo seed reproducibility remains a known follow-up (48 skipped events, 19 quantity differences).
+**As of 2026-11-16.** Username/password-only signup is implemented and verified locally, and prepared for the user-requested GitHub publication from main (base `a9bb412`). Signup has two fields, signs customers in immediately when hosted confirmation is disabled, and requires no contact email. Both login screens accept usernames and existing email accounts. People displays usernames and offers protected lower-level username password resets. Existing role hierarchy and isolated demo behavior remain in place.
+- Final verification: 326 JavaScript tests plus 4 TypeScript role/reset-guard tests pass; build/design lint/diff checks pass, and the final TypeScript check exited successfully after integration. Exact pending delegated-access and username migrations plus the complete signup/hierarchy/username/reset audit SQL suite pass against actual demo Postgres in one rolled-back transaction. No demo schema or data changes persisted.
+- Hosted rollout is blocked: persistent database rejects saved password (`28P01`), Supabase CLI has no login token, and hosted public settings still report email confirmation required. No persistent Auth settings, schema, accounts or deployments changed. Earlier missing persistent API schema remains unresolved.
+- Both-theme visual checks remain unavailable: CUA tab creation fails internally (`timeoutMs`). Components and theme tokens were reviewed against Glazed docs/reference images; no design exceptions were introduced.
+- Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Publishing the requested hook policy changes; hosted application/backend rollout remains pending.
-- Waiting for corrected local DB password, Supabase login and controlled inbox/owner email before live configuration and verification. No persistent changes have been made.
+- Publishing the verified username signup changes to GitHub at the user's request. Hosted configuration, migrations, endpoint/frontend deployment and end-to-end signup verification await working Supabase credentials. The temporary verification server has been stopped.
 
 ## Next Steps
-1. Restore persistent DB access and Supabase CLI login; then inspect migrations and apply without resets.
-2. Inspect/configure hosted SMTP and exact Auth redirects, bootstrap the confirmed owner and deploy backend then frontend.
-3. Verify hosted signup, confirmation, recovery and invitations using a controlled inbox; complete both-theme browser checks once CUA works.
-4. Preserve existing demo data; address seed reproducibility only under a future explicit request.
+1. Finish the GitHub push and verify remote main matches the new commit. Restore hosted access by correcting the persistent database password locally and running `supabase login`; inspect hosted migration history without resetting data.
+2. Apply ordered migrations, disable hosted Confirm email, bootstrap the owner if needed, deploy People, then deploy the frontend together with matching backend changes. Preserve existing accounts and demo data.
+3. Verify hosted username signup → immediate shop access → sign-out/login, existing email login/recovery and authorized username password reset; finish both-theme browser review once CUA works.
+4. Configure SMTP only for legacy recovery/staff email invitations; address seed reproducibility only under a future explicit request.
 
 ## Open Questions for the User
-- No input is needed for Git synchronization; contributors need their own authenticated account with write access. Existing rollout questions follow.
-- Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
-- Correct the persistent database password locally and run `supabase login`, then confirm readiness. Never paste credentials in chat.
+- No input is needed for the GitHub push. Hosted rollout needs a working local persistent database password and completed `supabase login`. Never paste credentials in chat.
+- Which existing account should own the persistent ERP if it has not been bootstrapped? Username signup needs no inbox.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Publish simplified username signup to GitHub (Codex)
+- **What:** Prepared all 17 changed files for a commit and direct push to GitHub main.
+- **Why:** User requested pushing the completed work to GitHub.
+- **How:** Confirmed remote main matches local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
+- **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Verify push; hosted rollout and browser visual checks remain pending backend access and working browser automation.
+
+### 2026-11-16: Add protected username password resets (Codex)
+- **What:** Added username display and authorized password resets to People; username accounts never receive invitation emails.
+- **Why:** Username-only accounts need a recovery path without email verification.
+- **How:** Shared identity helper; existing hierarchy checks; service-only reset-attempt authorization/audit before Auth updates. Passwords stay out of storage and audit. 286 People tests pass within 330 total local tests; final typecheck, build, design lint and diff checks pass. Existing Glazed components and theme tokens only; no design exceptions. Browser visual review is blocked by the CUA tab-creation error; integrated rollback SQL security checks pass. Final handoff reconciled after the documentation reminder.
+- **Files:** People endpoint/UI, shared identity helper, People endpoint/UI tests, PROGRESS.md and progress archive.
+- **Preferences learned:** Username accounts require no email verification; record centrally in README with the main signup change.
+- **Correction sweep:** Checked People invitations, resend, directory labels, reset controls and demo simulation; updated two runtime surfaces and shared identity handling.
+- **Rework:** None.
+- **Follow-ups:** Complete hosted rollout and browser verification when access is restored.
+
+### 2026-11-16: Simplify account creation to username and password (Codex)
+- **What:** Replaced email-confirmed signup with username/password signup and immediate customer access; retained existing email logins.
+- **Why:** User requested simple account creation without email verification and approved implementation.
+- **How:** Shared normalized identity, Glazed two-field form and immediate sessions; immutable usernames and no matching-email customer claims. 330 local tests, build/typecheck/design lint and exact migration/security SQL checks pass (demo transaction rolled back). Fixed test fixture owner collision. Visible labels, one primary action, standard focus styles/status tones and both-theme tokens reviewed; no design exceptions. Browser visuals blocked by CUA. Hosted DB password rejected; confirmation remains enabled.
+- **Files:** Auth pages/provider, shared identity, Supabase configuration/migration, People reset controls, verification tests and current documentation.
+- **Preferences learned:** Signup requires only username/password; no email verification (README §8.1).
+- **Correction sweep:** Swept confirmation/signup/name requirements across shared auth, both logins, signup, local config, People, current backend functions, tests and 3 current docs; historical logs/migrations preserved.
+- **Rework:** Replaces the previously approved email-confirmation flow.
+- **Follow-ups:** Restore Supabase access, apply migrations/settings, deploy backend and frontend, and finish hosted/browser checks.
+
 ### 2026-11-16: Remove project hook barriers to Git synchronization (Codex)
 - **What:** Made commit checks advisory, exempted pull from AI read gating and aligned every AI instruction file with unblocked synchronization.
 - **Why:** The user explicitly requested that hooks never block GitHub pulls or pushes.
@@ -98,39 +127,6 @@
 - **Correction sweep:** Shared selector covers both login pages; role verification prevents incorrect account landing.
 - **Rework:** Previous demo selector existed without configured backend; provisioning now attempted.
 - **Follow-ups:** Finish provisioning, seed, verify all roles and deploy frontend settings.
-
-
-### 2026-11-10: Integrated and verified account access implementation (Codex)
-- **What:** Completed local login choices, recovery/invitation routes, People access, owner/admin permissions and demo isolation/reset setup.
-- **Why:** Implement the approved plan while preserving the persistent backend.
-- **How:** Separate demo project/storage; guarded reset tools; owner-only service endpoint and database protection. Build/typecheck/design lint passed; 15 endpoint tests and 4 access/reset tests passed. Database check failed on password authentication; browser tools unavailable. No design exceptions.
-- **Files:** `src/`, `supabase/`, `scripts/demo/`, `scripts/seed/run.ts`, `scripts/verify/`, `.env.example`, `README.md`, `PROGRESS.md`
-- **Preferences learned:** Owner controls staff; customer signup; bottom demo selector uses isolated interactive data (README §8.1).
-- **Correction sweep:** Updated shared role types, operation checks, route/nav access, both login pages and legacy quick-login setup guidance.
-- **Rework:** None
-- **Follow-ups:** Restore DB access, bootstrap owner, configure demo, deploy and complete connected verification.
-
-
-### 2026-11-10: Added owner People screen and simulated access management (Codex)
-- **What:** Added owner-only directory, staff invitation form, role/location editing and invitation resend controls.
-- **Why:** The highest administrator must control who joins as admins, managers and other staff.
-- **How:** Trusted people endpoint for real accounts; demo directory and mutations remain in tab-local storage without emails or permission changes. Shared Glazed components provide loading, error, retry, empty and status states. Typecheck and design lint passed; connected browser checks remain pending. No design exceptions.
-- **Files:** `src/features/people/PeoplePage.tsx`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
-- **Preferences learned:** Owner controls staff access; interactive demos must not alter real permissions (README updates coordinated with parent).
-- **Correction sweep:** N/A; new People screen uses the shared owner role and trusted endpoint.
-- **Rework:** None
-- **Follow-ups:** Deploy endpoint, verify invitations and access edits in browser, and complete backend setup.
-
-
-### 2026-11-10: Added login choices and account recovery (Codex)
-- **What:** Added customer signup links, confirmation resend, password recovery/update screens and a demo role dropdown at the bottom of both login pages.
-- **Why:** Users need clear account creation and role preview options, with useful sign-in errors.
-- **How:** Extended roles with owner/admin, separated profile failures from missing profiles, handled thrown errors and loading completion, and reused Glazed components. No design exceptions.
-- **Files:** `src/app/AuthPages.tsx`, `src/hooks/useAuth.tsx`, `PROGRESS.md`
-- **Preferences learned:** Public signup creates customers; staff access comes from the owner; login includes a bottom demo selector (README §8.1).
-- **Correction sweep:** Replaced legacy quick-login buttons on both staff and customer login screens; shared auth behavior applies throughout the app.
-- **Rework:** None
-- **Follow-ups:** Finish backend access setup, verify integrated build/browser behavior, configure Auth redirects and isolated demo credentials.
 
 
 ## Archive Index

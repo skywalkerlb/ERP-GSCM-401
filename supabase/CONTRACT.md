@@ -239,7 +239,7 @@ Seed replays (`p_at` from a system session): `history_batch` sales emit no event
 
 Ledger, document and GL tables have **no INSERT/UPDATE/DELETE policies and no write grants** for `authenticated`; only RPCs write them. `anon` has no table or function privileges at all. Roles: enum `app_role` (`owner, admin, manager, cashier, baker, customer`); `auth_role()`, `is_staff()`, `my_customer_id()` are definer helpers (executable by signed-in users, they read `profiles`).
 
-**Accounts.** Staff users are created through the admin API with `app_metadata = {"role": "admin|manager|cashier|baker", "home_location_code": "PRV"}` (and `user_metadata.full_name`); the signup trigger `on_auth_user_created` creates their `profiles` row. Any other signup becomes a `customer`: the trigger links an existing `customers` row with the same email (case-insensitive, not yet linked) or creates one, and creates the customer profile. Users cannot set `app_metadata`, so no one can self-assign a staff role.
+**Accounts.** Staff users are created through the admin API with `app_metadata = {"role": "admin|manager|cashier|baker", "home_location_code": "PRV"}` (and `user_metadata.full_name`); the signup trigger `on_auth_user_created` creates their `profiles` row. Any other signup becomes a `customer`: the trigger creates a customer row linked by Auth user ID and a customer profile. Matching an unverified email never claims an existing customer row. Users cannot set `app_metadata`, so no one can self-assign a staff role.
 
 ## 7. Adding migrations (streams D-G)
 
@@ -258,10 +258,11 @@ Ledger, document and GL tables have **no INSERT/UPDATE/DELETE policies and no wr
 
 Deploy `supabase/functions/people/index.ts` and set server-only `APP_URL` to the canonical app origin. Supabase provides `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; never expose the latter in Vite variables. The endpoint verifies the JWT with Auth `getUser`, checks the current database profile for an account-management role, and uses a fixed `/accept-invite` redirect. Add that exact URL to Supabase Auth's redirect allowlist. It accepts POST JSON:
 
-- `{action:"list"}` returns `{users:[{user_id,email,full_name,role,home_location_id,status}]}`, with status `active`, `invited` or `unconfirmed`.
+- `{action:"list"}` returns `{users:[{user_id,email,username,full_name,role,home_location_id,status}]}`, with status `active`, `invited` or `unconfirmed`.
 - `{action:"invite",email,role,home_location_id:null|number}` invites a new account or grants access to an existing account without duplicating customer records.
 - `{action:"resend",user_id}` resends an unaccepted invitation; active users use password recovery.
 - `{action:"set-role",user_id,role,home_location_id:null|number}` updates an existing non-owner account. Assignable roles depend on the caller hierarchy; owner changes are rejected.
+- `{action:"reset-password",user_id,password}` sets a new password (minimum 6 characters) for a lower-level username account only. `_authorize_password_reset(p_actor,p_user)` rechecks the current hierarchy and logs an authorized attempt in `account_password_reset_audit` before the Auth API update. Auth update and authorization are separate transactions; the audit records attempts, not completion. Failed Auth updates return an error. No passwords enter logs, audit or demo storage. Operators must verify the account holder and share the password privately. Legacy email accounts use email recovery.
 
 The browser and endpoint share pure hierarchy helpers in `supabase/functions/_shared/account-access.ts`. `_set_account_access(p_actor uuid,p_user uuid,p_role app_role,p_home_location bigint = null)` is service-only; it locks actor and target profile rows in UUID order, checks their current database roles and applies the change in the same transaction. The old actor-free signature is removed. `_authorize_account_access(p_actor,p_user,p_role)` provides service-only preauthorization before invitation email, with null target allowed only for new users. Each successful assignment appends actor, target, old/new role and home location, and timestamp to `account_access_audit`; browser roles cannot read or write that audit table. Existing customer linkage is preserved.
 
@@ -270,3 +271,9 @@ Invitation authorization happens before sending email. Auth email and database u
 Failures return `{error}` with an appropriate non-2xx status. Deploy the same endpoint to the isolated demo project with `DEMO_MODE=true`; it rejects all mutation actions even if a visitor knows the demo owner's credentials. The demo People UI simulates mutations locally. No real email is sent from demo account management.
 
 Run `node --test scripts/verify/people_endpoint.test.mjs` for mocked endpoint authorization/invitation tests. Run `scripts/verify/access_security.sql` in a trusted database connection after migrations. It performs rolled-back permission tests. The migrations and endpoint still require hosted verification before release.
+
+## 10. Username signup (2026-11-16)
+
+Public signup requires only username and password. Normalize usernames by trimming and lowercasing; accept 3–30 ASCII letters, digits or underscores. The browser uses Supabase password Auth with the internal identifier `<username>@users.glazed.invalid`, and supplies matching `user_metadata.username`. The Auth email identity and unique immutable `profiles.username` enforce uniqueness; a trigger rejects malformed/mismatched reserved identifiers and subsequent identity changes. Customer contact email is null for these accounts. The shared identity helpers live in `supabase/functions/_shared/identity.ts`. The People API returns username and an empty email for these identities and refuses to invite/resend to the reserved domain.
+
+Set local `auth.email.enable_confirmations=false` and separately disable hosted Confirm email. Successful signup returns a session, loads the new customer profile and opens `/shop`. An unexpected missing session is reported as backend setup failure, with no email-confirmation instructions for the customer. Existing email accounts keep their login, invitations and recovery routes. Signup never accepts a requested staff role. Owner username recovery requires trusted backend administration because the public hierarchy cannot reset the owner.

@@ -7,8 +7,10 @@ import ts from 'typescript';
 const compile = (path, suffix = '') => ts.transpileModule(readFileSync(new URL(path, import.meta.url), 'utf8').replace(/^import .*;$/gm, '') + suffix, {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
+const identity = {};
+vm.runInNewContext(compile('../../supabase/functions/_shared/identity.ts'), { exports: identity });
 const helpers = {};
-vm.runInNewContext(compile('../../src/hooks/useAuth.tsx'), { exports: helpers, createContext: () => ({}), require: () => ({}) });
+vm.runInNewContext(compile('../../src/hooks/useAuth.tsx'), { exports: helpers, ...identity, createContext: () => ({}), require: () => ({}) });
 const pages = compile('../../src/app/AuthPages.tsx', '\nexport const internals = { SignInForm, AuthFrame };');
 const guard = compile('../../src/components/RequireRole.tsx');
 function mount(name, { auth = {}, error = null, search = '', hash = '', guardProps = null } = {}) {
@@ -20,7 +22,7 @@ function mount(name, { auth = {}, error = null, search = '', hash = '', guardPro
     useAuth: () => ({ session: null, profile: null, loading: false, profileError: null,
       signOut: async () => { calls.push(['signOut']); if (error) throw error; },
       refreshProfile: async () => { calls.push(['refreshProfile']); },
-      signUp: async input => { calls.push(['signUp', input]); return error ? { error: helpers.friendlyAuthError(error) } : { needsConfirmation: true }; }, ...auth }),
+      signUp: async input => { calls.push(['signUp', input]); return error ? { error: helpers.friendlyAuthError(error) } : { profile: { role: 'customer' } }; }, ...auth }),
     useLocation: () => ({ state: null, pathname: '/private', search: '' }), useNavigate: () => to => { calls.push(['navigate', to]); }, homeFor: role => role === 'customer' ? '/shop' : '/',
     ...Object.fromEntries(['Link', 'Navigate', 'Alert', 'Button', 'Card', 'Logo', 'Skeleton', 'SkeletonLines', 'TextField', 'Select', 'ThemeToggle', 'EmptyState'].map(x => [x, x])),
     friendlyAuthError: helpers.friendlyAuthError, signupFieldErrors: helpers.signupFieldErrors,
@@ -37,14 +39,13 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 async function submit(app) { await find(app, 'form').props.onSubmit({ preventDefault() {} }); await tick(); }
 const message = (app, title) => find(app, 'Alert', 'title', title).props.children;
 
-test('confirmation resend sends trimmed email/current-origin callback and exposes rate-limit failure', async () => {
-  for (const error of [null, { code: 'over_email_send_rate_limit' }]) {
-    const app = mount('SignInForm', { error }); field(app, 'Email', ' jane@example.com ');
-    find(app, 'Button', 'children', 'Resend confirmation email').props.onClick(); await tick();
-    assert.equal(app.calls[0][0], 'resend'); assert.equal(app.calls[0][1].email, 'jane@example.com');
-    assert.equal(app.calls[0][1].options.emailRedirectTo, 'https://glazed.example/login');
-    assert.match(message(app, error ? 'Could not sign in' : 'Check your email'), error ? /Wait a minute/ : /If your account needs confirmation/);
-  }
+test('login accepts a username and has no confirmation resend action', async () => {
+  const calls = [];
+  const app = mount('SignInForm', { auth: { signIn: async (...args) => { calls.push(args); return { profile: { role: 'customer' } }; } } });
+  field(app, 'Username or email', 'jane_doe'); field(app, 'Password', 'secret123'); await submit(app);
+  assert.deepEqual(calls, [['jane_doe', 'secret123']]);
+  assert.equal(nodes(app.render()).some(n => n.type === 'Button' && n.props.children === 'Resend confirmation email'), false);
+  assert.equal(app.calls.at(-1)[1], '/shop');
 });
 test('recovery uses correct redirect, preserves email privacy and reports network failure', async () => {
   for (const error of [null, { message: 'Network fetch failed' }]) {
@@ -76,23 +77,26 @@ test('missing/expired email links block password updates even when another sessi
 test('expired confirmation is visible instead of redirecting an existing session', () => {
   const app = mount('LoginPage', { auth: { session: {}, profile: { role: 'customer' } }, search: '?error_code=otp_expired' });
   assert.equal(nodes(app.render()).filter(n => n.type === 'Navigate').length, 0);
-  assert.match(message(mount('AuthFrame', { hash: '#error=access_denied' }), 'This email link could not be used'), /Request a new confirmation/);
+  assert.match(message(mount('AuthFrame', { hash: '#error=access_denied' }), 'This email link could not be used'), /Sign in with your username/);
 });
 test('explicit sign in still navigates after expired-link guidance', async () => {
   const app = mount('SignInForm', { search: '?error_code=otp_expired', auth: { signIn: async () => ({ profile: { role: 'customer' } }) } });
-  field(app, 'Email', 'jane@example.com'); field(app, 'Password', 'secret123'); await submit(app);
+  field(app, 'Username or email', 'jane@example.com'); field(app, 'Password', 'secret123'); await submit(app);
   assert.equal(app.calls.at(-1)[0], 'navigate'); assert.equal(app.calls.at(-1)[1], '/shop');
 });
-test('signup places all validation errors on fields without an account request', async () => {
-  const app = mount('PortalSignupPage'); field(app, 'Full name', '   '); field(app, 'Email', 'broken'); field(app, 'Password', 'short'); await submit(app);
-  for (const label of ['Full name', 'Email', 'Password']) assert.ok(find(app, 'TextField', 'label', label).props.error);
+test('signup has only username/password and validates before an account request', async () => {
+  const app = mount('PortalSignupPage'); field(app, 'Username', 'bad name'); field(app, 'Password', 'short'); await submit(app);
+  for (const label of ['Username', 'Password']) assert.ok(find(app, 'TextField', 'label', label).props.error);
+  assert.equal(nodes(app.render()).filter(n => n.type === 'TextField').length, 2);
   assert.equal(app.calls.length, 0);
 });
-test('signup confirmation notice handles obfuscated duplicates and explicit errors', async () => {
+test('signup enters shop immediately and duplicate errors keep retry form', async () => {
   for (const error of [null, { code: 'email_exists' }]) {
-    const app = mount('PortalSignupPage', { error }); field(app, 'Full name', 'Jane Doe'); field(app, 'Email', 'jane@example.com'); field(app, 'Password', 'secret123'); await submit(app);
-    assert.match(message(app, error ? 'Could not create the account' : 'Check your email'), error ? /Sign in instead/ : /If you already have an account/);
+    const app = mount('PortalSignupPage', { error }); field(app, 'Username', 'jane_doe'); field(app, 'Password', 'secret123'); await submit(app);
+    if (error) assert.match(message(app, 'Could not create the account'), /Sign in instead/);
+    else assert.equal(app.calls.at(-1)[1], '/shop');
     assert.equal(app.calls[0][0], 'signUp');
+    assert.equal(nodes(app.render()).some(n => n.type === 'Alert' && n.props.title === 'Check your email'), false);
   }
 });
 test('missing-profile retry and signout work; signout failure offers useful recovery', async () => {
