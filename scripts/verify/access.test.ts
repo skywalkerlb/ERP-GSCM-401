@@ -11,10 +11,10 @@ test('owner and admin inherit all manager operation permissions', () => {
     for (const group of ['manager', 'sell', 'bakery', 'staff'] as const) assert.ok((ACCESS[group] as readonly string[]).includes(role));
   }
 });
-test('only owner receives People navigation and access', () => {
+test('owner, admin and manager receive People navigation and access', () => {
   for (const role of ['owner', 'admin', 'manager', 'cashier', 'baker', 'customer'] as AppRole[]) {
-    assert.equal(navFor(role).flatMap(s => s.items).some(i => i.to === '/people'), role === 'owner');
-    assert.equal((ACCESS.owner as readonly string[]).includes(role), role === 'owner');
+    assert.equal(navFor(role).flatMap(s => s.items).some(i => i.to === '/people'), ['owner', 'admin', 'manager'].includes(role));
+    assert.equal((ACCESS.people as readonly string[]).includes(role), ['owner', 'admin', 'manager'].includes(role));
   }
 });
 test('operational and customer roles remain limited', () => {

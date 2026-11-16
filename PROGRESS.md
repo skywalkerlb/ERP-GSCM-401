@@ -1,37 +1,42 @@
 # PROGRESS.md: ERP Project (GSCM 401)
 
-> **Read this file, `README.md` and `design-system/DESIGN_SYSTEM.md` before any edit. Update this file after every edit.** Full rules: README.md §9.
-> **Size rules:** no more than 10 entries in Recent Changes and no more than 300 lines in this file. Move older entries to `docs/progress-archive/YYYY-MM.md`.
-> Status, In-flight, Next Steps, and Open Questions are **snapshots**. Rewrite them; don't append to them.
+> **Read this file, README.md and design-system/DESIGN_SYSTEM.md before edits; update after edits.** README §9 has the full protocol. Keep at most 10 recent entries and 300 lines.
 
 ## Current Status
-**As of 2026-11-16.** Publication requested; local build/typecheck passed. GitHub has newer main commits through a9bb412; preserving local work before merging them. Barcode Labels capitalization updated in the page heading/browser title, breadcrumb, sidebar and item editor reference; approved sentence-case exception recorded in README. Local development server is running at http://localhost:5173/login; HTTP response verified as 200. Dependencies installed from the lockfile with npm ci. Node v24.22.3 is available temporarily at /private/tmp/node-v24.22.3-darwin-arm64/bin (not installed globally). Shared hooks allow pull/fetch synchronization; 88 focused hook assertions previously passed. Local main remains one commit ahead of origin/main at `3f20b4b`; hook/documentation changes remain uncommitted and GitHub publishing remains incomplete. Vercel integration is unconfirmed. Shared sidebar overlap fix is implemented; both-theme visual checks remain pending.
-
-- Previously recorded build/typecheck/design lint, 38 entry/access/sign-out tests and 85 full database checks passed. These were not rerun for server setup.
-- Public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Separate demo backend: `wzsbtfzettxpczgulibd`; persistent backend unchanged. Six credential-free demo roles were previously verified.
-- Existing demo dataset includes 5,381 sales, 57,352 sale lines, 1,308 production orders and 152 purchase orders. Accounting reconciled to $34,672.89. Replay had 48 skipped events and 19 quantity differences; reproducibility remains a follow-up.
-- One approved wording exception: "Barcode Labels" capitalization. Browser click-through and both-theme visual verification remain pending.
+**As of 2026-11-16.** Publishing requested. Latest upstream main a9bb412 is merged with local sidebar overlap fixes and Barcode Labels wording. Documentation conflicts reconciled with both contributors' preferences/history preserved. Integrated production build/typecheck, full design lint and all 281 JavaScript verification tests pass. Git hooks remain configured as .githooks with upstream advisory policy; no bypass used. Chris Shipp's verified noreply identity retained.
+- Signup/delegated account hierarchy comes from upstream: owner grants admin and below; admins grant manager and below; managers grant cashier/baker/customer across shops. Confirmation required for new customers. Backend rollout is still pending credentials; no database changes made here.
+- Existing public Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Existing demo data preserved; replay limitations remain 48 skipped events and 19 quantity differences.
+- Node v24.22.3 is temporarily available in /private/tmp/node-v24.22.3-darwin-arm64/bin; dependencies installed. Local server was started at localhost:5173. No local .env.local or Vercel CLI credentials/project link are present in this checkout.
+- Approved design exceptions: Barcode Labels capitalization and sidebar Glazed! punctuation. Both-theme browser visual verification remains pending.
 
 ## In-flight Work
-- Publishing Barcode Labels and earlier sidebar changes, including reconciliation with newer upstream work.
-- Vite development server running for user testing on localhost:5173. Temporary Node runtime may need restoring after system cleanup; dependencies are installed locally.
-- Hook exemption implementation is complete and remains uncommitted with documentation changes.
-- Local commit awaits publishing; previous SSH/HTTPS authentication attempts failed.
-- Seed reproducibility and browser visual verification remain follow-ups.
+- Integrated merge passed checks and awaits commit, GitHub push and deployment verification.
+- Vercel plugin is disabled by the administrator; checking alternate authorized hosting access.
+- Persistent backend and email rollout remain pending credentials and controlled inbox; no resets or database writes authorized as routine publication.
 
 ## Next Steps
-1. User reviews Barcode Labels capitalization at http://localhost:5173/inventory/labels; verify sidebar scrolling and long labels on desktop/mobile in both themes.
-2. Merge current upstream, repeat required checks for the integrated code, push and confirm deployment.
-3. Review seed retry handling before any explicitly requested clean demo replay; preserve the usable dataset.
-4. Correct the persistent database password locally, apply migrations without resets, and configure owner and Auth redirects.
+1. Validate integrated code, commit and push; verify Vercel deployment and updated page.
+2. Restore persistent database access and Supabase login; inspect/apply migrations without resets when configured.
+3. Configure hosted SMTP, exact Auth redirects and confirmed owner; verify email/signup/invitations with a controlled inbox.
+4. Complete both-theme visuals; preserve current demo dataset and address replay reproducibility only on explicit request.
 
 ## Open Questions for the User
-- No clarification is needed for authorized publication; backend ownership and due-date questions remain.
-- Which confirmed signup email should own the persistent ERP account? Never send passwords in chat.
-- Has the persistent database password been corrected locally?
-- What is the final project due date? Chris Shipp is verified against the connected GitHub account; publishing still needs working Git authentication or approved connector access.
+- No clarification needed for authorized GitHub publication. Hosting access may be needed if automatic deployment is unavailable.
+- Which email should own the persistent ERP and which controlled inbox can receive verification messages? Never send passwords in chat.
+- Has the persistent database password been corrected locally and Supabase login restored?
+- What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Integrated upstream for requested publication (Codex)
+- **What:** Merged latest upstream signup/access work with local sidebar fixes and Barcode Labels capitalization.
+- **Why:** Publish user-approved changes while preserving concurrent contributors' work.
+- **How:** Preserved both histories, resolved three documentation conflicts by combining preferences and history, and retained upstream access rules and sidebar punctuation. Kept normal configured Git hooks. Integrated build/typecheck, full design lint, diff checks and 281 JavaScript verification tests pass; publication/deployment verification remain pending.
+- **Files:** Merged application, backend, verification, hook and documentation changes; PROGRESS.md and archive.
+- **Preferences learned:** None; Chris Shipp attribution and Barcode Labels capitalization retained.
+- **Correction sweep:** N/A
+- **Rework:** Reconciled divergent main branches without rewriting or dropping commits.
+- **Follow-ups:** Run integrated checks, push and verify hosting. Approved exceptions: Barcode Labels capitalization and sidebar Glazed! punctuation; both-theme browser visuals remain pending.
+
 ### 2026-11-16: Prepared local changes for publication (Codex)
 - **What:** Prepared Barcode Labels wording, earlier sidebar fix and pending project notes for publication.
 - **Why:** The user requested publishing the changes to the live website.
@@ -72,6 +77,36 @@
 - **Rework:** Corrected the false edit reminder after an already-up-to-date pull.
 - **Follow-ups:** Existing backend, publishing and visual follow-ups remain; hook work is complete.
 
+### 2026-11-16: Remove project hook barriers to Git synchronization (Codex)
+- **What:** Made commit checks advisory, exempted pull from AI read gating and aligned every AI instruction file with unblocked synchronization.
+- **Why:** The user explicitly requested that hooks never block GitHub pulls or pushes.
+- **How:** Verified GitHub main contains `4a9b815`, main is unprotected, rulesets are empty and current credentials allow push. Disable Git hooks locally via core.hooksPath=/dev/null; optional tracked commit hook always succeeds. Shell syntax checks and no-doc-read pull/push guard probes passed. No UI or design values changed.
+- **Files:** Git hook, shared AI guard, README.md, AI instruction pointers, design-system enforcement wording, PROGRESS.md and progress archive.
+- **Preferences learned:** Git synchronization has no project hook prerequisites; checks are advisory (README §8.4 and §9.5).
+- **Correction sweep:** Searched Git gating and setup guidance; updated shared guard, tracked hook, all five AI instruction pointers and design-system enforcement wording.
+- **Rework:** Replaced mandatory blocking commit policy with the user's requested advisory policy.
+- **Follow-ups:** GitHub still requires authentication and write permission for direct pushes; existing hosted rollout questions remain.
+
+### 2026-11-16: Publish pending project changes to GitHub (Codex)
+- **What:** Prepared all pending signup, delegated access, sidebar wording, verification and documentation changes for one GitHub commit and push.
+- **Why:** The user requested pushing all changes to GitHub.
+- **How:** Reviewed pending files, scanned 27 files for saved credentials with no findings, confirmed remote main matches local base and retained required commit hooks. Existing implementation checks and design review are recorded below; no new UI changes in this publication step.
+- **Files:** All pending project changes, including README.md and PROGRESS.md.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Hosted application/backend rollout remains pending credentials and controlled inbox details.
+
+### 2026-11-12: Implemented signup fixes and delegated access (Codex)
+- **What:** Replaced owner-only People management with the approved protected hierarchy; hardened signup, confirmation and live access refresh with routing to an allowed home screen after demotion.
+- **Why:** Users must create working customer accounts and admins/managers must manage lower-level access.
+- **How:** Shared role rules, service-only atomic assignment and audit (including protected audit sequence), Glazed controls in both themes; 237 endpoint tests and 48 other local checks pass; exact migration, 41 database assertions/probes and full SQL signup/hierarchy/audit suite pass in a rollback-only demo transaction (5 data-dependent checks skipped). Design checklist: full design lint passes; Glazed component props, visible labels, shared focus styles, action labels, one primary action, status tones and sentence case reviewed. Existing theme tokens cover light/dark; browser visual checks remain blocked by CUA. No new exceptions; preserved approved sidebar-only "Glazed!" punctuation (`ds-exception`, README §8.1).
+- **Files:** Authentication, People, access helpers, Supabase endpoint/migration, verification scripts (including People simulation/UI checks, realtime assertions and integrated rollback access suite), docs/ARCHITECTURE.md, README.md and PROGRESS.md.
+- **Preferences learned:** Confirm customer emails; owner grants admin, admins grant manager and below, managers grant cashier/baker/customer; all shops; no self/peer/superior changes (README §8.1).
+- **Correction sweep:** Replaced owner-only enforcement and wording across frontend routes/nav/People/auth, endpoint, contract, tests and current docs (including architecture/realtime publication rules); historical logs preserved.
+- **Rework:** None.
+- **Follow-ups:** Restore persistent DB password and Supabase login; configure SMTP/Auth redirects; deploy and verify hosted signup/email with a controlled inbox.
+
 ### 2026-11-11: Recorded local commit and blocked GitHub publication (Codex)
 - **What:** Created local commit `3f20b4b` as Chris Shipp; nothing was pushed to GitHub.
 - **Why:** The user requested publishing all changes and clarified the correct identity.
@@ -91,47 +126,6 @@
 - **Correction sweep:** Searched README, PROGRESS, docs and Git config for Mason/Briggs/old noreply identity; corrected the one active identity rule. Historical records and actual Vercel URLs preserved; no Git config identity was set.
 - **Rework:** Corrected the mistaken attribution inherited from project docs before creating a commit.
 - **Follow-ups:** Commit/push and check deployment status; verify sidebar visually when browser access works.
-
-### 2026-11-11: Prevented sidebar navigation text overlap (Codex)
-- **What:** Prevented flex compression of navigation groups and brand; let long labels grow their rows and kept icons and badges from shrinking.
-- **Why:** The user reported the sidebar overlapping text.
-- **How:** Updated shared app navigation CSS using existing Glazed tokens; the staff sidebar keeps its vertical scroll, including the mobile drawer. No design-system source changes or design exceptions. Screenshot inaccessible; browser host unavailable; Node/npm absent, so build and visual checks could not run.
-- **Files:** `src/styles/app.css`, `README.md`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
-- **Preferences learned:** Sidebar text must stay readable with scrolling and wrapping (README §8.1).
-- **Correction sweep:** Searched all sidebar, nav and shell styles and usages; fixed the shared nav rules in one place for all staff routes, roles and both desktop/drawer layouts. Portal uses separate horizontal navigation.
-- **Rework:** Corrected fixed-height navigation rows and shrinkable groups inherited from the reference layout.
-- **Follow-ups:** Build and both-theme browser verification when local tooling is available; confirm against the original screenshot.
-
-### 2026-11-10: Pulled latest main from GitHub (Codex)
-- **What:** Fast-forwarded local main from `6863d8a` to `23dc927` (one commit).
-- **Why:** The user requested a pull from GitHub.
-- **How:** Ran `git pull --ff-only`; confirmed main matches origin/main without conflicts. No application changes authored or tests rerun for this sync.
-- **Files:** Upstream implementation and documentation; `PROGRESS.md`, `docs/progress-archive/2026-11.md` for the required handoff.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** None
-- **Follow-ups:** Existing seed, browser verification and persistent backend follow-ups remain above.
-
-### 2026-11-10: Prepared ERP implementation for GitHub publication (Codex)
-- **What:** Prepared the current ERP app, migrations, access controls, demo setup and documentation for the user-requested GitHub push.
-- **Why:** The user requested publishing the working project to GitHub.
-- **How:** Confirmed main matches the remote base, GitHub noreply identity and active hooks; checked 271 candidate files for saved credential values and confirmed local env/hosting/database linkage stays ignored. Build and full design lint pass. Commit hooks remain enabled.
-- **Files:** Current ERP implementation, tests and documentation; `PROGRESS.md`, `docs/progress-archive/2026-11.md`
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** None
-- **Follow-ups:** Historical seed reproducibility and browser verification remain documented above.
-
-### 2026-11-10: Published and verified public role demos (Codex)
-- **What:** Finished isolated demo provisioning, automatic role entry and public Preview deployment; protected other visitors during demo sign-out.
-- **Why:** Anyone must enter demos without registering or supplying credentials.
-- **How:** Migrated separate Supabase project, verified six accounts, configured Vercel Preview, disabled hosting SSO wall, deployed demo-only People endpoint. Fixed setup paths with spaces and kit cost verification. 38 tests and 85 DB checks pass; build/typecheck/design lint pass. No design exceptions; browser visuals unavailable.
-- **Files:** `src/lib/supabase.ts`, `src/hooks/useAuth.tsx`, `src/app/AuthPages.tsx`, `scripts/demo/setup.mjs`, `scripts/verify/`, `README.md`, `PROGRESS.md`; ignored local demo settings
-- **Preferences learned:** Public role selection requires no visitor credentials; truthful unavailable states (README §8.1).
-- **Correction sweep:** Both login pages share demo entry; all auth sign-out paths preserve shared-account sessions through tab-local exit.
-- **Rework:** Seed connection failure left an orphan lock; closed only the confirmed stale demo connection. Replay completed with 48 skipped events, 19 simulator quantity differences and exit 2; dataset accounting checks pass.
-- **Follow-ups:** Browser verification and seed recovery/reproducibility improvement; persistent backend setup remains separate.
-
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

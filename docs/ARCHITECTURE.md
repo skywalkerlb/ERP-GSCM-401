@@ -250,14 +250,14 @@ Result: Σ`value_total` equals Σ ledger `value_delta`, which equals GL account 
 ## 4. Auth, roles, RLS, realtime
 
 **Roles**
-- `app_role` enum: manager, cashier, baker, customer.
+- `app_role` enum: owner, admin, manager, cashier, baker, customer.
 - `auth_role()` is a STABLE SECURITY DEFINER function that reads profiles. `is_staff()` builds on it.
 - A trigger on `auth.users` creates a customer profile when someone signs up through the portal.
 
 **RLS**
 - Enable RLS on every table. Revoke all access from anon.
 - Staff get `SELECT` on operational tables. All staff can see all locations; the top-bar location switcher filters the screens.
-- Only managers can write master data (items, item_suppliers, bom_lines, suppliers, customers, promotions, app_settings), through direct table writes under RLS.
+- Owners, admins and managers can write master data (items, item_suppliers, bom_lines, suppliers, customers, promotions, app_settings), through direct table writes under RLS.
 - Ledger, document and GL tables have **no INSERT/UPDATE/DELETE policies at all**. They can be written only through RPCs.
 - Customers never read base tables. They use `get_catalog_availability()` (definer: shop locations, sellable items, price, available qty, est date, no costs) and RLS on `sales_orders` and `so_lines` (`customer_id = my_customer_id()`).
 
@@ -265,22 +265,28 @@ Result: Σ`value_total` equals Σ ledger `value_delta`, which equals GL account 
 
 | Role | Can use |
 |---|---|
-| Manager | Everything |
+| Owner | All operations; grants admin and lower roles |
+| Admin | All operations; manages manager/cashier/baker/customer accounts |
+| Manager | All operations; manages cashier/baker/customer accounts |
 | Cashier | POS, returns, sales orders, shop transfers, waste, day close, inventory view |
 | Baker | Production, bake plan, kitchen receiving, adjustments, transfers, waste |
 | Customer | Customer portal only |
 
+All account-management changes target lower-level accounts only: no self, peer, superior or owner changes. Management spans all shops; home location is a default. Public signup requires email confirmation and creates customers.
+
 **Demo accounts** are created by the seed through the admin API with `email_confirm: true`:
+- owner@example.com
+- admin@example.com
 - manager@example.com
 - cashier.provo@example.com
 - cashier.orem@example.com
 - baker@example.com
 - two customers, ava@example.com and liam@example.com
 
-The login page has quick-login buttons. Keep the password in env or the private docs, not in the repo. The public demo URL allows writes, so plan a reset (see Risks).
+The login page has a credential-free demo role selector. Keep demo credentials in environment settings, not in the repo. Demo business workflows use a separate sandbox; People invitations and access edits are simulated in the browser without sending emails. Never reset the persistent backend.
 
 **Realtime**
-- Every RPC inserts into `app_events`, and only `app_events` is added to the `supabase_realtime` publication.
+- Business RPCs insert into `app_events`. The `supabase_realtime` publication contains `app_events` plus `profiles` for access changes. Auth subscribes to its own profile, treats events as invalidations and refetches through RLS; focus and 30-second polling provide fallbacks.
 - `useRealtimeInvalidation()` makes one subscription and maps each topic prefix to query keys. For example, `sale.*` maps to `['sales']`, `['inventory']`, `['finance']` and `['reports']`, and `po.*` maps to `['purchasing']`, `['inventory']`, `['suppliers']` and `['mrp']`.
 - RLS on `app_events`: staff see all events; customers see their own order events and `inventory.changed`.
 - The dashboard has an activity feed, for example "Cashier sold 6 items at Provo".

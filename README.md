@@ -25,7 +25,7 @@ This file says **how the project works** and **how the user wants it built**. It
 
 - **What:** **Glazed**, a donut-shop ERP built for the GSCM 401 final project and live demo. The instructor chooses the scenario; displayed numbers come from stored data.
 - **Design:** Every screen follows the Glazed design system in `design-system/` (see §7 and `design-system/DESIGN_SYSTEM.md`).
-- **Repo:** https://github.com/skywalkerlb/ERP-GSCM-401 (public, branch `main`). After cloning, run `git config core.hooksPath .githooks` once to enable the commit check.
+- **Repo:** https://github.com/skywalkerlb/ERP-GSCM-401 (public, branch `main`). Pulls and pushes have no project hook prerequisites. To disable Git hooks in a checkout, run `git config --local core.hooksPath /dev/null`.
 - **Goal:** Provide working sales, production, inventory, purchasing, reporting and finance workflows, with three demo features: forecast-driven bake planning, freshness/waste tracking and one-click replenishment.
 - **Users:** Owner, admin, manager, cashier, baker and customer roles, with isolated demo accounts. Staff screens support Provo, Orem and Lehi shops plus the Central Kitchen in Lindon.
 - **Business settings:** 7.25% starting sales tax, editable by location. The final due date has not been recorded.
@@ -86,14 +86,14 @@ Update this map when a top-level folder is added, renamed or removed.
 - `scripts/ai-guard/`, `scripts/seed/`, `scripts/demo/`, `scripts/verify/`: shared AI guard, deterministic demo-data simulation and database checks.
 - `scripts/check-design.sh`: design-system lint for app code.
 - `.ai-state/`: ignored per-session state used by the AI edit guard.
-- `.githooks/pre-commit`: design lint and PROGRESS entry check.
+- `.githooks/pre-commit`: optional advisory design lint and PROGRESS reminder; always allows commits.
 - `docs/progress-archive/`: older changelog entries moved out of PROGRESS.md.
 
 ## 6. ERP domain model
 
 **Staff modules:** POS, sales and orders, returns, demand forecast and bake plan, production, freshness and waste, inventory and transfers, adjustments, receiving, labels, purchasing and auto-replenish, supplier scorecard, MRP, dashboard, reports, finance, items/BOM, customers and settings. The customer portal is at `/shop`.
 
-**Locations and roles:** Provo, Orem and Lehi shops plus the Lindon Central Kitchen. The app uses owner, admin, manager, cashier, baker and customer roles. Only the owner manages staff access. Starting sales tax is 7.25% and can be edited by location.
+**Locations and roles:** Provo, Orem and Lehi shops plus the Lindon Central Kitchen. The app uses owner, admin, manager, cashier, baker and customer roles. Owner, admin and manager manage accounts below their own level across all shops. Only the owner grants admin; admins grant manager/cashier/baker/customer; managers grant cashier/baker/customer. Self-changes and changes to peers or superiors are forbidden. Starting sales tax is 7.25% and can be edited by location.
 
 Shop units and formats follow the design system: quantities in dozens/trays ("14 dozen"), money as "$342.75", dates as "Nov 9, 2026", pickup times as "9:00 AM", and order numbers like ORD-00481 in mono.
 
@@ -123,14 +123,15 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 - **Read `design-system/DESIGN_SYSTEM.md` before making any change, and keep it in mind** so design updates stay consistent. Scope: every agent, every session. Source: 2026-11-09.
 - **Tokens only, Glazed components only, both themes, one candy-pink primary button per view (chocolate text), fixed status colors (mint/lilac/butter/cherry/cocoa/neutral), sentence case, no emoji or exclamation marks.** The full list is in DESIGN_SYSTEM.md > Rules for AI agents. Scope: all UI. Source: 2026-11-09 (design system).
 - **Design changes go through the system.** When the user changes a look, update the token or shared component so it applies everywhere. A one-off happens only when the user explicitly asks for one. Scope: all design corrections. Source: 2026-11-09.
-- **The official logo is the design system's "Glazed" wordmark (Fredoka 600) with the pink donut ring mark.** Use it everywhere the brand appears (sidebar, login, favicon, exports), and don't replace or restyle it without asking. Scope: all branding. Source: 2026-11-09, "that logo in the design system is great".
+- **The official logo is the design system's "Glazed" wordmark (Fredoka 600) with the pink donut ring mark.** Use it everywhere the brand appears (sidebar, login, favicon, exports), and don't replace or restyle it without asking. The sidebar wordmark reads "Glazed!" by explicit request on 2026-11-10; this punctuation exception applies only to the sidebar. Scope: all branding. Source: 2026-11-09, "that logo in the design system is great".
 
 **Design exceptions** (approved one-offs that break the design system; each is also marked `ds-exception:` in code):
 | Date | File / place | What | User's words |
 |---|---|---|---|
 | 2026-11-16 | Barcode Labels page title/breadcrumb, sidebar and item editor hint | Capitalize Labels in this page name instead of sentence case; marked `ds-exception:` in source. | "on the barcode labels page, can you capitalize the L on labels" |
+| 2026-11-10 | `src/app/AppShell.tsx`, sidebar wordmark | Display "Glazed!" despite the general no-exclamation rule | "add an exclamation point after glazed in the title in the sidebar" |
 
-- **Show sign-in, public customer signup, and a demo role selector at the bottom of login.** Only the owner assigns staff access; admins operate the ERP. Anyone must be able to select a role and enter the demo without typing credentials or registering. Demo workflows use isolated sample data and simulated invitations; never imply missing configuration is being prepared automatically. Scope: authentication, permissions and demo. Source: 2026-11-10, user approved implementation plan.
+- **Show sign-in, public customer signup, and a demo role selector at the bottom of login.** Require email confirmation for customer signup. Use the protected access hierarchy: owner grants admin/manager/cashier/baker/customer, admin grants manager/cashier/baker/customer, manager grants cashier/baker/customer. Actors may manage only lower-level accounts across all shops and cannot change themselves (replaces owner-only staff management). Anyone must be able to select a role and enter the demo without typing credentials or registering. Demo workflows use isolated sample data and simulated invitations; never imply missing configuration is being prepared automatically. Scope: authentication, permissions and demo. Source: 2026-11-12, user approved signup and delegated-access implementation plan.
 
 ### 8.2 Wording & content
 - **Write the page name as "Barcode Labels".** Scope: this page's heading, browser title, breadcrumb, sidebar entry and references elsewhere in the app; exception to sentence case for this page name only. Source: 2026-11-16, "on the barcode labels page, can you capitalize the L on labels".
@@ -145,7 +146,7 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 - **The user works with several AI tools** (Claude Code, Codex, Cursor, Copilot, Gemini). Keep the docs tool-neutral. Scope: all docs. Source: 2026-11-09.
 - **Plan first, ask clarifying questions, and use subagents for larger tasks** when the tool supports it. Scope: non-trivial work. Source: 2026-11-09, the user asked for plan mode, fan-out subagents, and questions.
 
-- **The read-first / update-after rules must be enforced, not just suggested,** for every AI tool. Keep the hooks in §9.5 working, and never bypass them. Scope: all tools, all sessions. Source: 2026-11-09, "make sure that all will update the progress.md file and that they will all read the progress.md file before editing".
+- **The read-first / update-after rules must be enforced, not just suggested,** for every AI tool. Keep the AI edit hooks in §9.5 working. Git synchronization is exempt: pulls and pushes must not require documentation reads or updates, and Git checks are advisory. Scope: all tools, all sessions. Source: 2026-11-16, user requested unblocked GitHub pulls/pushes (replaces mandatory blocking Git checks); original read/update preference from 2026-11-09.
 
 - **Use Chris Shipp as the commit author and his GitHub noreply address** (`276119029+chrisshipp19-web@users.noreply.github.com`) for commits made for Chris. Verify identity against the connected account rather than copying another contributor's identity from history; never expose personal or work email. Scope: all commits for Chris (replaces: incorrectly identifying Chris as Mason Briggs). Source: 2026-11-11, "no i am Chris Shipp".
 
@@ -189,28 +190,28 @@ All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior i
 | **Read before edit** | Any authored file edit, or any shell command classified as an edit (excluding pull/fetch synchronization), is **blocked** until this session has read README.md, PROGRESS.md **and design-system/DESIGN_SYSTEM.md**. If another agent changes any of them afterward, you're blocked again until you re-read it. |
 | **Update after edit** | If project files changed and PROGRESS.md wasn't updated, the agent is **sent back once** when it tries to finish (it can't loop). |
 | **Design checklist** | If UI files changed (`.css/.scss/.tsx/.jsx/.html`, `src/`, `design-system/`), the agent is also sent back once with the design-system checklist. |
-| **Git commit check** | `.githooks/pre-commit` runs `scripts/check-design.sh`, which rejects hard-coded hex/rgb colors, px sizes above 2px and literal fonts in UI code outside `design-system/` (lines marked `ds-exception:` are skipped). It then rejects any commit that changes project files unless PROGRESS.md gains a new `### YYYY-MM-DD` changelog entry. This applies to every tool and every person. Run `sh scripts/check-design.sh --all` at any time to scan the whole project. |
+| **Git checks** | Optional `.githooks/pre-commit` prints design and PROGRESS advisories and always exits successfully. Pull/push operations are exempt from the AI read-before-edit gate. This checkout retains `core.hooksPath=.githooks` for advisory checks; new clones have no active project hooks by default. Authentication, write permission and normal Git conflict handling still apply. |
 
-| Tool | Hook file | Read-before-edit block | Update + design reminders | Commit check (design lint + PROGRESS) |
+| Tool | Hook file | Read-before-edit block | Update + design reminders | Advisory Git checks (optional) |
 |---|---|---|---|---|
-| Claude Code | `.claude/settings.json` | ✅ | ✅ | ✅ |
-| Codex | `.codex/hooks.json` | ✅ | ✅ | ✅ |
-| Cursor | `.cursor/hooks.json` | ✅ | ✅ | ✅ |
-| Copilot (VS Code) | `.github/hooks/ai-guard.json` | ✅ (preview feature) | ✅ | ✅ |
-| Gemini Code Assist | none (no hook support) | instructions only | instructions only | ✅ |
+| Claude Code | `.claude/settings.json` | ✅ | ✅ | Optional |
+| Codex | `.codex/hooks.json` | ✅ | ✅ | Optional |
+| Cursor | `.cursor/hooks.json` | ✅ | ✅ | Optional |
+| Copilot (VS Code) | `.github/hooks/ai-guard.json` | ✅ (preview feature) | ✅ | Optional |
+| Gemini Code Assist | none (no hook support) | instructions only | instructions only | Optional |
 
 **Setup notes:**
 - Codex and Claude Code ask you to **trust/approve project hooks** the first time; use `/hooks` in each to review and approve them.
 - Hooks need `jq` (`/usr/bin/jq` on macOS). If it's missing they let everything through rather than blocking the project.
-- On a fresh clone, run `git config core.hooksPath .githooks` once to turn the commit check on.
-- `git commit --no-verify` skips the commit check. AIs must never use it.
+- Git hooks are optional. Use `git config --local core.hooksPath /dev/null` to disable all local Git hooks, or `.githooks` for advisory commit reminders.
+- Do not add blocking project checks to commits, pulls or pushes. Run `npm run lint:design` explicitly for UI work.
 
 ## 10. Access setup
 
-Apply migrations in order, then deploy the `people` Supabase Edge Function. Set its `APP_URL` to the approved frontend origin; allow `/login`, `/update-password` and `/accept-invite` redirects in Supabase Auth. Bootstrap one confirmed owner with `supabase/bootstrap-owner.sql` using a trusted psql connection and the `owner_email` variable; never expose owner assignment publicly. Public signup creates customers. The owner uses People to invite staff or change existing roles. Privileged keys belong only in server secrets.
+Apply migrations in order, then deploy the `people` Supabase Edge Function. Set its `APP_URL` to the approved frontend origin; allow `/login`, `/update-password` and `/accept-invite` redirects in Supabase Auth. Bootstrap one confirmed owner with `supabase/bootstrap-owner.sql` using a trusted psql connection and the `owner_email` variable; never expose owner assignment publicly. Public signup creates customers and requires email confirmation. Configure custom SMTP (or an existing Send Email hook) for public signup: [Supabase’s default sender is restricted to organization members](https://supabase.com/docs/guides/auth/auth-smtp). Set the hosted Site URL and exact `/login`, `/update-password`, `/accept-invite` redirects to the approved frontend origin; do not push local Auth defaults to hosting. Local Mailpit captures messages for development. Owners, admins and managers use People to invite staff or change lower-level accounts under the protected hierarchy. All access assignments are checked atomically against the actor and target, and audited. Open sessions refresh access on own-profile realtime events, focus and every 30 seconds while visible, clear restricted cached data, and fail closed on profile errors. Privileged keys belong only in server secrets.
 
-The separate disposable Glazed Demo project is provisioned. For a replacement demo project, apply the same migrations and configure `DEMO_MODE=true` on its People function. Use `node --env-file=.env.local scripts/demo/setup.mjs` from the repository root with `DEMO_PROJECT_REF`, `DEMO_DATABASE_URL`, `DEMO_SUPABASE_SERVICE_ROLE_KEY` and `DEMO_PASSWORD` in the process environment to populate and reset sample data and role accounts. The script refuses the persistent project. Owner demo access changes are simulated locally; no invitation emails are sent.
+The separate disposable Glazed Demo project is provisioned. For a replacement demo project, apply the same migrations and configure `DEMO_MODE=true` on its People function. Use `node --env-file=.env.local scripts/demo/setup.mjs` from the repository root with `DEMO_PROJECT_REF`, `DEMO_DATABASE_URL`, `DEMO_SUPABASE_SERVICE_ROLE_KEY` and `DEMO_PASSWORD` in the process environment to populate and reset sample data and role accounts. The script refuses the persistent project. Owner, admin and manager demo access changes follow the same hierarchy and are simulated locally; no invitation emails are sent.
 
-Access tests: `node --test scripts/verify/people_endpoint.test.mjs` and `scripts/seed/node_modules/.bin/tsx --test scripts/verify/access.test.ts`. Run `scripts/verify/access_security.sql` inside its rollback transaction after applying migrations. These tests cover API authorization, frontend access and reset guards; connected email/browser checks are still required before release.
+Access tests: `node --test scripts/verify/*.test.mjs` and `scripts/seed/node_modules/.bin/tsx --test scripts/verify/access.test.ts`. The database runner `node scripts/verify/run.mjs --skip-data` includes rollback-only access security checks after applying migrations; `scripts/verify/access_security.sql` can also run directly. These tests cover API authorization, frontend access and reset guards; connected email/browser checks are still required before release.
 
 Public demo Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Vercel hosting authentication is disabled so visitors can reach the login page; real ERP access still requires Glazed authentication. All six demo roles sign in automatically. The full history replay takes about 30 minutes over a stable remote connection (longer after reconnects); never run simultaneous reset seeds.

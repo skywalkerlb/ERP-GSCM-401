@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth, type AppRole } from '@/hooks/useAuth';
 import { homeFor } from '@/hooks/useRole';
@@ -23,7 +23,9 @@ export interface RequireRoleProps {
  * `<RequireRole roles={['manager']}>...</RequireRole>`
  */
 export function RequireRole({ roles, loginPath = '/login', fallback, redirectDenied, children }: RequireRoleProps) {
-  const { session, profile, profileError, loading } = useAuth();
+  const { session, profile, profileError, loading, refreshProfile, signOut } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [recoveryError, setRecoveryError] = useState('');
   const location = useLocation();
 
   if (loading) {
@@ -39,7 +41,14 @@ export function RequireRole({ roles, loginPath = '/login', fallback, redirectDen
       <EmptyState
         icon="user"
         title="We could not find your profile"
-        description={profileError ?? "Your account is signed in but has no role yet. Ask the platform owner to set it up, then sign in again."}
+        description={recoveryError || profileError || 'Your account is signed in but its profile is unavailable. Retry, or ask an administrator to finish account setup.'}
+        action={<div className="auth-form"><Button variant="primary" disabled={busy} onClick={async () => {
+          setBusy(true); setRecoveryError('');
+          try { await refreshProfile(); } finally { setBusy(false); }
+        }}>{busy ? 'Checking account' : 'Retry account setup'}</Button><Button variant="secondary" disabled={busy} onClick={async () => {
+          setBusy(true); setRecoveryError('');
+          try { await signOut(); } catch { setRecoveryError('Could not sign out. Check your connection and try again.'); } finally { setBusy(false); }
+        }}>Sign out</Button></div>}
       />
     );
   }

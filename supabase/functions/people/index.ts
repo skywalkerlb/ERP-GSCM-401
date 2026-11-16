@@ -1,4 +1,5 @@
 import { createClient, type User } from 'npm:@supabase/supabase-js@2.119.0';
+import { assignableRoles, canManageAccount, canAssignAccountRole } from '../_shared/account-access.ts';
 
 // Service credentials never leave this function. Every request verifies a user JWT and the
 // authoritative profile role rather than trusting editable user metadata or client role claims.
@@ -6,7 +7,6 @@ const url = Deno.env.get('SUPABASE_URL')!;
 const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const appUrl = Deno.env.get('APP_URL');
 const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-const assignable = new Set(['admin', 'manager', 'cashier', 'baker', 'customer']);
 const cors = {
   'Access-Control-Allow-Origin': appUrl ? new URL(appUrl).origin : '',
   'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
@@ -40,8 +40,9 @@ Deno.serve(async (req: Request) => {
   const { data: identity, error: authError } = await admin.auth.getUser(token);
   if (authError || !identity.user) return reply(401, { error: 'Your session has expired. Sign in again.' });
   const { data: caller, error: callerError } = await admin.from('profiles').select('role').eq('user_id', identity.user.id).single();
-  if (callerError || caller?.role !== 'owner') return reply(403, { error: 'Only the owner can manage people.' });
+  if (callerError || !assignableRoles(caller?.role).length) return reply(403, { error: 'Your role cannot manage people.' });
 
+  let invitationSent = false;
   try {
     const body = await req.json();
     if (!body || typeof body !== 'object') return reply(400, { error: 'Provide an account action.' });
@@ -66,13 +67,16 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await admin.auth.admin.getUserById(body.user_id);
       if (error || !data.user?.email) return reply(404, { error: 'Account not found.' });
       const { data: profile, error: profileError } = await admin.from('profiles').select('role').eq('user_id', body.user_id).single();
-      if (profileError || !profile || profile.role === 'owner') return reply(403, { error: 'This account cannot be invited.' });
+      if (profileError || !profile || !canManageAccount(caller.role, profile.role, identity.user.id, body.user_id)) return reply(403, { error: 'Your role cannot manage this account.' });
       if (data.user.email_confirmed_at) return reply(400, { error: 'This account is already active. Use password recovery from sign in if needed.' });
+      const authorized = await admin.rpc('_authorize_account_access', { p_actor: identity.user.id, p_user: body.user_id, p_role: profile.role });
+      if (authorized.error) return reply(403, { error: 'Your access changed. Refresh the directory and try again.' });
       const invite = await admin.auth.admin.inviteUserByEmail(data.user.email, { redirectTo });
       if (invite.error) throw invite.error;
       return reply(200, { message: 'Invitation sent. Ask them to check their inbox.' });
     }
-    if (!assignable.has(body.role)) return reply(400, { error: 'Choose admin, manager, cashier, baker or customer.' });
+    if (!['admin','manager','cashier','baker','customer'].includes(body.role)) return reply(400, { error: 'Choose a valid account role.' });
+    if (!assignableRoles(caller.role).includes(body.role)) return reply(403, { error: 'Your role cannot assign that access level.' });
     const location = body.home_location_id ?? null;
     if (location !== null) {
       if (!Number.isSafeInteger(location) || location <= 0) return reply(400, { error: 'Choose a valid location.' });
@@ -85,30 +89,44 @@ Deno.serve(async (req: Request) => {
       if (typeof body.email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email.trim())) return reply(400, { error: 'Enter a valid email address.' });
       const email = body.email.trim().toLowerCase();
       target = (await allUsers()).find(u => u.email?.toLowerCase() === email);
+      // Existing targets must be checked before any invitation email is sent.
+      if (target) {
+        const profile = await admin.from('profiles').select('role').eq('user_id', target.id).single();
+        if (profile.error || !profile.data) return reply(409, { error: 'The account profile is missing. Ask an administrator to finish backend setup.' });
+        if (!canAssignAccountRole(caller.role, profile.data.role, body.role, identity.user.id, target.id)) return reply(403, { error: 'Your role cannot change this account.' });
+      }
+      const authorized = await admin.rpc('_authorize_account_access', {
+        p_actor: identity.user.id, p_user: target?.id ?? null, p_role: body.role,
+      });
+      if (authorized.error) return reply(403, { error: 'Your access changed. Refresh the directory and try again.' });
       if (!target || !target.email_confirmed_at) {
         const result = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
         if (result.error) throw result.error;
         target = result.data.user;
+        invitationSent = true;
       }
+      if (!target) throw new Error('Missing invited account');
       targetId = target.id;
     } else {
       if (typeof body.user_id !== 'string') return reply(400, { error: 'Choose an account.' });
       targetId = body.user_id;
     }
     const { data: profile, error: profileError } = await admin.from('profiles').select('role').eq('user_id', targetId).single();
-    if (profileError || !profile) return reply(409, { error: 'The account profile is missing. Apply the backend migrations before assigning access.' });
-    if (profile.role === 'owner' || targetId === identity.user.id) return reply(403, { error: 'The owner account cannot be changed here.' });
+    const partial = (message: string) => reply(409, { error: `The invitation email was sent, but access was not assigned. ${message} Refresh the directory and retry the access change.`, invitation_sent: true });
+    if (profileError || !profile) return invitationSent ? partial('The account profile is missing.') : reply(409, { error: 'The account profile is missing. Apply the backend migrations before assigning access.' });
+    if (!canAssignAccountRole(caller.role, profile.role, body.role, identity.user.id, targetId)) return invitationSent ? partial('Your role cannot change this account.') : reply(403, { error: 'Your role cannot change this account.' });
     // Keep customer_id intact when promoting a customer. This preserves existing business records.
     const { error } = await admin.rpc('_set_account_access', {
-      p_user: targetId, p_role: body.role, p_home_location: location,
+      p_actor: identity.user.id, p_user: targetId, p_role: body.role, p_home_location: location,
     });
-    if (error) throw error;
+    if (error) return invitationSent ? partial('The access update failed.') : reply(error.code === '42501' ? 403 : 400, { error: 'Access was not saved. Refresh the directory, check your permissions and try again.' });
     return reply(200, { message: action === 'invite' && !target?.email_confirmed_at
       ? 'Access assigned. The invitation recipient can set a password from their email.'
       : 'Account access updated.' });
   } catch (error) {
     // No tokens or connection credentials in client responses or logs.
     console.error('People action failed', error instanceof Error ? error.name : 'backend_error');
+    if (invitationSent) return reply(409, { error: 'The invitation email was sent, but access assignment could not be confirmed. Refresh the directory and verify the account role before retrying.', invitation_sent: true });
     return reply(400, { error: 'Account management failed. Check the account details and backend configuration, then try again.' });
   }
 });

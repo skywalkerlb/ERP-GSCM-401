@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase, isDemo, exitDemo } from '@/lib/supabase';
+import { queryClient } from '@/lib/queryClient';
 
 export type AppRole = 'owner' | 'admin' | 'manager' | 'cashier' | 'baker' | 'customer';
 export interface Profile {
@@ -11,6 +12,16 @@ export interface Profile {
   customer_id: number | null;
 }
 export interface AuthResult { error?: string }
+export function signupFieldErrors(input: { email: string; password: string; fullName: string }): Partial<Record<'email' | 'password' | 'fullName', string>> {
+  return {
+    ...(!input.fullName.trim() ? { fullName: 'Enter your full name.' } : {}),
+    ...(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email.trim()) ? { email: 'Enter a valid email address.' } : {}),
+    ...(input.password.length < 6 ? { password: 'Use a password with at least 6 characters.' } : {}),
+  };
+}
+export function validateSignup(input: { email: string; password: string; fullName: string }): string | null {
+  return Object.values(signupFieldErrors(input))[0] ?? null;
+}
 export interface AuthContextValue {
   session: Session | null;
   user: User | null;
@@ -68,6 +79,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionChecked, setSessionChecked] = useState(!isSupabaseConfigured);
   const [checkedUserId, setCheckedUserId] = useState<string | null>(null);
   const userId = session?.user.id ?? null;
+  const currentProfile = useRef<Profile | null>(null);
+  const currentUserId = useRef(userId);
+  currentUserId.current = userId;
+  const applyProfile = useCallback((next: Profile | null) => {
+    const previous = currentProfile.current;
+    if (previous?.user_id !== next?.user_id || previous?.role !== next?.role || previous?.home_location_id !== next?.home_location_id || previous?.customer_id !== next?.customer_id) queryClient.clear();
+    currentProfile.current = next;
+    setProfile(next);
+  }, []);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -89,19 +109,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    setProfile(null);
+    applyProfile(null);
     setProfileError(null);
     if (!userId) { setCheckedUserId(null); return; }
-    void fetchProfileWithRetry(userId).then((next) => {
-      if (active) {
-        setProfile(next);
+    let inFlight = false;
+    const refresh = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const next = await fetchProfileWithRetry(userId);
+        if (!active) return;
+        applyProfile(next);
+        setProfileError(null);
         if (!next) setProfileError('You are signed in, but your account has no role yet. Ask the platform owner to set it up.');
+      } catch (error) {
+        if (active) { applyProfile(null); setProfileError(friendlyAuthError(error)); }
+      } finally {
+        inFlight = false;
+        if (active) setCheckedUserId(userId);
       }
-    }).catch((error: unknown) => {
-      if (active) setProfileError(friendlyAuthError(error));
-    }).finally(() => { if (active) setCheckedUserId(userId); });
-    return () => { active = false; };
-  }, [userId]);
+    };
+    void refresh();
+    const onFocus = () => { void refresh(); };
+    const interval = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, 30_000);
+    window.addEventListener('focus', onFocus);
+    // Treat realtime payloads only as invalidation signals; read access through RLS again.
+    const channel = supabase.channel(`account-access-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `user_id=eq.${userId}` }, onFocus)
+      .subscribe();
+    return () => { active = false; window.clearInterval(interval); window.removeEventListener('focus', onFocus); void supabase.removeChannel(channel); };
+  }, [userId, applyProfile]);
 
   const signIn = useCallback<AuthContextValue['signIn']>(async (email, password) => {
     try {
@@ -109,13 +146,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) return { error: friendlyAuthError(error) };
       const next = data.user ? await fetchProfileWithRetry(data.user.id) : null;
       setSession(data.session);
-      setProfile(next);
+      applyProfile(next);
       setCheckedUserId(data.user?.id ?? null);
       setProfileError(next ? null : 'You are signed in, but your account has no role yet. Ask the platform owner to set it up.');
       return { profile: next };
     } catch (error) { return { error: friendlyAuthError(error) }; }
-  }, []);
+  }, [applyProfile]);
   const signUp = useCallback<AuthContextValue['signUp']>(async ({ email, password, fullName }) => {
+    const invalid = validateSignup({ email, password, fullName });
+    if (invalid) return { error: invalid };
+    if (isDemo) return { error: 'Exit the demo before creating your account.' };
     try {
       const { data, error } = await supabase.auth.signUp({ email: email.trim(), password,
         options: { emailRedirectTo: `${window.location.origin}/login`, data: { full_name: fullName.trim() } } });
@@ -127,15 +167,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (isDemo) { await exitDemo(); return; }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    setSession(null); setProfile(null); setProfileError(null);
+    queryClient.clear();
+    setSession(null); setProfile(null); currentProfile.current = null; setProfileError(null);
   }, []);
   const refreshProfile = useCallback(async () => {
     if (!userId) return null;
     try {
       const next = await fetchProfile(userId);
-      setProfile(next); setProfileError(null); return next;
-    } catch (error) { setProfileError(friendlyAuthError(error)); return null; }
-  }, [userId]);
+      if (currentUserId.current !== userId) return null;
+      applyProfile(next); setProfileError(next ? null : 'Your account profile is missing. Ask an administrator to finish account setup.'); return next;
+    } catch (error) { if (currentUserId.current === userId) { applyProfile(null); setProfileError(friendlyAuthError(error)); } return null; }
+  }, [userId, applyProfile]);
   const value = useMemo<AuthContextValue>(() => ({ session, user: session?.user ?? null, profile,
     profileError, loading: !sessionChecked || Boolean(userId && checkedUserId !== userId),
     signIn, signUp, signOut, refreshProfile,
