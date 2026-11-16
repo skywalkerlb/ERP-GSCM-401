@@ -128,17 +128,18 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 **Design exceptions** (approved one-offs that break the design system; each is also marked `ds-exception:` in code):
 | Date | File / place | What | User's words |
 |---|---|---|---|
-| _none yet_ | | | |
+| 2026-11-16 | Barcode Labels page title/breadcrumb, sidebar and item editor hint | Capitalize Labels in this page name instead of sentence case; marked `ds-exception:` in source. | "on the barcode labels page, can you capitalize the L on labels" |
 
 - **Show sign-in, public customer signup, and a demo role selector at the bottom of login.** Only the owner assigns staff access; admins operate the ERP. Anyone must be able to select a role and enter the demo without typing credentials or registering. Demo workflows use isolated sample data and simulated invitations; never imply missing configuration is being prepared automatically. Scope: authentication, permissions and demo. Source: 2026-11-10, user approved implementation plan.
 
 ### 8.2 Wording & content
-- _None recorded yet._
+- **Write the page name as "Barcode Labels".** Scope: this page's heading, browser title, breadcrumb, sidebar entry and references elsewhere in the app; exception to sentence case for this page name only. Source: 2026-11-16, "on the barcode labels page, can you capitalize the L on labels".
 
 ### 8.3 Code & architecture
 - **Keep shared values centralized** (tokens, constants, components) so a single change applies project-wide. Scope: all code. Source: 2026-11-09, the user wants changes "implemented across the whole project".
 
 ### 8.4 Workflow / process
+- **Allow GitHub pulls and fetches without project hook prerequisites or changelog reminders.** Synchronizing upstream history alone is not an authored edit; commands that also edit files and manual conflict resolutions still follow the normal checks. Sandbox permissions and Git conflict protection still apply. Scope: all AI tool hooks. Source: 2026-11-16, "make sure pulling from github is not blocked by any hooks".
 - **Every AI reads README.md and PROGRESS.md before editing, and updates them after every edit.** Scope: every session, every tool. Source: 2026-11-09.
 - **Treat a correction as a project-wide rule, not a one-off fix.** When the user asks to change something an AI just made, apply it everywhere it's relevant and record it here. Scope: all corrections (design, wording, code). Source: 2026-11-09.
 - **The user works with several AI tools** (Claude Code, Codex, Cursor, Copilot, Gemini). Keep the docs tool-neutral. Scope: all docs. Source: 2026-11-09.
@@ -181,11 +182,11 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 - Say which AI tool you are in each changelog heading so the user can trace work across tools.
 
 ### 9.5 How the rules are enforced (don't remove or weaken these without the user's permission)
-All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior is the same in every tool.
+All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior is the same in every tool. Plain `git pull` and `git fetch` are synchronization operations: they neither require the read-before-edit check nor create a progress reminder. Additional writes in the same shell command remain guarded; existing reminders from authored edits remain pending.
 
 | Check | What happens |
 |---|---|
-| **Read before edit** | Any file edit, or any shell command that changes files, is **blocked** until this session has read README.md, PROGRESS.md **and design-system/DESIGN_SYSTEM.md**. If another agent changes any of them afterward, you're blocked again until you re-read it. |
+| **Read before edit** | Any authored file edit, or any shell command classified as an edit (excluding pull/fetch synchronization), is **blocked** until this session has read README.md, PROGRESS.md **and design-system/DESIGN_SYSTEM.md**. If another agent changes any of them afterward, you're blocked again until you re-read it. |
 | **Update after edit** | If project files changed and PROGRESS.md wasn't updated, the agent is **sent back once** when it tries to finish (it can't loop). |
 | **Design checklist** | If UI files changed (`.css/.scss/.tsx/.jsx/.html`, `src/`, `design-system/`), the agent is also sent back once with the design-system checklist. |
 | **Git commit check** | `.githooks/pre-commit` runs `scripts/check-design.sh`, which rejects hard-coded hex/rgb colors, px sizes above 2px and literal fonts in UI code outside `design-system/` (lines marked `ds-exception:` are skipped). It then rejects any commit that changes project files unless PROGRESS.md gains a new `### YYYY-MM-DD` changelog entry. This applies to every tool and every person. Run `sh scripts/check-design.sh --all` at any time to scan the whole project. |
