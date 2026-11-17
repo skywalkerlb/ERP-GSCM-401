@@ -4,29 +4,47 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** Local sidebar and Barcode Labels changes are published to GitHub main in 1ecc273; fetch confirms local/remote match. Live website deployment is not complete: no GitHub deployment records or commit status checks are present, and Vercel requires sign-in to the owning account. GitHub CLI sign-in as chrisshipp19-web is complete after explicit user approval of exact scopes. Publication integration includes upstream ff265ec plus local sidebar fixes and Barcode Labels capitalization; integrated build/typecheck, full design lint, diff checks and all 326 JavaScript tests pass. Username/password-only signup is implemented, verified and pushed to GitHub main in commit `530db86`. Signup has two fields, signs customers in immediately when hosted confirmation is disabled, and requires no contact email. Both login screens accept usernames and existing email accounts. People displays usernames and offers protected lower-level username password resets. Existing role hierarchy and isolated demo behavior remain in place.
-- Current publication verification: 326 JavaScript tests pass. Previously recorded 4 TypeScript role/reset-guard tests passed; build/design lint/diff checks pass, and the final TypeScript check exited successfully after integration. Exact pending delegated-access and username migrations plus the complete signup/hierarchy/username/reset audit SQL suite pass against actual demo Postgres in one rolled-back transaction. No demo schema or data changes persisted.
-- Hosted rollout is blocked: persistent database rejects saved password (`28P01`), Supabase CLI has no login token, and hosted public settings still report email confirmation required. No persistent Auth settings, schema, accounts or deployments changed. Earlier missing persistent API schema remains unresolved.
-- Both-theme visuals have not been rechecked for publication. Browser access now works for sign-in; prior visual attempts had CUA errors. Components and theme tokens were reviewed against Glazed docs/reference images; preserved approved Barcode Labels capitalization and Glazed! sidebar punctuation exceptions.
-- Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
+**As of 2026-11-16.** The persistent ERP Supabase project (`eaphbcbklbcadokfcewc`) is migrated and configured for username signup without email verification. All 21 ordered migrations and their original versions are recorded. People is deployed with the production origin and `DEMO_MODE=false`. Auth Site URL is `https://erpprojectgscm401.vercel.app` with exact login/password-update/invitation redirects. Existing accounts and isolated demo data are preserved; no reset or seed replay ran.
+- Hosted checks: all 35 non-data schema assertions pass (5 data-dependent checks skipped), and the full signup/hierarchy/username/reset audit SQL suite passes in a rolled-back transaction on the persistent backend. Real public signup returned an immediate session and customer profile; sign-out/password login, duplicate rejection and People customer denial passed. The temporary Auth account and customer were removed.
+- Local main includes GitHub history through `c4264d6`, including Chris Shipp's sidebar/Barcode Labels changes and the earlier signup implementation (`530db86`). This publication adds the Supabase rollout handoff; no application changes are authored here. Prior 330 local tests, build, typecheck, design lint and diff checks pass. No product code changed during rollout.
+- Supabase CLI login and management API access work outside the sandbox. Direct saved database password remains stale (`28P01`); migration rollout used the authenticated management API with transaction-per-migration and CLI-compatible history. Tokens and API keys stayed in memory.
+- The persistent project has no owner assigned. Vercel production still points to the older Nov 10 frontend; publishing the new frontend remains separate. Both-theme visuals remain unverified; this session previously hit CUA tab-creation errors, while upstream reports browser sign-in working.
+- Demo seed reproducibility remains a separate follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- GitHub publication is complete. Waiting for user sign-in to the existing Vercel project in the opened Chrome tab; plugin disabled by administrator and GitHub sign-in reports no linked Vercel account.
-- Hosted configuration, migrations, endpoint/frontend deployment and end-to-end signup verification await working Supabase credentials. The temporary verification server has been stopped.
+- Supabase rollout and hosted API verification are complete; no backend deployment is in flight. Awaiting the user's exact owner account choice before owner bootstrap; Vercel frontend deployment and browser review remain pending.
 
 ## Next Steps
-1. After user signs in to the existing Vercel project, inspect deployment/source configuration and deploy the requested website changes; verify live Barcode Labels. Coordinate latest signup frontend/backend rollout with the existing backend prerequisites.
-2. Restore hosted access by correcting the persistent database password locally and running `supabase login`; inspect hosted migration history without resetting data.
-3. Apply ordered migrations, disable hosted Confirm email, bootstrap the owner if needed, deploy People, then deploy the frontend together with matching backend changes. Preserve existing accounts and demo data.
-4. Verify hosted username signup → immediate shop access → sign-out/login, existing email login/recovery and authorized username password reset; finish both-theme browser review once CUA works.
-5. Configure SMTP only for legacy recovery/staff email invitations; address seed reproducibility only under a future explicit request.
+1. Obtain the exact owner account choice, then bootstrap only that existing account; preserve its customer records.
+2. Deploy the current frontend to Vercel production so the new two-field signup UI reaches visitors, then verify the browser flow in both themes.
+3. Verify owner/admin/manager People flows against the deployed endpoint after owner setup; configure SMTP only for legacy recovery and staff invitations if needed.
+4. Correct the saved database password locally for direct SQL tools when convenient; management API access already supports backend operations. Keep demo reset/replay separate.
 
 ## Open Questions for the User
-- Sign in to Vercel using an account with access to erpprojectgscm401, or confirm hosting access is unavailable. GitHub authorization and publication are complete. Hosted rollout needs a working local persistent database password and completed `supabase login`. Never paste credentials in chat.
-- Which existing account should own the persistent ERP if it has not been bootstrapped? Username signup needs no inbox.
+- Owner setup still needs the exact existing username or email to grant access. Never share passwords in chat. No further credentials are needed for Supabase management API access.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Publish persistent backend rollout records (Codex)
+- **What:** Reconciled the completed Supabase rollout records with current GitHub main for publication.
+- **Why:** User requested deploying the latest work to GitHub.
+- **How:** Fast-forwarded six upstream commits without changing their source or attribution; retained sidebar/Barcode Labels preferences and both documentation histories. Verified current GitHub login as briggsamason and retained that account's noreply author identity. Documentation diff checks and saved-credential scan pass; existing application checks remain recorded below. No new UI changes.
+- **Files:** README.md, PROGRESS.md and docs/progress-archive/2026-11.md.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** Remote main advanced during concurrent work; combined current backend status with upstream handoff instead of overwriting it.
+- **Follow-ups:** Frontend hosting and owner bootstrap remain separate from GitHub publication.
+
+### 2026-11-16: Roll out persistent Supabase username access (Codex)
+- **What:** Applied all 21 migrations to the previously empty persistent schema, deployed People and disabled signup email verification.
+- **Why:** User requested the Supabase rollout after connecting CLI access.
+- **How:** Authenticated management API bypassed stale direct-DB credentials; transaction-per-migration preserved enum boundaries and original migration history. Set production Site URL/exact redirects and People origin. All 35 schema checks (5 data checks skipped), rollback security suite and live signup/login/duplicate/customer-denial probes pass; temporary test account/customer removed. No data reset, demo seed, owner assignment, frontend deploy or UI edits.
+- **Files:** README.md, PROGRESS.md and progress archive; deployed existing Supabase migrations/functions and Auth settings.
+- **Preferences learned:** None; the existing no-email-verification preference is now configured on hosting.
+- **Correction sweep:** N/A.
+- **Rework:** Direct DB access still rejected the saved password; used the connected management API securely instead.
+- **Follow-ups:** Obtain exact owner account, deploy frontend and verify browser/privileged People flows.
+
 ### 2026-11-16: Published verified label and sidebar changes to GitHub (Codex)
 - **What:** Pushed the fully integrated history to main as 1ecc273; local and remote branches match.
 - **Why:** The user requested publishing the changes and explicitly approved exact GitHub CLI permissions.
@@ -106,27 +124,6 @@
 - **Correction sweep:** N/A
 - **Rework:** New upstream signup/access implementation requires integration before push.
 - **Follow-ups:** Merge, check, push and verify deployment. Approved Barcode Labels capitalization exception remains; no new UI changes.
-
-### 2026-11-16: Capitalized Barcode Labels page name (Codex)
-- **What:** Capitalized Labels in the page heading, browser title, breadcrumb, sidebar entry and item editor hint.
-- **Why:** The user requested an uppercase L on the barcode labels page.
-- **How:** Updated all four page-name literals across three source files; kept existing Glazed components and theme styles. Marked the approved sentence-case exception with ds-exception comments and in README. Source sweep, design lint and diff checks pass; no browser verification performed.
-- **Files:** `src/features/labels/LabelsPage.tsx`, `src/app/nav.ts`, `src/features/items/ItemEditor.tsx`, `README.md`, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
-- **Preferences learned:** This page name is "Barcode Labels" in all app references (README §8.2).
-- **Correction sweep:** Searched the whole project for Barcode labels; corrected four active UI literals in three files. PageHeader also sets the browser tab title.
-- **Rework:** None
-- **Follow-ups:** User review locally; existing deployment, backend and visual follow-ups remain.
-
-### 2026-11-16: Started local app for user testing (Codex)
-- **What:** Installed locked frontend dependencies and started Vite at http://localhost:5173/login.
-- **Why:** The user requested a local address to test changes without using the terminal.
-- **How:** Downloaded official Node v24.22.3 for Apple Silicon to /private/tmp, verified its SHA-256 against the official manifest, ran npm ci, and started the existing dev command. Login route returns HTTP 200; browser workflows not checked.
-- **Files:** `PROGRESS.md`, `docs/progress-archive/2026-11.md`; ignored node_modules and temporary runtime/cache only.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** Used Node 24 to satisfy the barcode dependency's engine requirement; retried network and port access with required permissions.
-- **Follow-ups:** User local testing; temporary runtime may need restoring after cleanup. No application source changes or UI deviations.
-
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
