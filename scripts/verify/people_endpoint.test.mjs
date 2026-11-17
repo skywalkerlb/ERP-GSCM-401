@@ -11,7 +11,7 @@ const js = ts.transpileModule(identity + '\n' + shared + '\n' + source.replace(/
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None },
 }).outputText;
 
-function harness({ role = 'owner', demo = false, targetRole = 'customer', confirmed = true, rpcError = null, authorizationError = null, throwUpdate = false, username = false, passwordError = null, throwPasswordUpdate = false } = {}) {
+function harness({ appUrl = 'https://glazed.example', role = 'owner', demo = false, targetRole = 'customer', confirmed = true, rpcError = null, authorizationError = null, throwUpdate = false, username = false, passwordError = null, throwPasswordUpdate = false } = {}) {
   let handler;
   const calls = [];
   const users = [
@@ -57,12 +57,12 @@ function harness({ role = 'owner', demo = false, targetRole = 'customer', confir
   vm.runInNewContext(js, {
     createClient: () => client,
     Deno: {
-      env: { get: key => ({ APP_URL: 'https://glazed.example', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-only', DEMO_MODE: String(demo) })[key] },
+      env: { get: key => ({ APP_URL: appUrl, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_SERVICE_ROLE_KEY: 'test-only', DEMO_MODE: String(demo) })[key] },
       serve: fn => { handler = fn; },
     },
     Request, Response, URL, console,
   });
-  async function request(body, { token = 'valid', origin = 'https://glazed.example' } = {}) {
+  async function request(body, { token = 'valid', origin = new URL(appUrl).origin } = {}) {
     const headers = { 'Content-Type': 'application/json', Origin: origin };
     if (token) headers.Authorization = `Bearer ${token}`;
     const response = await handler(new Request('https://example.supabase.co/functions/v1/people', { method: 'POST', headers, body: JSON.stringify(body) }));
@@ -236,4 +236,14 @@ test('reserved username identifiers cannot receive invitation or resend emails',
   assert.equal((await h.request({ action: 'invite', email: 'sample_user@users.glazed.invalid', role: 'cashier' })).status, 400);
   assert.equal((await h.request({ action: 'resend', user_id: 'target' })).status, 400);
   assert.equal(h.calls.length, 0);
+});
+
+test('Pages invitations preserve the repository prefix and accept the Pages origin', async () => {
+  for (const appUrl of ['https://skywalkerlb.github.io/ERP-GSCM-401', 'https://skywalkerlb.github.io/ERP-GSCM-401/']) {
+    const h = harness({ appUrl, confirmed: false });
+    const result = await h.request({ action: 'invite', email: 'staff@example.invalid', role: 'baker' });
+    assert.equal(result.status, 200);
+    assert.equal(h.calls.find(c => c.name === 'invite').opts.redirectTo, 'https://skywalkerlb.github.io/ERP-GSCM-401/accept-invite');
+    assert.equal((await h.request({ action: 'list' }, { origin: 'https://attacker.example' })).status, 403);
+  }
 });

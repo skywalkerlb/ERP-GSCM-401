@@ -4,27 +4,48 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** The persistent ERP Supabase project (`eaphbcbklbcadokfcewc`) is migrated and configured for username signup without email verification. All 21 ordered migrations and their original versions are recorded. People is deployed with the production origin and `DEMO_MODE=false`. Auth Site URL is `https://erpprojectgscm401.vercel.app` with exact login/password-update/invitation redirects. Existing accounts and isolated demo data are preserved; no reset or seed replay ran.
-- Hosted checks: all 35 non-data schema assertions pass (5 data-dependent checks skipped), and the full signup/hierarchy/username/reset audit SQL suite passes in a rolled-back transaction on the persistent backend. Real public signup returned an immediate session and customer profile; sign-out/password login, duplicate rejection and People customer denial passed. The temporary Auth account and customer were removed.
-- Local main includes GitHub history through `c4264d6`, including Chris Shipp's sidebar/Barcode Labels changes and the earlier signup implementation (`530db86`). This publication adds the Supabase rollout handoff; no application changes are authored here. Prior 330 local tests, build, typecheck, design lint and diff checks pass. No product code changed during rollout.
-- Supabase CLI login and management API access work outside the sandbox. Direct saved database password remains stale (`28P01`); migration rollout used the authenticated management API with transaction-per-migration and CLI-compatible history. Tokens and API keys stayed in memory.
-- The persistent project has no owner assigned. Vercel production still points to the older Nov 10 frontend; publishing the new frontend remains separate. Both-theme visuals remain unverified; this session previously hit CUA tab-creation errors, while upstream reports browser sign-in working.
-- Demo seed reproducibility remains a separate follow-up (48 skipped events, 19 quantity differences).
+**As of 2026-11-16.** GitHub Pages replaces Vercel as the requested public frontend host at `https://skywalkerlb.github.io/ERP-GSCM-401/`. The push-to-main Actions workflow, five browser/demo build secrets, repository-prefixed assets/router/demo navigation/Auth callbacks and README site link are prepared. The old Vercel rewrite config is removed, and About identifies GitHub Pages.
+- Publication is not live yet: connected GitHub account briggsamason has push/triage permission but no admin/maintain permission. GitHub denied Pages creation and repository About-link updates with HTTP 404. A repository owner must choose Settings → Pages → Source: GitHub Actions once. README already includes the clickable intended site link.
+- Checks: all 334 JavaScript tests, repository-path production build/typecheck, design lint, workflow YAML parsing and diff checks pass. Build assets retain the correct prefix; no saved credentials were found across the 19 pending files. No styling tokens or component layouts changed; both-theme browser review remains unverified.
+- Persistent Supabase is migrated (21 original migration versions), signup confirmation is disabled, and People is deployed. Supabase Site URL, exact repository-prefixed Auth callback allowlist and People APP_URL now target GitHub Pages; existing callback URLs remain allowed. The invitation path fix is deployed. Prior 35 schema assertions and rollback account security suite passed; public signup/login and permissions were verified with a removed temporary account.
+- Direct saved DB password remains stale (`28P01`); Supabase management API/CLI login works outside the sandbox. No owner has been assigned. Existing accounts and separate demo data are preserved; no reset or seed replay ran.
+- Latest upstream sidebar/Barcode Labels changes and contributor history remain integrated. Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Supabase rollout and hosted API verification are complete; no backend deployment is in flight. Awaiting the user's exact owner account choice before owner bootstrap; Vercel frontend deployment and browser review remain pending.
+- Publishing the completed Pages implementation to main and verifying the Actions run. Live publication awaits one-time repository-owner Pages enablement; all required frontend build secrets are configured.
 
 ## Next Steps
-1. Obtain the exact owner account choice, then bootstrap only that existing account; preserve its customer records.
-2. Deploy the current frontend to Vercel production so the new two-field signup UI reaches visitors, then verify the browser flow in both themes.
-3. Verify owner/admin/manager People flows against the deployed endpoint after owner setup; configure SMTP only for legacy recovery and staff invitations if needed.
-4. Correct the saved database password locally for direct SQL tools when convenient; management API access already supports backend operations. Keep demo reset/replay separate.
+1. Repository owner selects GitHub Actions in Settings → Pages, then reruns the Pages workflow if its initial deployment failed before enablement.
+2. Verify the public root, direct/reloaded routes, username signup/login, demo entry/exit and both themes. Custom 404 loads the SPA at nested routes; direct nested responses retain HTTP 404 while rendering normally.
+3. Add the Pages URL to repository About after an administrator signs in (README link is already present).
+4. Obtain the exact existing owner account before bootstrap; verify privileged People/invitation flows afterward. Configure SMTP only for legacy recovery/staff invitations if needed.
 
 ## Open Questions for the User
-- Owner setup still needs the exact existing username or email to grant access. Never share passwords in chat. No further credentials are needed for Supabase management API access.
+- A repository owner/admin must enable GitHub Pages with Source: GitHub Actions; current collaborator credentials cannot change that setting.
+- Which existing username or email should receive ERP owner access? Never share passwords in chat.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-16: Configure GitHub Pages automatic publishing (Codex)
+- **What:** Added push-to-main Pages publishing, frontend base-path support and path-preserving invitation redirects; replaced current Vercel hosting guidance.
+- **Why:** User wants anyone to open the app from GitHub and see updates after each push.
+- **How:** Pinned official Pages actions, Node 24 build/tests, artifact deployment and custom 404; configured five frontend/demo Actions secrets without exposing privileged credentials. 334 tests, repository-path build/typecheck, design lint, workflow YAML and diff checks pass; Pages/About settings require repository administration. Deployed the invitation prefix fix and configured Supabase for Pages. No visual design changes.
+- **Files:** Pages workflow, Vite/router/URL helpers, People redirect, verification tests, current docs, env example and removed Vercel rewrite config.
+- **Preferences learned:** GitHub Pages replaces Vercel; main pushes publish automatically (README §8.3).
+- **Correction sweep:** Swept active hosting instructions, assets, full-page redirects, Auth callbacks and invitation URLs; historical logs retained.
+- **Rework:** GitHub denied Pages enablement because the connected collaborator lacks repository administration.
+- **Follow-ups:** One-time owner Pages enablement and live URL/browser verification; Supabase canonical URLs and People are already configured for Pages.
+
+### 2026-11-16: Support repository-path frontend hosting (Codex)
+- **What:** Added a configurable Vite base, router basename and shared full-page/callback URL helpers for GitHub Pages.
+- **Why:** User wants a public GitHub-hosted frontend that updates when main is pushed.
+- **How:** Keep browser routing and Auth URL hashes; prefix demo entry/exit and recovery URLs with the build base. No design values or visible component markup changed; existing Glazed styles remain intact. 36 focused URL/auth/demo tests, typecheck, design lint and the repository-prefix production build pass. All six built entry assets retain the repository prefix and exist.
+- **Files:** vite.config.ts, src/lib/appUrl.ts, src/app/routes.tsx, src/lib/supabase.ts, src/app/AuthPages.tsx, routing/auth/demo verification tests and PROGRESS.md.
+- **Preferences learned:** GitHub Pages replaces Vercel hosting; parent agent records the preference centrally.
+- **Correction sweep:** Searched runtime full-page navigation, Auth redirects and absolute asset paths; updated two demo redirects and password recovery plus the shared router/build base.
+- **Rework:** None; root-hosted local development retains its existing URLs.
+- **Follow-ups:** Complete coordinated Pages deployment, server invitation-prefix handling and live deep-link checks. GitHub custom 404 serves the SPA for nested routes while preserving the request URL; direct nested requests retain HTTP 404 status.
+
 ### 2026-11-16: Publish persistent backend rollout records (Codex)
 - **What:** Reconciled the completed Supabase rollout records with current GitHub main for publication.
 - **Why:** User requested deploying the latest work to GitHub.
@@ -104,26 +125,6 @@
 - **Correction sweep:** N/A
 - **Rework:** Reconciled newer upstream commits and documentation before attempting publication; preserved local histories and Chris Shipp attribution.
 - **Follow-ups:** Await exact scope approval, complete GitHub sign-in/push and resolve hosting access. Existing Barcode Labels and Glazed! exceptions remain; no new UI changes.
-
-### 2026-11-16: Integrated upstream for requested publication (Codex)
-- **What:** Merged latest upstream signup/access work with local sidebar fixes and Barcode Labels capitalization.
-- **Why:** Publish user-approved changes while preserving concurrent contributors' work.
-- **How:** Preserved both histories, resolved three documentation conflicts by combining preferences and history, and retained upstream access rules and sidebar punctuation. Kept normal configured Git hooks. Integrated build/typecheck, full design lint, diff checks and 281 JavaScript verification tests pass; publication/deployment verification remain pending.
-- **Files:** Merged application, backend, verification, hook and documentation changes; PROGRESS.md and archive.
-- **Preferences learned:** None; Chris Shipp attribution and Barcode Labels capitalization retained.
-- **Correction sweep:** N/A
-- **Rework:** Reconciled divergent main branches without rewriting or dropping commits.
-- **Follow-ups:** Run integrated checks, push and verify hosting. Approved exceptions: Barcode Labels capitalization and sidebar Glazed! punctuation; both-theme browser visuals remain pending.
-
-### 2026-11-16: Prepared local changes for publication (Codex)
-- **What:** Prepared Barcode Labels wording, earlier sidebar fix and pending project notes for publication.
-- **Why:** The user requested publishing the changes to the live website.
-- **How:** Verified Chris Shipp against connected GitHub account, confirmed local noreply commit identity and active hooks. Build/typecheck pass. Fetched newer upstream commits for a merge preserving both contributors' work; deployment remains pending.
-- **Files:** Pending source, hook and documentation files; PROGRESS.md and progress archive.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** New upstream signup/access implementation requires integration before push.
-- **Follow-ups:** Merge, check, push and verify deployment. Approved Barcode Labels capitalization exception remains; no new UI changes.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

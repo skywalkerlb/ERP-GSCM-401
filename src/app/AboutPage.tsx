@@ -80,8 +80,8 @@ function AboutContent() {
               <span className="gz-muted">Postgres database, sign in (Auth) and live updates (Realtime).</span>
             </li>
             <li>
-              <strong>Vercel</strong>
-              <span className="gz-muted">Hosting, with HTTPS so phone cameras can scan barcodes.</span>
+              <strong>GitHub Pages</strong>
+              <span className="gz-muted">Public hosting with HTTPS. Updates publish automatically when main is pushed.</span>
             </li>
             <li>
               <strong>GitHub</strong>

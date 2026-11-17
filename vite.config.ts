@@ -7,6 +7,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 const useHttps = process.env.HTTPS === '1';
 
 export default defineConfig({
+  base: process.env.VITE_APP_BASE_PATH || '/',
   plugins: [react(), ...(useHttps ? [basicSsl() as PluginOption] : [])],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },

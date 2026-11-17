@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { AppRole } from '@/hooks/useAuth';
+import { appPath } from '@/lib/appUrl';
 
 const realUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const realKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
@@ -50,7 +51,7 @@ export async function enterDemo(role: AppRole): Promise<void> {
       .select('role').eq('user_id', data.user.id).single();
     if (profileError || profile?.role !== role) throw new Error('The selected demo role is not ready. Try another role or ask the platform owner to check demo setup.');
     sessionStorage.setItem('glazed-demo-v1', 'true');
-    window.location.assign(demoHomes[role]);
+    window.location.assign(appPath(demoHomes[role]));
   } catch (cause) {
     // Never globally sign out a shared demo identity or touch the visitor's real account session.
     try { await client.auth.signOut({ scope: 'local' }); } catch { /* Clear this tab even if offline. */ }
@@ -67,6 +68,6 @@ export async function exitDemo(): Promise<void> {
   finally {
     sessionStorage.removeItem('glazed-demo-v1');
     sessionStorage.removeItem('glazed-demo-auth-v1');
-    window.location.assign('/login');
+    window.location.assign(appPath('/login'));
   }
 }
