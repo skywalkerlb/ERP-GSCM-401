@@ -4,11 +4,11 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-17.** `wzsbtfzettxpczgulibd` is the real persistent backend, as confirmed by the user. Promotion is complete: all 22 migrations applied, People/onboarding deployed, confirmation-free email signup and Pages callbacks configured. Existing business data is preserved; no reset/replay ran.
+**As of 2026-11-17.** `wzsbtfzettxpczgulibd` is the real persistent backend, as confirmed by the user. Promotion is complete: all 25 migrations applied, People/onboarding deployed, confirmation-free email signup and Pages callbacks configured. Existing business data is preserved; no reset/replay ran.
 - Eight seeded demo identities are banned with randomized credentials, sessions revoked, staff roles removed and customer-profile access detached. No real owner is claimed; live onboarding status returns HTTP 200 with available=true.
 - Local environment and GitHub's two required backend secrets point to the selected project. Three demo build secrets were removed. Supabase CLI is linked to the selected real project; former backend `eaphbcbklbcadokfcewc` is retained and protected.
 - Both project IDs are blocked centrally from public demo entry and seed/reset/demo-prep operations. Demo remains unavailable until a third separate disposable backend is configured.
-- 364 JavaScript tests, app build/typecheck, seed typecheck and design lint pass; both live access/onboarding security suites passed with rolled-back fixtures. UI markup/styles unchanged; no new design deviations. Existing Barcode Labels/Glazed! exceptions remain; earlier visual verification is still pending.
+- 377 combined JavaScript/TypeScript tests, app build/typecheck, seed typecheck and design lint pass. All five live access/onboarding/MRP/BOM/customer security suites passed with rolled-back fixtures. Concurrent MRP/customer-pickup work is preserved and its migrations are applied to the selected backend. No new design deviations; existing Barcode Labels/Glazed! exceptions remain. Earlier visual verification is still pending.
 - Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Frontend publication follows this record.
 
 ## In-flight Work
@@ -27,12 +27,42 @@
 ### 2026-11-17: Promote selected Supabase project to real backend (Codex)
 - **What:** Promoted `wzsbtfzettxpczgulibd`, disabled seeded public identities and demo entry, deployed missing migrations/functions and updated local/GitHub configuration.
 - **Why:** User explicitly corrected the project ID and confirmed it must be the real backend.
-- **How:** Preserved business records; banned eight seeded identities, randomized passwords and revoked sessions/access. Applied three pending migrations, set APP_URL/DEMO_MODE/private setup code, deployed People/onboarding and configured Auth. 364 tests, build/typechecks and design lint pass; live rollback SQL suites and setup availability pass. No real owner claim or email sent.
+- **How:** Preserved business records; banned eight seeded identities, randomized passwords and revoked sessions/access. Applied six pending migrations including the integrated upstream MRP/customer-pickup release, set APP_URL/DEMO_MODE/private setup code, deployed People/onboarding and configured Auth. 377 combined tests, build/typechecks and design lint pass; live rollback SQL suites and setup availability pass. No real owner claim or email sent.
 - **Files:** Shared protected-project helper, browser backend selection, demo/seed scripts/tests, README, CONTRACT, PROGRESS/archive; ignored local env and hosted configuration.
 - **Preferences learned:** Selected project is real; former backend remains protected (README §8.5).
 - **Correction sweep:** Swept all active project-ID references, frontend/build secrets, CLI link, reset/seed/prep guards, backend account access and current docs. Historical logs retained.
-- **Rework:** Decoded existing CLI keychain format for management API login; no new authorization needed. No UI changes or new design exceptions; approved Barcode Labels/Glazed! exceptions retained.
+- **Rework:** Decoded existing CLI keychain format for management API login; no new authorization needed. Preserved concurrent MRP/customer-pickup changes; no new design exceptions; approved Barcode Labels/Glazed! exceptions retained.
 - **Follow-ups:** Verify Pages publication; owner completes setup using private code; configure SMTP. Demo requires a separate disposable project.
+
+### 2026-11-17: Publish and verify MRP/customer pickup on Pages (Codex)
+- **What:** Merged PR #1 and published the integrated MRP/customer frontend at the public GitHub Pages URL.
+- **Why:** Complete the user-authorized deployment after their Supabase migration/function rollout and Pages activation.
+- **How:** Pages run `44136673348` built source `b5d0c30` and deployed successfully. 367 local TS/Node tests, prefixed build/typecheck/design lint and both-theme browser regressions pass. Live demo sign-ins work: Manager MRP shows nine loaded BOM parents; Customer shop shows 13 items and per-shop availability, without JS page errors. People CORS permits Pages. Live browser used a proxy-certificate test override; shell HTTPS checks retained verification. No orders, owner claims or data resets.
+- **Files:** Published PR #1 source; PROGRESS.md and progress archive record final verification. No new UI edits in this handoff.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** Preserved concurrent Pages, username and first-owner source changes while resolving progress history conflicts.
+- **Follow-ups:** Separate first-owner backend/private-code setup and persistent master data remain; existing demo history limitations preserved. No new design exceptions.
+
+### 2026-11-17: Integrate MRP/customer pickup with GitHub Pages (Codex)
+- **What:** Combined PR #1 with the live Pages hosting changes, preserved username signup and added repository-prefix browser regression coverage.
+- **Why:** Finish the authorized frontend deployment after the user enabled GitHub Pages and successfully applied MRP migrations/deployed People from PowerShell.
+- **How:** Confirmed Pages root HTTP 200 and successful prior Actions runs; integrated main without dropping sidebar/Barcode Labels exceptions or URL-prefix support. Combined 367 TS/Node tests, both-theme prefixed browser flows, typecheck/design lint and production build pass; root-hosted browser flows also passed before the additive owner-setup merge. User CLI confirms all three MRP migrations applied to the linked persistent project; no database mutation/reset from this environment.
+- **Files:** Browser regression, README, database contract, PROGRESS and archive; integrated upstream Pages workflow/router/URL helpers.
+- **Preferences learned:** None; existing GitHub Pages hosting preference retained.
+- **Correction sweep:** N/A.
+- **Rework:** Resolved overlapping progress histories; retained upstream hosting/access changes and all MRP/pickup implementation.
+- **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; First-owner onboarding backend/setup-code configuration remains a separate upstream follow-up; no owner is claimed in this release.
+
+### 2026-11-16: Prepare combined release and verify deployment access (Codex)
+- **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
+- **Why:** The user authorized hosted migration/deployment of both feature sets.
+- **How:** Preserved username/password signup and existing access hierarchy; assigned unique ordered versions to the three unpublished MRP/customer migrations. Combined build/typecheck, design lint, 338 TS/Node tests, both-theme browser flows, four SQL suites and 36 assertions pass; 24 migrations apply on a fresh local database. No new design exceptions. Environment status has no deployment secrets; Vercel/Supabase plugins report DISABLED_BY_ADMIN. No hosted changes made.
+- **Files:** Three renamed migrations, seed MRP reference, browser test label, README, contract, PROGRESS and archive; integrated upstream auth changes.
+- **Preferences learned:** None; existing username-only signup preference retained.
+- **Correction sweep:** N/A.
+- **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
+- **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
 
 ### 2026-11-17: Implement first-owner business onboarding (Codex)
 - **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
@@ -94,36 +124,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** Direct DB access still rejected the saved password; used the connected management API securely instead.
 - **Follow-ups:** Obtain exact owner account, deploy frontend and verify browser/privileged People flows.
-
-### 2026-11-16: Published verified label and sidebar changes to GitHub (Codex)
-- **What:** Pushed the fully integrated history to main as 1ecc273; local and remote branches match.
-- **Why:** The user requested publishing the changes and explicitly approved exact GitHub CLI permissions.
-- **How:** GitHub CLI authenticated as chrisshipp19-web; HTTPS push succeeded with Chris Shipp noreply attribution and configured Git hooks. Latest integrated build/typecheck, design lint and all 326 JavaScript tests pass. GitHub reports no deployments or status checks; live hosting remains unverified.
-- **Files:** Published integrated source/history and documentation; PROGRESS.md and progress archive updated for handoff.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** Resolved authentication and integrated concurrent upstream signup changes without overwriting either history.
-- **Follow-ups:** User signs in to the existing Vercel project in Chrome; deploy/verify live change. Existing backend rollout requirements remain. Approved Barcode Labels capitalization and Glazed! punctuation exceptions preserved; both-theme visuals not rechecked.
-
-### 2026-11-16: Restored publishing access and integrated latest signup work (Codex)
-- **What:** Completed GitHub CLI sign-in with explicit exact-scope approval and integrated upstream ff265ec with local label/sidebar changes.
-- **Why:** Complete the user's requested website publication without overwriting concurrent work.
-- **How:** Verified browser device-success page and CLI login as chrisshipp19-web; retained Chris Shipp's noreply commit identity and configured hooks. Resolved documentation conflicts while preserving both histories and current username signup requirements. Integrated build/typecheck, full design lint, diff checks and all 326 JavaScript tests pass; GitHub push follows this edit.
-- **Files:** Merged source and documentation; PROGRESS.md and progress archive.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** New upstream commits arrived during authorization; preserved them in a second merge. Earlier automatic approval rejection was resolved by explicit approval of its exact scopes.
-- **Follow-ups:** Push and verify hosting. Backend rollout is still credential-blocked; Vercel GitHub login reports account_not_found. Approved Barcode Labels and Glazed! wording exceptions remain; no new design changes.
-
-### 2026-11-16: Publish simplified username signup to GitHub (Codex)
-- **What:** Committed and pushed all 17 changed files to GitHub main in `530db86`.
-- **Why:** User requested pushing the completed work to GitHub.
-- **How:** Confirmed remote main matched local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. GitHub accepted the main update to `530db86`. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
-- **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
-- **Preferences learned:** None.
-- **Correction sweep:** N/A.
-- **Rework:** None.
-- **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

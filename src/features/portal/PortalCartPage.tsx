@@ -71,6 +71,8 @@ export default function PortalCartPage() {
   const lines = cart.lines
     .map((l) => ({ ...l, item: byId.get(l.item_id) }))
     .filter((l): l is typeof l & { item: NonNullable<typeof l.item> } => Boolean(l.item));
+  const unavailableLines = cart.lines.filter((l) => !byId.has(l.item_id));
+  const unavailableAtShop = lines.filter((l) => shopId === null || !l.item.byShop.has(shopId));
   const totals = computeTotals(lines.map((l) => ({ qty: l.qty, unitPrice: l.item.list_price, discountPct: 0 })), null, shop?.tax_rate ?? 0);
 
   // Where the order is short of stock, the pickup should wait for the date the shop expects more.
@@ -79,6 +81,8 @@ export default function PortalCartPage() {
     .filter(({ line, row }) => row && line.qty > row.available_qty);
   const readyBy = shortages.reduce((latest, { row }) => (row && row.est_available_date > latest ? row.est_available_date : latest), '');
   const tooEarly = readyBy !== '' && date !== '' && date < readyBy;
+  const canPlace = !catalogQ.isError && !shopsQ.isError && shopId !== null && lines.length > 0 &&
+    unavailableLines.length === 0 && unavailableAtShop.length === 0 && dates.includes(date) && slots.includes(time);
 
   const place = useMutation({
     mutationFn: () =>
@@ -92,14 +96,15 @@ export default function PortalCartPage() {
       cart.clear();
       void qc.invalidateQueries({ queryKey: queryKeys.orders.all });
       void qc.invalidateQueries({ queryKey: queryKeys.catalog.all });
-      toast.success('Order placed', `${res.so_number} for ${formatMoney(res.total)} before tax. We will have it ready.`);
+      void qc.invalidateQueries({ queryKey: queryKeys.mrp.all });
+      toast.success('Order placed', `${res.so_number} for ${formatMoney(res.total)} before tax. Track your pickup in My orders.`);
       navigate('/shop/orders');
     },
   });
 
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (lines.length > 0 && shopId !== null && date && time) place.mutate();
+    if (canPlace && !place.isPending) place.mutate();
   }
 
   const crumbs = [{ label: 'Shop', to: '/shop' }, { label: 'Cart' }];
@@ -113,7 +118,15 @@ export default function PortalCartPage() {
       </>
     );
   }
-  if (lines.length === 0) {
+  if (catalogQ.isError || shopsQ.isError) {
+    return <>
+      <PageHeader title="Your cart" breadcrumb={crumbs} />
+      <Alert tone="danger" title="Could not check pickup availability" action={<Button onClick={() => { void catalogQ.refetch(); void shopsQ.refetch(); }}>Try again</Button>}>
+        {rpcErrorMessage(catalogQ.error ?? shopsQ.error)} Your cart is saved. Reload availability before placing the order.
+      </Alert>
+    </>;
+  }
+  if (cart.lines.length === 0) {
     return (
       <>
         <PageHeader title="Your cart" breadcrumb={crumbs} />
@@ -138,13 +151,17 @@ export default function PortalCartPage() {
         breadcrumb={crumbs}
         subtitle="Choose where and when to pick up. You pay at the shop."
         actions={
-          <Button variant="primary" type="submit" form="pickup-form" disabled={place.isPending || shopId === null || !date || !time || dates.length === 0}>
+          <Button variant="primary" type="submit" form="pickup-form" disabled={place.isPending || !canPlace}>
             {place.isPending ? 'Placing order' : 'Place pickup order'}
           </Button>
         }
       />
       <form id="pickup-form" className="gz-detail" onSubmit={submit} noValidate>
         <div className="gz-stack">
+          {(unavailableLines.length > 0 || unavailableAtShop.length > 0) && <Alert tone="warning" title="Some items are unavailable at this shop">
+            Choose another pickup shop or remove the unavailable items before ordering.
+            {unavailableLines.map((l) => <div key={l.item_id}><Button size="sm" onClick={() => cart.remove(l.item_id)}>Remove unavailable item {l.item_id}</Button></div>)}
+          </Alert>}
           {place.isError && (
             <Alert tone="danger" title="We could not place your order">
               {rpcErrorMessage(place.error)} Check the pickup time and quantities, then try again.
@@ -152,7 +169,7 @@ export default function PortalCartPage() {
           )}
           {tooEarly && (
             <Alert tone="warning" title="Some items will not be ready by then">
-              {shortages.map(({ line }) => line.item.name).join(', ')} {shortages.length === 1 ? 'is' : 'are'} expected at {shop?.name} on {formatDate(readyBy)}. Pick that day or later so your order is complete.
+              More stock of {shortages.map(({ line }) => line.item.name).join(', ')} is estimated at {shop?.name} on {formatDate(readyBy)}. Choose a later pickup or contact the shop to confirm the full quantity.
             </Alert>
           )}
 
@@ -165,6 +182,7 @@ export default function PortalCartPage() {
                   <div>
                     <div className="text-body-strong">{l.item.name}</div>
                     <div className="text-body-sm gz-muted">{formatMoney(l.item.list_price)} each</div>
+                    <div className="text-body-sm gz-muted">{row ? `${formatNumber(row.available_qty)} available at ${shop?.name}` : 'Unavailable at this pickup shop'}</div>
                   </div>
                   <QtyStepper min={1} max={500} label={`Quantity of ${l.item.name}`} value={l.qty} onChange={(n) => cart.setQty(l.item_id, n)} />
                   <div className="gz-row" style={{ flexWrap: 'nowrap', gap: 'var(--space-2)' }}>
@@ -174,7 +192,7 @@ export default function PortalCartPage() {
                   {short && row && (
                     <span className="shop-cart-line__note shop-warn text-body-sm">
                       <Icon name="alert" size={16} />
-                      {shop?.name} has {formatNumber(row.available_qty)} right now. The rest is expected {formatDate(row.est_available_date)}.
+                      {shop?.name} has {formatNumber(row.available_qty)} right now. More stock is estimated {formatDate(row.est_available_date)}; contact the shop to confirm larger quantities.
                     </span>
                   )}
                 </div>

@@ -57,6 +57,9 @@ Available frontend checks:
     npm run build
     npm run typecheck
     npm run lint:design
+    npm run test:browser
+
+`test:browser` starts an isolated Vite server on port 4174 and mocks Supabase for repeatable UI checks. It covers both themes, MRP BOM/drivers, customer sign-in, per-shop inventory, pickup checkout/order confirmation, failed availability and removed cart items. It uses system Chromium when available; otherwise run `npx playwright install chromium` first. Real database behavior is covered separately by the rollback SQL suites.
 
 The browser app reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the root `.env.local`. `VITE_DEMO_SUPABASE_URL`, `VITE_DEMO_SUPABASE_ANON_KEY` and `VITE_DEMO_PASSWORD` enable the demo selector against a separate sandbox project. Demo and real sessions use separate storage. Never point demo settings at the persistent backend. Copy `.env.example` as a starting point; do not commit `.env.local`.
 
@@ -100,11 +103,24 @@ Update this map when a top-level folder is added, renamed or removed.
 
 **Staff modules:** POS, sales and orders, returns, demand forecast and bake plan, production, freshness and waste, inventory and transfers, adjustments, receiving, labels, purchasing and auto-replenish, supplier scorecard, MRP, dashboard, reports, finance, items/BOM, customers and settings. The customer portal is at `/shop` in the app, under `/ERP-GSCM-401/` on GitHub Pages.
 
+**Material requirements planning:** `/mrp` shows four weekly buckets from today using outstanding quantities on confirmed (`placed`) sales orders. Single-level recipe/kit quantities produce component requirements; company-wide stock and unreceived, uncancelled quantities on sent POs offset them in expected-date order. A receipt later in a week cannot hide an earlier shortage. Suggestions round up to supplier packs; the order-by date is the first shortage date minus the component item's lead time in calendar days. Projected stock carries forward. The page also lists each active parent BOM, quantities per unit and component lead times, with a warning below five parents; the seed catalog supplies nine parents. Manage recipes and lead times in Items. Production consumes components when a batch starts; kit checkout/fulfillment consumes its BOM directly. Finished donuts sell from the stock created by production, avoiding double consumption. Missing recipes block production starts and kit sales. Forecast is optional; creating POs requires confirmed-demand mode. The plan refreshes after stock, order, recipe and forecast events.
+
+MRP checks after installing root and `scripts/seed` dependencies:
+
+    scripts/seed/node_modules/.bin/tsx --test scripts/verify/mrp.test.ts
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/verify/mrp_planning.sql
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/verify/bom_consumption.sql
+
+Run the SQL suites against a migrated disposable test database; their fixtures and postings roll back. The three MRP/customer migrations `20261116000101..103` follow username migration `20261116000001`; the user confirmed applying them successfully to the former persistent backend; promotion also applies them to the selected real backend. New installations apply all migrations in order. No reset or replay is needed.
+
 **Locations and roles:** Provo, Orem and Lehi shops plus the Lindon Central Kitchen. The app uses owner, admin, manager, cashier, baker and customer roles. Owner, admin and manager manage accounts below their own level across all shops. Only the owner grants admin; admins grant manager/cashier/baker/customer; managers grant cashier/baker/customer. Self-changes and changes to peers or superiors are forbidden. Starting sales tax is 7.25% and can be edited by location.
+
 
 Shop units and formats follow the design system: quantities in dozens/trays ("14 dozen"), money as "$342.75", dates as "Nov 9, 2026", pickup times as "9:00 AM", and order numbers like ORD-00481 in mono.
 
 The approved schema, RPCs, reporting views, seed model and security decisions are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [supabase/CONTRACT.md](supabase/CONTRACT.md). Inventory uses a transaction ledger and weighted-average cost; business actions go through transactional RPCs; accounting uses a double-entry GL-lite journal; forecast, reorder, supplier and production reporting are database-backed.
+
+**Customer-facing ERP:** customers create accounts at `/shop/signup` and sign in at `/shop/login`. The `/shop` catalog shows available quantities separately for each active shop, using fresh stock after confirmed-order reservations, including components shared by kits. Customers choose their pickup shop (with address), day and time in the cart, then track or cancel their own orders in My orders. Checkout preserves the cart on availability failures and blocks missing/deactivated items instead of silently dropping them. The server validates active pickup locations, Denver opening hours/closed days, future dates within 60 days and at most 500 units per item across duplicate lines. Future orders may exceed today's stock and become confirmed demand for MRP; estimates do not guarantee availability of an entire larger order. Inventory moves only on fulfillment. Customers cannot see staff costs or another customer's orders. Run `scripts/verify/customer_portal.sql` with the same rollback-test command above to verify signup roles, inventory locations, allocations, pickup validation, ownership and MRP integration.
 
 ## 7. Conventions
 

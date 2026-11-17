@@ -8,9 +8,10 @@ import type { BomLine, Item, MrpRow, SalesOrder, SoLine } from '@/types/domain';
 export const MRP_WEEKS = 4;
 
 export function useMrpWeekly(includeForecast: boolean) {
+  const start = businessDate();
   return useQuery({
-    queryKey: queryKeys.mrp.scope('weekly', { includeForecast }),
-    queryFn: () => reports.mrpWeekly({ start: businessDate(), weeks: MRP_WEEKS, include_forecast: includeForecast }),
+    queryKey: queryKeys.mrp.scope('weekly', { start, includeForecast }),
+    queryFn: () => reports.mrpWeekly({ start, weeks: MRP_WEEKS, include_forecast: includeForecast }),
   });
 }
 

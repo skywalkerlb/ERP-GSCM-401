@@ -38,6 +38,10 @@ export default function MrpPage() {
   const itemMap = useMemo(() => indexBy(itemsQ.data, (i) => i.id), [itemsQ.data]);
   const costOf = useMemo(() => costLookup(costsQ.data, suppliedQ.data, itemsQ.data), [costsQ.data, suppliedQ.data, itemsQ.data]);
   const kitchen = locationsQ.data?.find((l) => l.kind === 'kitchen') ?? locationsQ.data?.[0];
+  const recipeParents = (itemsQ.data ?? []).filter((i) => i.is_active && bomQ.data?.some((b) => b.parent_item_id === i.id));
+  const queries = [mrpQ, baseQ, ordersQ, bomQ, itemsQ, costsQ, suppliedQ, locationsQ];
+  const error = queries.find((q) => q.error)?.error;
+  const retry = () => { for (const q of queries) void q.refetch(); };
 
   const plans = useMemo<ItemPlan[]>(() => {
     const by = new Map<number, ItemPlan>();
@@ -95,12 +99,12 @@ export default function MrpPage() {
     { key: 'cost', header: 'Est. cost', align: 'right', render: (r) => <MoneyCell value={toNumber(r.planned_order_qty) * costOf(r.item_id)} /> },
     {
       key: 'po', header: '', align: 'right',
-      render: (r) => <Button size="sm" disabled={!r.supplier_id || !kitchen || createOne.isPending} onClick={() => createOne.mutate(r)}>Create PO</Button>,
+      render: (r) => <Button size="sm" disabled={forecast || !!error || loading || !r.supplier_id || !kitchen || createOne.isPending || createAll.isPending} onClick={() => createOne.mutate(r)}>Create PO</Button>,
     },
   ];
 
   const baseByKey = useMemo(() => new Map((baseQ.data ?? []).map((r) => [`${r.item_id}:${r.week_no}`, r])), [baseQ.data]);
-  const loading = mrpQ.isLoading || itemsQ.isLoading;
+  const loading = queries.some((q) => q.isLoading);
 
   return (
     <div className="gz-stack">
@@ -109,12 +113,12 @@ export default function MrpPage() {
         breadcrumb={[{ label: 'Buy' }, { label: 'Material planning' }]}
         subtitle="What confirmed orders will need over the next four weeks, what is on order, and when to order the rest."
         actions={
-          <Button variant="primary" icon="sparkles" onClick={() => createAll.mutate(undefined)} disabled={createAll.isPending || planned.length === 0}>
+          <Button variant="primary" icon="sparkles" onClick={() => createAll.mutate(undefined)} disabled={forecast || !!error || loading || createAll.isPending || createOne.isPending || planned.length === 0}>
             {createAll.isPending ? 'Creating' : 'Create POs for planned orders'}
           </Button>
         }
       />
-      {(mrpQ.error || ordersQ.error) && <ErrorAlert error={mrpQ.error ?? ordersQ.error} onRetry={() => void mrpQ.refetch()} />}
+      {error && <ErrorAlert error={error} onRetry={retry} />}
 
       {made && (
         <Alert tone={made.length ? 'success' : 'info'} title={made.length ? `${plural(made.length, 'draft PO')} created` : 'Nothing due to order yet'} action={<Button size="sm" onClick={() => setMade(null)}>Dismiss</Button>}>
@@ -135,13 +139,14 @@ export default function MrpPage() {
         <div className="gz-grid-2 text-body-sm">
           <ul style={{ margin: 0, paddingLeft: 'var(--space-4)' }}>
             <li><strong>Gross requirement</strong> = confirmed sales-order quantity × each recipe or kit quantity per parent{forecast ? ', plus the latest forecast × quantity per' : ''}. Overdue orders count in week 1.</li>
-            <li><strong>Scheduled receipts</strong> = quantity still due on sent purchase orders, placed in the week of their expected date.</li>
-            <li><strong>Net requirement</strong> = max(0, gross − (projected on hand carried in + scheduled receipts)).</li>
+            <li><strong>Scheduled receipts</strong> = quantity still due on sent purchase orders, using each line&apos;s expected date. Received and cancelled quantities are excluded.</li>
+            <li><strong>Net requirement</strong> = the largest shortage during the week after subtracting starting stock and receipts due by each requirement date. A later receipt cannot cover an earlier need.</li>
           </ul>
           <ul style={{ margin: 0, paddingLeft: 'var(--space-4)' }}>
             <li><strong>Planned order</strong> = net requirement rounded up to the supplier pack size.</li>
             <li><strong>Order by</strong> = date it is first needed − the item&apos;s lead time. If that date has passed, the order is flagged <strong>Expedite</strong>.</li>
             <li><strong>Projected on hand</strong> = start + receipts + planned order − gross, carried into the next week.</li>
+            <li>Stock is pooled across locations. Manufacturing issues recipe components when a batch starts; selling a kit issues its components at checkout.</li>
           </ul>
         </div>
       </Card>
@@ -152,14 +157,14 @@ export default function MrpPage() {
         padded={false}
         actions={
           <Select
-            aria-label="Create orders due within" value={horizon} onChange={(e) => setHorizon(e.target.value)}
+            label="Create orders due within" value={horizon} onChange={(e) => setHorizon(e.target.value)}
             options={[{ value: '3', label: 'Order-by within 3 days' }, { value: '7', label: 'Order-by within 7 days' }, { value: '14', label: 'Order-by within 14 days' }, { value: '28', label: 'Order-by within 28 days' }]}
           />
         }
       >
         <DataTable<MrpRow>
           aria-label="Planned orders" rows={planned.map((r) => ({ ...r, id: `${r.item_id}-${r.week_no}` })) as unknown as MrpRow[]} rowKey="id" columns={plannedColumns} density="compact" loading={loading}
-          empty={<EmptyState icon="checkCircle" title="No planned orders" description="Stock and open orders cover everything confirmed for the next four weeks." />}
+          empty={<EmptyState icon="checkCircle" title={error ? 'Plan unavailable' : 'No planned orders'} description={error ? 'Retry loading the plan before making purchasing decisions.' : 'Stock and open orders cover everything confirmed for the next four weeks.'} />}
         />
       </Card>
 
@@ -169,15 +174,15 @@ export default function MrpPage() {
           <Checkbox label="Include the forecast" checked={forecast} onChange={(e) => setForecast(e.target.checked)} />
           <Checkbox label="Only components that need an order" checked={onlyOrders} onChange={(e) => setOnlyOrders(e.target.checked)} />
         </Toolbar>
-        {forecast && <Alert tone="info" title="Forecast demand is included">Gross requirements also count the newest forecast run, so the plan looks past confirmed orders.</Alert>}
+        {forecast && <Alert tone="info" title="Forecast demand is included">Gross requirements also count the newest forecast run. Turn this off to create purchase orders from confirmed demand.</Alert>}
         <div className="gz-stack gz-stack--sm" style={{ marginTop: 'var(--space-4)' }}>
           {loading && <Card><DataTable aria-label="Loading" columns={[{ key: 'a', header: 'Component' }]} rows={[]} loading /></Card>}
-          {!loading && shown.length === 0 && <EmptyState icon="layers" title="No demand to plan" description="Confirmed sales orders will show the components they need here." />}
+          {!loading && !error && shown.length === 0 && <EmptyState icon="layers" title="No demand to plan" description="Confirmed sales orders will show the components they need here." />}
           {shown.map((p) => (
             <Card
               key={p.item_id}
               title={<span className="gz-row" style={{ gap: 'var(--space-2)' }}><Link className="gz-link" to={`/inventory/${p.item_id}`}>{p.name}</Link><span className="gz-mono text-body-sm gz-muted">{p.sku}</span>{p.expedite && <StatusBadge status="expedite" label="Expedite" />}</span>}
-              subtitle={`${p.supplier_name ?? 'No preferred supplier'} · lead time ${p.lead} days · packs of ${formatNumber(p.pack, 0)} · ${p.uom}`}
+              subtitle={`${p.supplier_name ?? 'No preferred supplier'} · lead time ${p.lead} days · packs of ${formatNumber(p.pack, 3)} · ${p.uom}`}
               padded={false}
               actions={<Button size="sm" icon="search" onClick={() => setDrill(p)}>What drives this</Button>}
             >
@@ -186,6 +191,18 @@ export default function MrpPage() {
           ))}
         </div>
       </div>
+
+      <Card title="Parent items and bills of material" subtitle={`${recipeParents.length} active parent items with recipes or kits. Quantities below are per one parent unit.`} padded={false} actions={<Link className="gz-link" to="/items">Manage items and recipes</Link>}>
+        {!itemsQ.isLoading && !bomQ.isLoading && !itemsQ.error && !bomQ.error && recipeParents.length < 5 && <Alert tone="warning" title="Add at least five parent items">Open Items to add recipes or kits and their component quantities.</Alert>}
+        <DataTable<Item> aria-label="Parent bills of material" rows={recipeParents} loading={itemsQ.isLoading || bomQ.isLoading} columns={[
+          { key: 'name', header: 'Parent item', render: (i) => <Link className="gz-link" to={`/items?edit=${i.id}`}>{i.name}</Link> },
+          { key: 'sku', header: 'SKU', mono: true },
+          { key: 'components', header: 'Components per unit · lead time', render: (i) => <ul style={{ margin: 0, paddingLeft: 'var(--space-4)' }}>{(bomQ.data ?? []).filter((b) => b.parent_item_id === i.id).map((b) => {
+            const component = itemMap.get(b.component_item_id);
+            return <li key={b.id}>{component?.name ?? 'Unknown component'}: {formatNumber(b.qty_per, 5)} {component?.uom} · {component?.lead_time_days ?? '—'} days</li>;
+          })}</ul> },
+        ]} />
+      </Card>
 
       <DrillDialog
         plan={drill} onClose={() => setDrill(null)} weeks={weekDefs} itemMap={itemMap}
@@ -202,7 +219,7 @@ function WeekGrid({ plan }: { plan: ItemPlan }) {
     { key: 'gross', label: 'Gross requirements', cell: (w) => q(w.gross_req) },
     { key: 'sched', label: 'Scheduled receipts', cell: (w) => q(w.scheduled_receipts) },
     { key: 'net', label: 'Net requirements', cell: (w) => (toNumber(w.net_req) > 0 ? <strong>{q(w.net_req)}</strong> : q(0)) },
-    { key: 'planned', label: 'Planned order', cell: (w) => (toNumber(w.planned_order_qty) > 0 ? <Badge tone="info">{formatNumber(w.planned_order_qty, 0)}</Badge> : <span className="gz-muted">—</span>) },
+    { key: 'planned', label: 'Planned order', cell: (w) => (toNumber(w.planned_order_qty) > 0 ? <Badge tone="info">{formatNumber(w.planned_order_qty, 3)}</Badge> : <span className="gz-muted">—</span>) },
     { key: 'proj', label: 'Projected on hand', cell: (w) => q(w.projected_on_hand) },
     {
       key: 'by', label: 'Order by',
