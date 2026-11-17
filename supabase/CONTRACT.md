@@ -280,3 +280,20 @@ Run `node --test scripts/verify/people_endpoint.test.mjs` for mocked endpoint au
 Public signup requires only username and password. Normalize usernames by trimming and lowercasing; accept 3–30 ASCII letters, digits or underscores. The browser uses Supabase password Auth with the internal identifier `<username>@users.glazed.invalid`, and supplies matching `user_metadata.username`. The Auth email identity and unique immutable `profiles.username` enforce uniqueness; a trigger rejects malformed/mismatched reserved identifiers and subsequent identity changes. Customer contact email is null for these accounts. The shared identity helpers live in `supabase/functions/_shared/identity.ts`. The People API returns username and an empty email for these identities and refuses to invite/resend to the reserved domain.
 
 Set local `auth.email.enable_confirmations=false` and separately disable hosted Confirm email. Successful signup returns a session, loads the new customer profile and opens `/shop`. An unexpected missing session is reported as backend setup failure, with no email-confirmation instructions for the customer. Existing email accounts keep their login, invitations and recovery routes. Signup never accepts a requested staff role. Owner username recovery requires trusted backend administration because the public hierarchy cannot reset the owner.
+
+
+## 11. First-owner business setup (2026-11-17)
+
+This is a single-business installation, not a multi-tenant service. Apply migration `20261117000001_business_onboarding.sql`, deploy `onboarding` with gateway JWT verification disabled (the function verifies protected actions with Auth `getUser`), and configure server-only `APP_URL` and `OWNER_SETUP_CODE` (16–256 random characters). The public status action reveals availability only. CORS uses the canonical app origin. Demo mode closes setup.
+
+POST JSON actions:
+
+- `{action:"status"}` → `{available:boolean}`; unavailable when unconfigured or already claimed.
+- `{action:"locations",setup_code}` → `{locations:[{id,name,address}]}`; requires an authenticated real email account and correct code before disclosing existing active locations.
+- `{action:"complete",setup_code,business_name,location_id?,location_name?,location_address?}` → `{completed:true,location_id}`; select an existing active location, or provide a shop name/address when none exist. New shops default to 7.25% tax. Errors return `{error}` with non-2xx status.
+
+The setup account uses real email Auth and initially has ordinary customer permissions. Editable metadata cannot grant owner. Existing email accounts may complete setup without a duplicate Auth identity. Public registration remains confirmation-free; invitation acceptance establishes email access for invited staff. Emails remain Auth identities, not legacy `profiles.username` values.
+
+Service-only `_business_setup_status`, `_business_setup_attempt` and `_complete_business_setup` control access. Attempts commit before code validation, allowing five requests per account and thirty globally per fifteen-minute fixed window. Both location lookup and completion consume attempts. The code is compared through fixed-length digests and is never stored in database/audit. Completion locks the singleton `business_setup` row and writes settings, location, role, home location and access audit atomically. Retries by the winning owner return the recorded result. Competing owners fail. A trigger closes setup on trusted owner assignment; its marker survives owner deletion. Existing owners close setup during migration. The trusted bootstrap script shares the permanent guard.
+
+Deploy backend before frontend. Verify email delivery/SMTP and the repository-prefixed `/accept-invite` redirect before inviting real staff. Do not claim the production owner for a smoke test. Run `node --test scripts/verify/onboarding_endpoint.test.mjs` and execute `scripts/verify/onboarding_security.sql` through a trusted database connection; SQL fixtures roll back.

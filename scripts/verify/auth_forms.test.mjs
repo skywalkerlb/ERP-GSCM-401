@@ -26,7 +26,7 @@ function mount(name, { base = '/', auth = {}, error = null, search = '', hash = 
       refreshProfile: async () => { calls.push(['refreshProfile']); },
       signUp: async input => { calls.push(['signUp', input]); return error ? { error: helpers.friendlyAuthError(error) } : { profile: { role: 'customer' } }; }, ...auth }),
     useLocation: () => ({ state: null, pathname: '/private', search: '' }), useNavigate: () => to => { calls.push(['navigate', to]); }, homeFor: role => role === 'customer' ? '/shop' : '/',
-    ...Object.fromEntries(['Link', 'Navigate', 'Alert', 'Button', 'Card', 'Logo', 'Skeleton', 'SkeletonLines', 'TextField', 'Select', 'ThemeToggle', 'EmptyState'].map(x => [x, x])),
+    ...Object.fromEntries(['Link', 'Navigate', 'Alert', 'Button', 'Card', 'Logo', 'Skeleton', 'SkeletonLines', 'TextField', 'Select', 'ThemeToggle', 'EmptyState', 'BusinessSetupLink'].map(x => [x, x])),
     friendlyAuthError: helpers.friendlyAuthError, signupFieldErrors: helpers.signupFieldErrors,
     isDemo: false, isDemoConfigured: false, URLSearchParams, window: { location: { origin: 'https://glazed.example', search, hash } },
     supabase: { auth: Object.fromEntries(['resend', 'resetPasswordForEmail', 'updateUser'].map(method => [method, async (...args) => { calls.push([method, ...args]); return { error }; }])) },

@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { Alert } from '@/components/Alert';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
@@ -112,6 +113,7 @@ async function peopleAction(input: PeopleAction, actor: Actor): Promise<Director
 }
 
 export default function PeoplePage() {
+  const routeLocation = useLocation();
   const { profile } = useAuth();
   const allowedRoles = assignableRoles(profile?.role ?? 'customer');
   const canManage = allowedRoles.length > 0;
@@ -180,8 +182,9 @@ export default function PeoplePage() {
   if (!canManage) return <Alert tone="warning" title="Staff management access required">Ask an owner, admin or manager to manage invitations and staff roles.</Alert>;
 
   return <>
-    <PageHeader title="People" breadcrumb={[{ label: 'Setup' }, { label: 'People' }]} subtitle="Manage access and username passwords for accounts below your own level. New users can create an account from sign in." />
+    <PageHeader title="People" breadcrumb={[{ label: 'Setup' }, { label: 'People' }]} subtitle="Invite people by email and manage accounts below your own level. New staff choose their own password from their invitation email." />
     <div className="gz-stack">
+      {(routeLocation.state as { businessCreated?: boolean } | null)?.businessCreated && <Alert tone="success" title="Your business is ready">Invite your admins and staff below. Their email will be their username.</Alert>}
       {isDemo && <Alert tone="info" title="Simulated access management">Try invitations and role changes using sample people. Changes stay in this browser tab; no emails are sent and no real or demo passwords or account permissions change.</Alert>}
       {error && <Alert tone="danger" title="Access was not saved">{error}</Alert>}
       {notice && <Alert tone="success" title="Access updated">{notice}</Alert>}

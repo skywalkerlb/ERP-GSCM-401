@@ -6,9 +6,9 @@
 ## Current Status
 **As of 2026-11-17.** Public frontend hosting is GitHub Pages at **https://skywalkerlb.github.io/ERP-GSCM-401/** with automatic publishing on main pushes. The MRP/customer-pickup release is integrated with the Pages base-path/router and latest username signup; combined verification passed and Pages publication is in progress.
 
-- The user successfully applied migrations `20261116000101..103` to linked persistent Supabase `eaphbcbklbcadokfcewc` and deployed People via CLI 2.122.1 (terminal output confirmed in this session). Baseline 21 migrations, username Auth settings and Pages URLs were verified by the earlier hosting rollout. No seed/reset is required or performed.
+- The user successfully applied migrations `20261116000101..103` to linked persistent Supabase `eaphbcbklbcadokfcewc` and deployed People via CLI 2.122.1 (terminal output confirmed in this session). Baseline 21 migrations, username Auth settings and Pages URLs were verified by the earlier hosting rollout. The separate first-owner onboarding migration `20261117000001`/function/setup-code configuration is newly added upstream and remains pending; its setup UI stays unavailable until configured. No seed/reset is required or performed.
 - MRP nets confirmed BOM demand against dated PO receipts and company-wide stock over four weeks, calculates pack-rounded suggestions/order-by dates and shows nine seed-catalog parent BOMs. Customer catalog shows fresh availability by shop after direct/shared-kit reservations; checkout validates available items and pickup times. Persistent master data/owner still require setup if empty.
-- Prior release verification passed 338 TS/Node tests, four rollback SQL suites and 36 non-data assertions; Pages main separately passed 334 JavaScript tests. Combined verification passes: 346 TS/Node tests, root and repository-prefix browser flows in both themes, standard and prefixed production builds, typecheck and design lint. No new design exceptions; approved Glazed! and Barcode Labels exceptions retained.
+- Prior release verification passed 338 TS/Node tests, four rollback SQL suites and 36 non-data assertions; Pages main separately passed 334 JavaScript tests. Combined verification passes: 367 TS/Node tests, both-theme browser flows at root and repository prefix, typecheck/design lint and prefixed production build. Concurrent first-owner setup changes are preserved; their private backend configuration remains pending upstream. No new design exceptions; approved Glazed! and Barcode Labels exceptions retained.
 - Existing demo data remains isolated; no replay ran. Known seed reproducibility differences remain (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
@@ -18,7 +18,7 @@
 ## Next Steps
 1. Complete combined tests and Pages deployment; verify updated MRP and customer portal at the public site.
 2. Confirm live backend functions and complete browser smoke checks without creating persistent orders.
-3. Obtain the exact existing username/email for ERP owner bootstrap; do not guess the owner account. Confirm catalog/inventory data before real customer ordering.
+3. Complete upstream first-owner onboarding backend/private-code setup or obtain the exact account for trusted bootstrap; never claim an owner as a smoke test. Confirm catalog/inventory data before real customer ordering.
 4. Preserve existing demo data; repair historical seed reproducibility only under a separate request.
 
 ## Open Questions for the User
@@ -29,12 +29,12 @@
 ### 2026-11-17: Integrate MRP/customer pickup with GitHub Pages (Codex)
 - **What:** Combined PR #1 with the live Pages hosting changes, preserved username signup and added repository-prefix browser regression coverage.
 - **Why:** Finish the authorized frontend deployment after the user enabled GitHub Pages and successfully applied MRP migrations/deployed People from PowerShell.
-- **How:** Confirmed Pages root HTTP 200 and successful prior Actions runs; integrated main without dropping sidebar/Barcode Labels exceptions or URL-prefix support. Combined 346 TS/Node tests, root/prefixed both-theme browser checks, standard/prefixed builds, typecheck and design lint pass before merge/publication. User CLI confirms all three MRP migrations applied to the linked persistent project; no database mutation/reset from this environment.
+- **How:** Confirmed Pages root HTTP 200 and successful prior Actions runs; integrated main without dropping sidebar/Barcode Labels exceptions or URL-prefix support. Combined 367 TS/Node tests, both-theme prefixed browser flows, typecheck/design lint and production build pass; root-hosted browser flows also passed before the additive owner-setup merge. User CLI confirms all three MRP migrations applied to the linked persistent project; no database mutation/reset from this environment.
 - **Files:** Browser regression, README, database contract, PROGRESS and archive; integrated upstream Pages workflow/router/URL helpers.
 - **Preferences learned:** None; existing GitHub Pages hosting preference retained.
 - **Correction sweep:** N/A.
 - **Rework:** Resolved overlapping progress histories; retained upstream hosting/access changes and all MRP/pickup implementation.
-- **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; ERP owner bootstrap still needs the exact selected account.
+- **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; First-owner onboarding backend/setup-code configuration remains a separate upstream follow-up; no owner is claimed in this release.
 
 ### 2026-11-16: Prepare combined release and verify deployment access (Codex)
 - **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
@@ -46,15 +46,16 @@
 - **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
 - **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
 
-### 2026-11-16: Publish simplified username signup to GitHub (Codex)
-- **What:** Committed and pushed all 17 changed files to GitHub main in `530db86`.
-- **Why:** User requested pushing the completed work to GitHub.
-- **How:** Confirmed remote main matched local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. GitHub accepted the main update to `530db86`. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
-- **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
-- **Preferences learned:** None.
+### 2026-11-17: Implement first-owner business onboarding (Codex)
+- **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
+- **Why:** Owner needs to create the business and invite admins/staff who choose passwords using email usernames.
+- **How:** Private backend setup code, persisted limits, locked one-time database claim, atomic business/location/profile/audit writes and safe owner retries. Existing records and role hierarchy preserved. 355 JavaScript tests, build/typecheck and design lint pass. Migration and expanded security SQL passed against isolated demo in a rollback-only transaction (including its missing access-audit prerequisite). No owner claim or deployment. Glazed components/tokens only; no design exceptions. Browser visual checks remain blocked by tab-creation automation error.
+- **Files:** Onboarding endpoint/migration/tests, bootstrap/config, auth UI/routes, README, CONTRACT and PROGRESS.
+- **Preferences learned:** One business, private setup code, owner-invited admins, email invitations and first-location setup (README §8.5).
 - **Correction sweep:** N/A.
 - **Rework:** None.
-- **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
+- **Design review:** Re-ran full design lint after the hook reminder: passed. New UI uses existing Glazed components and inherited theme tokens, visible field labels and standard focus styles; conditional views have one primary action, sentence-case copy and semantic status tones. No new design deviations. Existing approved Barcode Labels capitalization and sidebar Glazed! exceptions remain unchanged. Light/dark browser visual review remains unverified because browser tab creation failed.
+- **Follow-ups:** Deploy backend/configuration before frontend; verify both-theme visuals and SMTP. Existing demo backend lacks the delegated-access prerequisite; stage all unapplied migrations when deploying there. README setup instructions and preference rule are updated; changelog remains at ten entries.
 
 ### 2026-11-17: Activate public GitHub Pages hosting (Codex)
 - **What:** Confirmed Pages enabled and successfully published Glazed at the repository's public Pages URL.

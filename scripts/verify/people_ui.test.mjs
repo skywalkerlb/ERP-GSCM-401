@@ -15,7 +15,7 @@ function harness(role) {
   const profile = { user_id: `demo-${role}`, role };
   vm.runInNewContext(js, {
     exports: exported, require: () => ({ jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }), Fragment: 'Fragment' }),
-    useAuth: () => ({ profile }), isDemo: true,
+    useAuth: () => ({ profile }), useLocation: () => ({ state: null }), isDemo: true,
     useState: initial => [initial, () => {}], useEffect: () => {},
     useQuery: () => ({ data: exported.testing.sampleDirectory(), isPending: false }),
     useQueryClient: () => ({ invalidateQueries: async () => {} }),
