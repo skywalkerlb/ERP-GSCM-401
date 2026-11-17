@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { AppRole } from '@/hooks/useAuth';
 import { appPath } from '@/lib/appUrl';
+import { isProtectedProject } from '../../supabase/functions/_shared/protected-projects.mjs';
 
 const realUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const realKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
@@ -10,7 +11,7 @@ const demoPassword = import.meta.env.VITE_DEMO_PASSWORD?.trim();
 function separateDemoProject(): boolean {
   try {
     const target = new URL(demoUrl || '');
-    return target.protocol === 'https:' && target.origin !== new URL(realUrl || 'http://localhost').origin && target.hostname !== 'eaphbcbklbcadokfcewc.supabase.co';
+    return target.protocol === 'https:' && target.origin !== new URL(realUrl || 'http://localhost').origin && !isProtectedProject(target.hostname.replace(/\.supabase\.co$/, ''));
   } catch { return false; }
 }
 export const isDemoConfigured = Boolean(demoKey && demoPassword && separateDemoProject());

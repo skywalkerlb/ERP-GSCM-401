@@ -3,6 +3,7 @@ import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import ts from 'typescript';
+import { isProtectedProject } from '../../supabase/functions/_shared/protected-projects.mjs';
 
 const source = readFileSync(new URL('../../src/lib/supabase.ts', import.meta.url), 'utf8');
 const js = ts.transpileModule(source.replace(/^import .*;$/gm, '').replaceAll('import.meta.env', '__env'), {
@@ -39,7 +40,7 @@ function harness({ base = '/', configured = true, demoUrl = 'https://demo.supaba
   vm.runInNewContext(js, {
     exports: exported, ...paths(base), createClient: (url, key, options) => { configs.push({ url, key, options }); return client; },
     __env: { VITE_SUPABASE_URL: 'https://real.supabase.co', VITE_SUPABASE_ANON_KEY: 'real-public-key', ...(configured ? { VITE_DEMO_SUPABASE_URL: demoUrl, VITE_DEMO_SUPABASE_ANON_KEY: 'demo-public-key', VITE_DEMO_PASSWORD: 'demo-only-password' } : {}) },
-    URL, Error, TypeError, AbortSignal, sessionStorage: storage,
+    URL, Error, TypeError, AbortSignal, isProtectedProject, sessionStorage: storage,
     fetch: async (input, init) => { requests.push({ input, init }); return new Response('{}'); },
     window: { location: { assign: destination => redirects.push(destination) } },
   });
@@ -62,7 +63,7 @@ test('unconfigured demo fails before any sign-in', async () => {
   const app = harness({ configured: false });
   await assert.rejects(app.enterDemo('manager'), /setup is incomplete/); assert.equal(app.calls.length, 0);
 });
-for (const demoUrl of ['https://real.supabase.co/', 'https://eaphbcbklbcadokfcewc.supabase.co', 'invalid', 'http://demo.supabase.co']) test(`unsafe demo target rejected: ${demoUrl}`, async () => {
+for (const demoUrl of ['https://real.supabase.co/', 'https://eaphbcbklbcadokfcewc.supabase.co', 'https://wzsbtfzettxpczgulibd.supabase.co', 'invalid', 'http://demo.supabase.co']) test(`unsafe demo target rejected: ${demoUrl}`, async () => {
   const app = harness({ demoUrl }); assert.equal(app.isDemoConfigured, false);
   await assert.rejects(app.enterDemo('manager')); assert.equal(app.calls.length, 0);
 });

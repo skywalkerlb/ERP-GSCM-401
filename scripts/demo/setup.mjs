@@ -4,16 +4,14 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
+import { assertDisposableDemo } from '../../supabase/functions/_shared/protected-projects.mjs';
 const require = createRequire(new URL('../seed/package.json', import.meta.url));
 const postgres = require('postgres');
 const { DEMO_PROJECT_REF: ref, DEMO_DATABASE_URL: db, DEMO_SUPABASE_SERVICE_ROLE_KEY: key, DEMO_PASSWORD: password } = process.env;
-if (!ref || ref === 'eaphbcbklbcadokfcewc' || !/^[a-z]{20}$/.test(ref) || !db || !key || !password) {
+if (!ref || !db || !key || !password) {
   throw new Error('Set DEMO_PROJECT_REF, DEMO_DATABASE_URL, DEMO_SUPABASE_SERVICE_ROLE_KEY and DEMO_PASSWORD for a separate disposable demo project.');
 }
-const connection = new URL(db);
-if (!(connection.hostname === `db.${ref}.supabase.co` || (connection.hostname.endsWith('.pooler.supabase.com') && connection.username === `postgres.${ref}`))) {
-  throw new Error('Demo database connection must match DEMO_PROJECT_REF. No reset performed.');
-}
+assertDisposableDemo(ref, db);
 const url = `https://${ref}.supabase.co`;
 const seed = spawnSync(fileURLToPath(new URL('../seed/node_modules/.bin/tsx', import.meta.url)), ['scripts/seed/run.ts', 'seed'], {
   stdio: 'inherit', env: { ...process.env, DATABASE_URL: db, SUPABASE_URL: url, VITE_SUPABASE_URL: url, SUPABASE_SERVICE_ROLE_KEY: key, DEMO_PASSWORD: password },

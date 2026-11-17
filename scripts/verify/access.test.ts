@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { ACCESS } from '../../src/app/access';
 import { navFor } from '../../src/app/nav';
 import { canCall, RPC_ROLES, type AppRole } from '../../src/types/domain';
+import { PROTECTED_PROJECT_REFS } from '../../supabase/functions/_shared/protected-projects.mjs';
 
 test('owner and admin inherit all manager operation permissions', () => {
   for (const role of ['owner', 'admin', 'manager'] as AppRole[]) {
@@ -26,8 +27,8 @@ test('operational and customer roles remain limited', () => {
   assert.equal(canCall('customer', 'complete_sale'), false);
   assert.deepEqual(navFor('customer'), []);
 });
-test('demo reset refuses the persistent project before connecting or resetting', () => {
-  const result = spawnSync(process.execPath, ['scripts/demo/setup.mjs'], { encoding: 'utf8', env: { ...process.env, DEMO_PROJECT_REF: 'eaphbcbklbcadokfcewc', DEMO_DATABASE_URL: 'postgres://test:test@localhost/test', DEMO_PASSWORD: 'test', DEMO_SUPABASE_SERVICE_ROLE_KEY: 'test' } });
+for (const ref of PROTECTED_PROJECT_REFS) test(`demo reset refuses protected ${ref} before connecting or resetting`, () => {
+  const result = spawnSync(process.execPath, ['scripts/demo/setup.mjs'], { encoding: 'utf8', env: { ...process.env, DEMO_PROJECT_REF: ref, DEMO_DATABASE_URL: 'postgres://test:test@localhost/test', DEMO_PASSWORD: 'test', DEMO_SUPABASE_SERVICE_ROLE_KEY: 'test' } });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /separate disposable demo project/);
+  assert.match(result.stderr, /Persistent ERP projects cannot be used/);
 });

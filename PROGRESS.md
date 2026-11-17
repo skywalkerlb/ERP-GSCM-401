@@ -4,24 +4,36 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-17.** Glazed remains publicly hosted on GitHub Pages with Supabase authentication/data. Local first-owner setup implementation is complete and verified; no real owner has been claimed and no new deployment has run.
-- Existing live backend has 21 migrations and confirmation-free customer username signup. New onboarding migration/function will require deployment and a private server-only setup code.
-- Saved direct database password remains stale; no database reset/replay is permitted.
-- Existing demo reproducibility and browser verification follow-ups remain separate.
+**As of 2026-11-17.** `wzsbtfzettxpczgulibd` is the real persistent backend, as confirmed by the user. Promotion is complete: all 22 migrations applied, People/onboarding deployed, confirmation-free email signup and Pages callbacks configured. Existing business data is preserved; no reset/replay ran.
+- Eight seeded demo identities are banned with randomized credentials, sessions revoked, staff roles removed and customer-profile access detached. No real owner is claimed; live onboarding status returns HTTP 200 with available=true.
+- Local environment and GitHub's two required backend secrets point to the selected project. Three demo build secrets were removed. Supabase CLI is linked to the selected real project; former backend `eaphbcbklbcadokfcewc` is retained and protected.
+- Both project IDs are blocked centrally from public demo entry and seed/reset/demo-prep operations. Demo remains unavailable until a third separate disposable backend is configured.
+- 364 JavaScript tests, app build/typecheck, seed typecheck and design lint pass; both live access/onboarding security suites passed with rolled-back fixtures. UI markup/styles unchanged; no new design deviations. Existing Barcode Labels/Glazed! exceptions remain; earlier visual verification is still pending.
+- Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Frontend publication follows this record.
 
 ## In-flight Work
-- Implementation and automated verification are complete. Backend deployment, private setup-code configuration, SMTP verification and browser visual review are pending; these are required before release.
+- Publishing corrected backend configuration and protected-project guards to GitHub Pages, then verifying the hosted bundle uses the selected backend.
 
 ## Next Steps
-1. Review the completed local changes; all 355 JavaScript tests, production build/typecheck and design lint pass.
-2. Apply the additive onboarding migration, configure server secrets and deploy the function before frontend publishing.
-3. Verify invitation SMTP and callback URLs; intended owner completes setup privately.
+1. Verify automatic Pages deployment and the live frontend's selected backend.
+2. Intended owner opens `/create-business`, uses the private OWNER_SETUP_CODE from local `.env.local`, and creates the business without email confirmation.
+3. Configure custom SMTP before inviting staff; provision a separate demo backend only if requested.
 
 ## Open Questions for the User
-- No implementation decisions pending. Deployment needs a privately configured setup code and working invitation email delivery; no owner account has been claimed.
+- No backend-selection decision pending: use `wzsbtfzettxpczgulibd`. Which email provider will send staff invitations? SMTP credentials should be entered privately in Supabase.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-17: Promote selected Supabase project to real backend (Codex)
+- **What:** Promoted `wzsbtfzettxpczgulibd`, disabled seeded public identities and demo entry, deployed missing migrations/functions and updated local/GitHub configuration.
+- **Why:** User explicitly corrected the project ID and confirmed it must be the real backend.
+- **How:** Preserved business records; banned eight seeded identities, randomized passwords and revoked sessions/access. Applied three pending migrations, set APP_URL/DEMO_MODE/private setup code, deployed People/onboarding and configured Auth. 364 tests, build/typechecks and design lint pass; live rollback SQL suites and setup availability pass. No real owner claim or email sent.
+- **Files:** Shared protected-project helper, browser backend selection, demo/seed scripts/tests, README, CONTRACT, PROGRESS/archive; ignored local env and hosted configuration.
+- **Preferences learned:** Selected project is real; former backend remains protected (README §8.5).
+- **Correction sweep:** Swept all active project-ID references, frontend/build secrets, CLI link, reset/seed/prep guards, backend account access and current docs. Historical logs retained.
+- **Rework:** Decoded existing CLI keychain format for management API login; no new authorization needed. No UI changes or new design exceptions; approved Barcode Labels/Glazed! exceptions retained.
+- **Follow-ups:** Verify Pages publication; owner completes setup using private code; configure SMTP. Demo requires a separate disposable project.
+
 ### 2026-11-17: Implement first-owner business onboarding (Codex)
 - **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
 - **Why:** Owner needs to create the business and invite admins/staff who choose passwords using email usernames.
@@ -112,16 +124,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** None.
 - **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
-
-### 2026-11-16: Add protected username password resets (Codex)
-- **What:** Added username display and authorized password resets to People; username accounts never receive invitation emails.
-- **Why:** Username-only accounts need a recovery path without email verification.
-- **How:** Shared identity helper; existing hierarchy checks; service-only reset-attempt authorization/audit before Auth updates. Passwords stay out of storage and audit. 286 People tests pass within 330 total local tests; final typecheck, build, design lint and diff checks pass. Existing Glazed components and theme tokens only; no design exceptions. Browser visual review is blocked by the CUA tab-creation error; integrated rollback SQL security checks pass. Final handoff reconciled after the documentation reminder.
-- **Files:** People endpoint/UI, shared identity helper, People endpoint/UI tests, PROGRESS.md and progress archive.
-- **Preferences learned:** Username accounts require no email verification; record centrally in README with the main signup change.
-- **Correction sweep:** Checked People invitations, resend, directory labels, reset controls and demo simulation; updated two runtime surfaces and shared identity handling.
-- **Rework:** None.
-- **Follow-ups:** Complete hosted rollout and browser verification when access is restored.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

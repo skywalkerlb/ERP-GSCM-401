@@ -18,6 +18,7 @@ import {
 import type { Ev } from './events.js';
 import { addDays, range, ts, todayDenver } from './dates.js';
 import { defaultOptions, simulate, type SimResult } from './simulate.js';
+import { assertDisposableDemo } from '../../supabase/functions/_shared/protected-projects.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -377,13 +378,7 @@ async function summary(sql: Sql) {
 
 // ------------------------------------------------------------------------------------------------
 async function seed(argv: string[]) {
-  const target = new URL(connectionUrl());
-  const ref = process.env.DEMO_PROJECT_REF;
-  if (!ref || ref === 'eaphbcbklbcadokfcewc' ||
-      !(target.hostname === `db.${ref}.supabase.co` ||
-        (target.hostname.endsWith('.pooler.supabase.com') && target.username === `postgres.${ref}`))) {
-    throw new Error('Reset seeds require DEMO_PROJECT_REF and a matching separate disposable demo database. The persistent ERP backend cannot be reset.');
-  }
+  assertDisposableDemo(process.env.DEMO_PROJECT_REF, connectionUrl());
   const opts = defaultOptions(argv);
   const noAuth = argv.includes('--no-auth');
   log(`Simulating ${opts.days} days ending ${opts.end}...`);
@@ -435,6 +430,7 @@ async function seed(argv: string[]) {
 
 // ------------------------------------------------------------------------------------------------
 async function demoPrep() {
+  assertDisposableDemo(process.env.DEMO_PROJECT_REF, connectionUrl());
   const sql = connect();
   try {
     await (sql as any).unsafe('set statement_timeout = 0');
