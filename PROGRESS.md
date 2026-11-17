@@ -12,7 +12,7 @@
 - Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Frontend publication follows this record.
 
 ## In-flight Work
-- Publishing corrected backend configuration and protected-project guards to GitHub Pages, then verifying the hosted bundle uses the selected backend.
+- Publishing corrected backend configuration and protected-project guards to GitHub Pages, then verifying the hosted bundle uses the selected backend. First workflow failed because reset-guard tests need seed dependencies; added their installation to CI and retained all checks.
 
 ## Next Steps
 1. Verify automatic Pages deployment and the live frontend's selected backend.
@@ -31,7 +31,7 @@
 - **Files:** Shared protected-project helper, browser backend selection, demo/seed scripts/tests, README, CONTRACT, PROGRESS/archive; ignored local env and hosted configuration.
 - **Preferences learned:** Selected project is real; former backend remains protected (README §8.5).
 - **Correction sweep:** Swept all active project-ID references, frontend/build secrets, CLI link, reset/seed/prep guards, backend account access and current docs. Historical logs retained.
-- **Rework:** Decoded existing CLI keychain format for management API login; no new authorization needed. Preserved concurrent MRP/customer-pickup changes; no new design exceptions; approved Barcode Labels/Glazed! exceptions retained.
+- **Rework:** Decoded existing CLI keychain format for management API login. Preserved concurrent MRP/customer-pickup changes. Fixed initial Pages verification failure by installing seed test dependencies in CI. No new design exceptions; approved Barcode Labels/Glazed! exceptions retained.
 - **Follow-ups:** Verify Pages publication; owner completes setup using private code; configure SMTP. Demo requires a separate disposable project.
 
 ### 2026-11-17: Publish and verify MRP/customer pickup on Pages (Codex)

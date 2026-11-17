@@ -29,6 +29,8 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - name: Install seed verification dependencies
+        run: npm ci --prefix scripts/seed
       - name: Check frontend configuration
         run: node -e 'for (const key of ["VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY"]) { if (!process.env[key]) throw new Error(key + " is missing from repository Actions secrets"); }'
       - name: Verify application
