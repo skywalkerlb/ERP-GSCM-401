@@ -4,28 +4,38 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-17.** Public frontend hosting is GitHub Pages at **https://skywalkerlb.github.io/ERP-GSCM-401/** with automatic publishing on main pushes. The MRP/customer-pickup release is integrated with the Pages base-path/router and latest username signup; combined verification passed and Pages publication is in progress.
+**As of 2026-11-17.** Public frontend hosting is GitHub Pages at **https://skywalkerlb.github.io/ERP-GSCM-401/** with automatic publishing on main pushes. The MRP/customer-pickup release is integrated with the Pages base-path/router and latest username signup; PR #1 is merged and the MRP/customer-pickup update is publicly deployed. Pages workflow `44136673348` successfully published source `b5d0c30`.
 
 - The user successfully applied migrations `20261116000101..103` to linked persistent Supabase `eaphbcbklbcadokfcewc` and deployed People via CLI 2.122.1 (terminal output confirmed in this session). Baseline 21 migrations, username Auth settings and Pages URLs were verified by the earlier hosting rollout. The separate first-owner onboarding migration `20261117000001`/function/setup-code configuration is newly added upstream and remains pending; its setup UI stays unavailable until configured. No seed/reset is required or performed.
 - MRP nets confirmed BOM demand against dated PO receipts and company-wide stock over four weeks, calculates pack-rounded suggestions/order-by dates and shows nine seed-catalog parent BOMs. Customer catalog shows fresh availability by shop after direct/shared-kit reservations; checkout validates available items and pickup times. Persistent master data/owner still require setup if empty.
 - Prior release verification passed 338 TS/Node tests, four rollback SQL suites and 36 non-data assertions; Pages main separately passed 334 JavaScript tests. Combined verification passes: 367 TS/Node tests, both-theme browser flows at root and repository prefix, typecheck/design lint and prefixed production build. Concurrent first-owner setup changes are preserved; their private backend configuration remains pending upstream. No new design exceptions; approved Glazed! and Barcode Labels exceptions retained.
+- Live smoke checks: public Manager demo renders the updated MRP view with nine loaded BOM parents; Customer demo renders 13 menu items with availability across shops. No JavaScript page errors, owner claims or orders submitted. People preflight returns 204 and permits the Pages origin.
 - Existing demo data remains isolated; no replay ran. Known seed reproducibility differences remain (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Verify integrated PR #1, merge under the user's prior deployment authorization, monitor Pages publication and check the live frontend.
-- No database reset/replay or owner assignment in progress.
+- MRP/customer-pickup implementation and Pages deployment are complete.
+- No database reset/replay or owner assignment in progress; separate onboarding backend/private-code setup remains pending upstream.
 
 ## Next Steps
-1. Complete combined tests and Pages deployment; verify updated MRP and customer portal at the public site.
-2. Confirm live backend functions and complete browser smoke checks without creating persistent orders.
-3. Complete upstream first-owner onboarding backend/private-code setup or obtain the exact account for trusted bootstrap; never claim an owner as a smoke test. Confirm catalog/inventory data before real customer ordering.
-4. Preserve existing demo data; repair historical seed reproducibility only under a separate request.
+1. Complete upstream first-owner onboarding backend/private-code setup or obtain the exact account for trusted bootstrap; never claim an owner as a smoke test.
+2. Confirm persistent catalog/inventory data before real customer ordering; use isolated Manager/Customer demos to review sample workflows now.
+3. Preserve existing demo data; repair historical seed reproducibility only under a separate request.
 
 ## Open Questions for the User
 - Which existing username or email should receive persistent ERP owner access? Never share passwords in chat.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-17: Publish and verify MRP/customer pickup on Pages (Codex)
+- **What:** Merged PR #1 and published the integrated MRP/customer frontend at the public GitHub Pages URL.
+- **Why:** Complete the user-authorized deployment after their Supabase migration/function rollout and Pages activation.
+- **How:** Pages run `44136673348` built source `b5d0c30` and deployed successfully. 367 local TS/Node tests, prefixed build/typecheck/design lint and both-theme browser regressions pass. Live demo sign-ins work: Manager MRP shows nine loaded BOM parents; Customer shop shows 13 items and per-shop availability, without JS page errors. People CORS permits Pages. Live browser used a proxy-certificate test override; shell HTTPS checks retained verification. No orders, owner claims or data resets.
+- **Files:** Published PR #1 source; PROGRESS.md and progress archive record final verification. No new UI edits in this handoff.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** Preserved concurrent Pages, username and first-owner source changes while resolving progress history conflicts.
+- **Follow-ups:** Separate first-owner backend/private-code setup and persistent master data remain; existing demo history limitations preserved. No new design exceptions.
+
 ### 2026-11-17: Integrate MRP/customer pickup with GitHub Pages (Codex)
 - **What:** Combined PR #1 with the live Pages hosting changes, preserved username signup and added repository-prefix browser regression coverage.
 - **Why:** Finish the authorized frontend deployment after the user enabled GitHub Pages and successfully applied MRP migrations/deployed People from PowerShell.
@@ -116,16 +126,6 @@
 - **Correction sweep:** N/A
 - **Rework:** Resolved authentication and integrated concurrent upstream signup changes without overwriting either history.
 - **Follow-ups:** User signs in to the existing Vercel project in Chrome; deploy/verify live change. Existing backend rollout requirements remain. Approved Barcode Labels capitalization and Glazed! punctuation exceptions preserved; both-theme visuals not rechecked.
-
-### 2026-11-16: Restored publishing access and integrated latest signup work (Codex)
-- **What:** Completed GitHub CLI sign-in with explicit exact-scope approval and integrated upstream ff265ec with local label/sidebar changes.
-- **Why:** Complete the user's requested website publication without overwriting concurrent work.
-- **How:** Verified browser device-success page and CLI login as chrisshipp19-web; retained Chris Shipp's noreply commit identity and configured hooks. Resolved documentation conflicts while preserving both histories and current username signup requirements. Integrated build/typecheck, full design lint, diff checks and all 326 JavaScript tests pass; GitHub push follows this edit.
-- **Files:** Merged source and documentation; PROGRESS.md and progress archive.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** New upstream commits arrived during authorization; preserved them in a second merge. Earlier automatic approval rejection was resolved by explicit approval of its exact scopes.
-- **Follow-ups:** Push and verify hosting. Backend rollout is still credential-blocked; Vercel GitHub login reports account_not_found. Approved Barcode Labels and Glazed! wording exceptions remain; no new design changes.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
