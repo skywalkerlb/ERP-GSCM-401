@@ -125,8 +125,8 @@ export default function LabelsPage() {
     <>
       <div className="no-print">
         <PageHeader
-          title="Barcode labels"
-          breadcrumb={[{ label: 'Stock' }, { label: 'Inventory', to: '/inventory' }, { label: 'Barcode labels' }]}
+          title={'Barcode Labels' /* ds-exception: User-requested page-name capitalization. */}
+          breadcrumb={[{ label: 'Stock' }, { label: 'Inventory', to: '/inventory' }, { label: 'Barcode Labels' /* ds-exception: User-requested page-name capitalization. */ }]}
           subtitle="Print Code 128 labels on Avery 5160 sheets (30 per page). The POS and receiving scan these."
           actions={
             <Button variant="primary" icon="printer" disabled={total === 0} onClick={() => window.print()}>

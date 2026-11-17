@@ -13,10 +13,12 @@ const helpers = {};
 vm.runInNewContext(compile('../../src/hooks/useAuth.tsx'), { exports: helpers, ...identity, createContext: () => ({}), require: () => ({}) });
 const pages = compile('../../src/app/AuthPages.tsx', '\nexport const internals = { SignInForm, AuthFrame };');
 const guard = compile('../../src/components/RequireRole.tsx');
-function mount(name, { auth = {}, error = null, search = '', hash = '', guardProps = null } = {}) {
-  const state = [], calls = [], exported = {}; let index = 0;
+function mount(name, { base = '/', auth = {}, error = null, search = '', hash = '', guardProps = null } = {}) {
+  const state = [], calls = [], exported = {}, pathHelpers = {}; let index = 0;
+  const pathCode = compile('../../src/lib/appUrl.ts').replaceAll('import.meta.env', '__env');
+  vm.runInNewContext(pathCode, { exports: pathHelpers, __env: { BASE_URL: base }, URL, window: { location: { origin: 'https://glazed.example' } } });
   vm.runInNewContext(guardProps ? guard : pages, {
-    exports: exported,
+    exports: exported, ...pathHelpers,
     require: () => ({ jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }), Fragment: 'Fragment' }),
     useState: initial => { const i = index++; if (!(i in state)) state[i] = typeof initial === 'function' ? initial() : initial; return [state[i], next => { state[i] = next; }]; },
     useAuth: () => ({ session: null, profile: null, loading: false, profileError: null,
@@ -104,4 +106,10 @@ test('missing-profile retry and signout work; signout failure offers useful reco
   await find(app, 'Button', 'children', 'Retry account setup').props.onClick(); assert.equal(app.calls[0][0], 'refreshProfile');
   await find(app, 'Button', 'children', 'Sign out').props.onClick(); assert.equal(app.calls[1][0], 'signOut');
   assert.match(find(app, 'EmptyState').props.description, /Could not sign out/);
+});
+
+test('recovery callback stays under the GitHub Pages path', async () => {
+  const app = mount('PasswordRecoveryPage', { base: '/ERP-GSCM-401/' });
+  field(app, 'Email', 'jane@example.com'); await submit(app);
+  assert.equal(app.calls[0][2].redirectTo, 'https://glazed.example/ERP-GSCM-401/update-password');
 });

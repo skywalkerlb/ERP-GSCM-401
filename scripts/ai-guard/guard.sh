@@ -42,6 +42,8 @@ fi
 
 rel() { case "$1" in "$ROOT"/*) echo "${1#"$ROOT"/}" ;; /*) echo "__outside__" ;; *) echo "${1#./}" ;; esac; }
 
+# Pull/fetch synchronize upstream history, so they do not count as authored edits.
+# Keep checking the rest of a compound command for writes.
 # Does a shell command look like it changes files? (Redirects to /dev/null and fd dups don't count.)
 is_write() {
   printf '%s' "$CMD" | sed -E 's/[0-9&]?>+ *\/dev\/null//g; s/[0-9]>&[0-9]//g' |

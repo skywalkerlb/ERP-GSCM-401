@@ -41,7 +41,7 @@ export const NAV: NavSection[] = [
       { to: '/inventory/transfers', label: 'Transfers', icon: 'swap', roles: ACCESS.staff },
       { to: '/inventory/adjust', label: 'Adjust stock', icon: 'edit', roles: ACCESS.bakery },
       { to: '/inventory/receive', label: 'Receive stock', icon: 'truck', roles: ACCESS.bakery },
-      { to: '/inventory/labels', label: 'Barcode labels', icon: 'tag', roles: ACCESS.bakery },
+      { to: '/inventory/labels', label: 'Barcode Labels', icon: 'tag', roles: ACCESS.bakery }, // ds-exception: User-requested page-name capitalization.
     ],
   },
   {

@@ -1,4 +1,5 @@
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router-dom';
+import { APP_BASE_PATH } from '@/lib/appUrl';
 import { customersRoutes } from '@/features/customers/routes';
 import { dashboardRoutes } from '@/features/dashboard/routes';
 import { financeRoutes } from '@/features/finance/routes';
@@ -69,4 +70,4 @@ export const routes: RouteObject[] = [
   { path: '*', element: <NotFoundPage /> },
 ];
 
-export const router = createBrowserRouter(routes);
+export const router = createBrowserRouter(routes, { basename: APP_BASE_PATH.replace(/\/$/, '') || '/' });

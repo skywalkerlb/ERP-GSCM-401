@@ -1,5 +1,7 @@
 # ERP Project (GSCM 401)
 
+[**Open Glazed**](https://skywalkerlb.github.io/ERP-GSCM-401/) · [Publishing status](https://github.com/skywalkerlb/ERP-GSCM-401/actions/workflows/pages.yml)
+
 > ## ⚠️ Every AI must read this first, whatever the tool (Claude Code, Codex, Cursor, Copilot, Gemini, ChatGPT…)
 > 1. **Before editing anything**, read this file **and** `PROGRESS.md` from start to finish.
 > 2. **After every edit**, update `PROGRESS.md` every time, and update this file whenever how the project works or the user's preferences have changed.
@@ -39,9 +41,9 @@ This file says **how the project works** and **how the user wants it built**. It
 | Styling | Glazed `tokens.css` + `components.css` | Shared design tokens and `gz-` component classes. |
 | Icons/charts | `lucide-react`, Recharts | Icons and data-backed charts using design-system tokens. |
 | Data / backend | **Supabase** (Postgres, Auth, Realtime) | Transactional RPCs, row-level security and live invalidation. |
-| Hosting target | **Vercel** | Linked ERP project; Preview deployment configured. |
+| Frontend hosting | **GitHub Pages** | GitHub Actions builds and publishes every push to main. |
 
-Chosen 2026-11-09. The React app, database migrations, seed simulator and verification scripts are implemented. This repository is linked to the intended Supabase backend `ERP Project` (`eaphbcbklbcadokfcewc`) and Vercel project `erpprojectgscm401`. Persistent-backend migrations are pending a valid database password. The separate public demo backend is `Glazed Demo` (`wzsbtfzettxpczgulibd`), with migrated schema and six role accounts; see `PROGRESS.md` for seed and verification status.
+Chosen 2026-11-09. The React app, database migrations, seed simulator and verification scripts are implemented. This repository is linked to the intended Supabase backend `ERP Project` (`eaphbcbklbcadokfcewc`) and the public GitHub Pages project site. The 21 baseline persistent-backend migrations were applied on 2026-11-16; the user confirmed the three additional MRP/customer-pickup migrations (`20261116000101..103`) applied successfully on 2026-11-17. People is deployed and signup email confirmation is disabled. The saved direct database password is stale; authenticated management API access works through the Supabase CLI login. The separate public demo backend is `Glazed Demo` (`wzsbtfzettxpczgulibd`), with migrated schema and six role accounts; see `PROGRESS.md` for seed and verification status.
 
 ## 4. Run / build / test
 
@@ -60,6 +62,8 @@ Available frontend checks:
 `test:browser` starts an isolated Vite server on port 4174 and mocks Supabase for repeatable UI checks. It covers both themes, MRP BOM/drivers, customer sign-in, per-shop inventory, pickup checkout/order confirmation, failed availability and removed cart items. It uses system Chromium when available; otherwise run `npx playwright install chromium` first. Real database behavior is covered separately by the rollback SQL suites.
 
 The browser app reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from the root `.env.local`. `VITE_DEMO_SUPABASE_URL`, `VITE_DEMO_SUPABASE_ANON_KEY` and `VITE_DEMO_PASSWORD` enable the demo selector against a separate sandbox project. Demo and real sessions use separate storage. Never point demo settings at the persistent backend. Copy `.env.example` as a starting point; do not commit `.env.local`.
+
+**Automatic publishing:** `.github/workflows/pages.yml` runs tests, builds with Node 24 and publishes `dist/` whenever main changes. Pages is enabled with **Source: GitHub Actions** (completed 2026-11-17); future pushes to main publish automatically. The workflow reads five Actions secrets: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_DEMO_SUPABASE_URL`, `VITE_DEMO_SUPABASE_ANON_KEY`, `VITE_DEMO_PASSWORD` (configured for this repository). These are frontend/demo settings only; never add service-role keys or database passwords to the build. Failed builds leave the previous site published. The workflow sets the repository base path automatically; local development stays at `/`. A custom `404.html` loads the app for refreshed/deep links; those direct nested HTTP requests return 404 while the application renders normally.
 
 The deterministic 210-day seed and database verification scripts live under `scripts/seed/`:
 
@@ -88,13 +92,14 @@ Update this map when a top-level folder is added, renamed or removed.
 - `supabase/migrations/`, `supabase/functions/`, `supabase/bootstrap-owner.sql`, `supabase/CONTRACT.md`: database schema, RPCs, RLS and reporting contract.
 - `scripts/ai-guard/`, `scripts/seed/`, `scripts/demo/`, `scripts/verify/`: shared AI guard, deterministic demo-data simulation and database checks.
 - `scripts/check-design.sh`: design-system lint for app code.
+- `.github/workflows/pages.yml`: automatic public frontend build and deployment on pushes to main.
 - `.ai-state/`: ignored per-session state used by the AI edit guard.
 - `.githooks/pre-commit`: optional advisory design lint and PROGRESS reminder; always allows commits.
 - `docs/progress-archive/`: older changelog entries moved out of PROGRESS.md.
 
 ## 6. ERP domain model
 
-**Staff modules:** POS, sales and orders, returns, demand forecast and bake plan, production, freshness and waste, inventory and transfers, adjustments, receiving, labels, purchasing and auto-replenish, supplier scorecard, MRP, dashboard, reports, finance, items/BOM, customers and settings. The customer portal is at `/shop`.
+**Staff modules:** POS, sales and orders, returns, demand forecast and bake plan, production, freshness and waste, inventory and transfers, adjustments, receiving, labels, purchasing and auto-replenish, supplier scorecard, MRP, dashboard, reports, finance, items/BOM, customers and settings. The customer portal is at `/shop` in the app, under `/ERP-GSCM-401/` on GitHub Pages.
 
 **Material requirements planning:** `/mrp` shows four weekly buckets from today using outstanding quantities on confirmed (`placed`) sales orders. Single-level recipe/kit quantities produce component requirements; company-wide stock and unreceived, uncancelled quantities on sent POs offset them in expected-date order. A receipt later in a week cannot hide an earlier shortage. Suggestions round up to supplier packs; the order-by date is the first shortage date minus the component item's lead time in calendar days. Projected stock carries forward. The page also lists each active parent BOM, quantities per unit and component lead times, with a warning below five parents; the seed catalog supplies nine parents. Manage recipes and lead times in Items. Production consumes components when a batch starts; kit checkout/fulfillment consumes its BOM directly. Finished donuts sell from the stock created by production, avoiding double consumption. Missing recipes block production starts and kit sales. Forecast is optional; creating POs requires confirmed-demand mode. The plan refreshes after stock, order, recipe and forecast events.
 
@@ -104,7 +109,7 @@ MRP checks after installing root and `scripts/seed` dependencies:
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/verify/mrp_planning.sql
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/verify/bom_consumption.sql
 
-Run the SQL suites against a migrated disposable test database; their fixtures and postings roll back. Apply the three MRP/customer migrations `20261116000101..103` after the username migration `20261116000001` and all earlier pending migrations to a hosted backend before using the updated planning behavior. No reset or replay is needed.
+Run the SQL suites against a migrated disposable test database; their fixtures and postings roll back. The three MRP/customer migrations `20261116000101..103` follow username migration `20261116000001`; the user confirmed applying them successfully to the persistent backend. New installations apply all migrations in order. No reset or replay is needed.
 
 **Locations and roles:** Provo, Orem and Lehi shops plus the Lindon Central Kitchen. The app uses owner, admin, manager, cashier, baker and customer roles. Owner, admin and manager manage accounts below their own level across all shops. Only the owner grants admin; admins grant manager/cashier/baker/customer; managers grant cashier/baker/customer. Self-changes and changes to peers or superiors are forbidden. Starting sales tax is 7.25% and can be edited by location.
 
@@ -134,6 +139,7 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 > - Before building anything, re-read the rules whose scope covers it.
 
 ### 8.1 Visual design / UI
+- **Keep sidebar labels readable without overlap.** Navigation groups must scroll rather than compress on short windows, and long labels must wrap inside their own rows. Scope: shared staff sidebar, desktop and mobile drawer, both themes. Source: 2026-11-11, "the side bar overlaps with that text".
 - **Every UI/UX change uses the Glazed design system** (`design-system/`). Follow it unless the user explicitly says otherwise for that specific change. Scope: all screens, components, styles, charts, emails. Source: 2026-11-09, "all edits should follow the design system unless specifically specified otherwise".
 - **Read `design-system/DESIGN_SYSTEM.md` before making any change, and keep it in mind** so design updates stay consistent. Scope: every agent, every session. Source: 2026-11-09.
 - **Tokens only, Glazed components only, both themes, one candy-pink primary button per view (chocolate text), fixed status colors (mint/lilac/butter/cherry/cocoa/neutral), sentence case, no emoji or exclamation marks.** The full list is in DESIGN_SYSTEM.md > Rules for AI agents. Scope: all UI. Source: 2026-11-09 (design system).
@@ -143,17 +149,20 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 **Design exceptions** (approved one-offs that break the design system; each is also marked `ds-exception:` in code):
 | Date | File / place | What | User's words |
 |---|---|---|---|
+| 2026-11-16 | Barcode Labels page title/breadcrumb, sidebar and item editor hint | Capitalize Labels in this page name instead of sentence case; marked `ds-exception:` in source. | "on the barcode labels page, can you capitalize the L on labels" |
 | 2026-11-10 | `src/app/AppShell.tsx`, sidebar wordmark | Display "Glazed!" despite the general no-exclamation rule | "add an exclamation point after glazed in the title in the sidebar" |
 
 - **Show sign-in, public customer signup, and a demo role selector at the bottom of login.** Require only a username and password for customer signup, sign users in immediately, and never require email verification (replaces email-confirmed signup). Preserve existing email logins. Use the protected access hierarchy: owner grants admin/manager/cashier/baker/customer, admin grants manager/cashier/baker/customer, manager grants cashier/baker/customer. Actors may manage only lower-level accounts across all shops and cannot change themselves (replaces owner-only staff management). Anyone must be able to select a role and enter the demo without typing credentials or registering. Demo workflows use isolated sample data and simulated invitations; never imply missing configuration is being prepared automatically. Scope: authentication, permissions and demo. Source: 2026-11-16, "make it simple to create a username and password, dont use email verification"; access hierarchy approved 2026-11-12.
 
 ### 8.2 Wording & content
-- _None recorded yet._
+- **Write the page name as "Barcode Labels".** Scope: this page's heading, browser title, breadcrumb, sidebar entry and references elsewhere in the app; exception to sentence case for this page name only. Source: 2026-11-16, "on the barcode labels page, can you capitalize the L on labels".
 
 ### 8.3 Code & architecture
+- **Host the public frontend on GitHub Pages and publish every push to main automatically.** Put a clickable live-site link prominently in the GitHub README. Keep Supabase for authentication/data; repository-path links and Auth redirects must work (replaces Vercel hosting). Scope: frontend hosting, publishing and related URLs. Source: 2026-11-16, "the front end is hosted on github instead of vercel ... when i push to github anyone can view it".
 - **Keep shared values centralized** (tokens, constants, components) so a single change applies project-wide. Scope: all code. Source: 2026-11-09, the user wants changes "implemented across the whole project".
 
 ### 8.4 Workflow / process
+- **Allow GitHub pulls and fetches without project hook prerequisites or changelog reminders.** Synchronizing upstream history alone is not an authored edit; commands that also edit files and manual conflict resolutions still follow the normal checks. Sandbox permissions and Git conflict protection still apply. Scope: all AI tool hooks. Source: 2026-11-16, "make sure pulling from github is not blocked by any hooks".
 - **Every AI reads README.md and PROGRESS.md before editing, and updates them after every edit.** Scope: every session, every tool. Source: 2026-11-09.
 - **Treat a correction as a project-wide rule, not a one-off fix.** When the user asks to change something an AI just made, apply it everywhere it's relevant and record it here. Scope: all corrections (design, wording, code). Source: 2026-11-09.
 - **The user works with several AI tools** (Claude Code, Codex, Cursor, Copilot, Gemini). Keep the docs tool-neutral. Scope: all docs. Source: 2026-11-09.
@@ -161,7 +170,7 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 
 - **The read-first / update-after rules must be enforced, not just suggested,** for every AI tool. Keep the AI edit hooks in §9.5 working. Git synchronization is exempt: pulls and pushes must not require documentation reads or updates, and Git checks are advisory. Scope: all tools, all sessions. Source: 2026-11-16, user requested unblocked GitHub pulls/pushes (replaces mandatory blocking Git checks); original read/update preference from 2026-11-09.
 
-- **Commits to the public repo use the GitHub noreply email** (`208742214+briggsamason@users.noreply.github.com`, set in this repo's local git config), never the user's personal or work email. Scope: all commits. Source: 2026-11-09.
+- **Use Chris Shipp as the commit author and his GitHub noreply address** (`276119029+chrisshipp19-web@users.noreply.github.com`) for commits made for Chris. Verify identity against the connected account rather than copying another contributor's identity from history; never expose personal or work email. Scope: all commits for Chris (replaces: incorrectly identifying Chris as Mason Briggs). Source: 2026-11-11, "no i am Chris Shipp".
 
 ### 8.5 ERP / domain
 - **Use Supabase `ERP Project` as the intended persistent backend.** Do not treat it as a disposable demo database or run reset/replay seeds during deployment. Scope: hosted database and deployment workflow. Source: 2026-11-10, "the erp project is the entended database not just the demo".
@@ -196,14 +205,14 @@ The approved schema, RPCs, reporting views, seed model and security decisions ar
 - Say which AI tool you are in each changelog heading so the user can trace work across tools.
 
 ### 9.5 How the rules are enforced (don't remove or weaken these without the user's permission)
-All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior is the same in every tool.
+All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior is the same in every tool. Plain `git pull` and `git fetch` are synchronization operations: they neither require the read-before-edit check nor create a progress reminder. Additional writes in the same shell command remain guarded; existing reminders from authored edits remain pending.
 
 | Check | What happens |
 |---|---|
-| **Read before edit** | Any file edit, or any shell command that changes files, is **blocked** until this session has read README.md, PROGRESS.md **and design-system/DESIGN_SYSTEM.md**. If another agent changes any of them afterward, you're blocked again until you re-read it. |
+| **Read before edit** | Any authored file edit, or any shell command classified as an edit (excluding pull/fetch synchronization), is **blocked** until this session has read README.md, PROGRESS.md **and design-system/DESIGN_SYSTEM.md**. If another agent changes any of them afterward, you're blocked again until you re-read it. |
 | **Update after edit** | If project files changed and PROGRESS.md wasn't updated, the agent is **sent back once** when it tries to finish (it can't loop). |
 | **Design checklist** | If UI files changed (`.css/.scss/.tsx/.jsx/.html`, `src/`, `design-system/`), the agent is also sent back once with the design-system checklist. |
-| **Git checks** | Optional `.githooks/pre-commit` prints design and PROGRESS advisories and always exits successfully. Pull/push operations are exempt from the AI read-before-edit gate. This checkout disables Git hooks with `core.hooksPath=/dev/null`; new clones have no active project hooks by default. Authentication, write permission and normal Git conflict handling still apply. |
+| **Git checks** | Optional `.githooks/pre-commit` prints design and PROGRESS advisories and always exits successfully. Pull/push operations are exempt from the AI read-before-edit gate. This checkout retains `core.hooksPath=.githooks` for advisory checks; new clones have no active project hooks by default. Authentication, write permission and normal Git conflict handling still apply. |
 
 | Tool | Hook file | Read-before-edit block | Update + design reminders | Advisory Git checks (optional) |
 |---|---|---|---|---|
@@ -221,10 +230,12 @@ All hooks call one shared script, `scripts/ai-guard/guard.sh`, so the behavior i
 
 ## 10. Access setup
 
-Apply migrations in order, then deploy the `people` Supabase Edge Function. Set its `APP_URL` to the approved frontend origin; allow `/login`, `/update-password` and `/accept-invite` redirects in Supabase Auth. Bootstrap one confirmed owner with `supabase/bootstrap-owner.sql` using a trusted psql connection and the `owner_email` variable; never expose owner assignment publicly. Public signup requires only a case-insensitive username (3–30 letters, digits or underscores) and password (at least 6 characters), creates customer access and signs in immediately. Disable Confirm email in hosted Supabase Auth and keep local `auth.email.enable_confirmations=false`. Username identities use the reserved internal `users.glazed.invalid` domain; this is not a contact address. No signup email is sent. Existing email accounts retain email login and recovery. Configure custom SMTP (or an existing Send Email hook) only for legacy email recovery and staff email invitations: [Supabase’s default sender is restricted to organization members](https://supabase.com/docs/guides/auth/auth-smtp). Set the hosted Site URL and exact `/login`, `/update-password`, `/accept-invite` redirects to the approved frontend origin; do not push local Auth defaults to hosting. Local Mailpit captures messages for development. Owners, admins and managers use People to invite staff or change lower-level accounts under the protected hierarchy. All access assignments are checked atomically against the actor and target, and audited. People also resets lower-level username passwords after verifying the account holder; reset authorization attempts are audited separately from the Auth update, with no passwords stored in audit. Owner username recovery requires trusted backend administration. Open sessions refresh access on own-profile realtime events, focus and every 30 seconds while visible, clear restricted cached data, and fail closed on profile errors. Privileged keys belong only in server secrets.
+Persistent Supabase rollout completed 2026-11-16: all ordered migrations applied with CLI-compatible history, People deployed with `DEMO_MODE=false`, and public username signup/immediate login verified. The GitHub Pages frontend is at `https://skywalkerlb.github.io/ERP-GSCM-401/`; GitHub Pages was enabled and the first deployment succeeded on 2026-11-17. No owner is assigned yet; obtain the user's exact account choice before bootstrapping one.
+
+Apply migrations in order, then deploy the `people` Supabase Edge Function. Set its `APP_URL` to the full GitHub Pages URL, including `/ERP-GSCM-401/`; allow exact URLs below that prefix for `login`, `update-password` and `accept-invite` in Supabase Auth. CORS uses the origin `https://skywalkerlb.github.io`. Bootstrap one confirmed owner with `supabase/bootstrap-owner.sql` using a trusted psql connection and the `owner_email` variable; never expose owner assignment publicly. Public signup requires only a case-insensitive username (3–30 letters, digits or underscores) and password (at least 6 characters), creates customer access and signs in immediately. Disable Confirm email in hosted Supabase Auth and keep local `auth.email.enable_confirmations=false`. Username identities use the reserved internal `users.glazed.invalid` domain; this is not a contact address. No signup email is sent. Existing email accounts retain email login and recovery. Configure custom SMTP (or an existing Send Email hook) only for legacy email recovery and staff email invitations: [Supabase’s default sender is restricted to organization members](https://supabase.com/docs/guides/auth/auth-smtp). Set the hosted Site URL and exact login/password-update/invitation redirects under the full GitHub Pages base URL; do not push local Auth defaults to hosting. Local Mailpit captures messages for development. Owners, admins and managers use People to invite staff or change lower-level accounts under the protected hierarchy. All access assignments are checked atomically against the actor and target, and audited. People also resets lower-level username passwords after verifying the account holder; reset authorization attempts are audited separately from the Auth update, with no passwords stored in audit. Owner username recovery requires trusted backend administration. Open sessions refresh access on own-profile realtime events, focus and every 30 seconds while visible, clear restricted cached data, and fail closed on profile errors. Privileged keys belong only in server secrets.
 
 The separate disposable Glazed Demo project is provisioned. For a replacement demo project, apply the same migrations and configure `DEMO_MODE=true` on its People function. Use `node --env-file=.env.local scripts/demo/setup.mjs` from the repository root with `DEMO_PROJECT_REF`, `DEMO_DATABASE_URL`, `DEMO_SUPABASE_SERVICE_ROLE_KEY` and `DEMO_PASSWORD` in the process environment to populate and reset sample data and role accounts. The script refuses the persistent project. Owner, admin and manager demo access changes follow the same hierarchy and are simulated locally; no invitation emails are sent.
 
 Access tests: `node --test scripts/verify/*.test.mjs` and `scripts/seed/node_modules/.bin/tsx --test scripts/verify/access.test.ts`. The database runner `node scripts/verify/run.mjs --skip-data` includes rollback-only access security checks after applying migrations; `scripts/verify/access_security.sql` can also run directly. These tests cover API authorization, frontend access and reset guards; connected username signup/login, legacy email recovery and browser checks are still required before release.
 
-Public demo Preview: https://erpprojectgscm401-3jdf3tsvt-briggsamasons-projects.vercel.app/login . Vercel hosting authentication is disabled so visitors can reach the login page; real ERP access still requires Glazed authentication. All six demo roles sign in automatically. The full history replay takes about 30 minutes over a stable remote connection (longer after reconnects); never run simultaneous reset seeds.
+Public frontend: [Open Glazed](https://skywalkerlb.github.io/ERP-GSCM-401/). Visitors can open the login page and enter isolated demos without a hosting login; real ERP access still requires Glazed authentication. All six demo roles sign in automatically. The full history replay takes about 30 minutes over a stable remote connection (longer after reconnects); never run simultaneous reset seeds.

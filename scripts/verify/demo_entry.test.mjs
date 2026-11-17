@@ -8,7 +8,14 @@ const source = readFileSync(new URL('../../src/lib/supabase.ts', import.meta.url
 const js = ts.transpileModule(source.replace(/^import .*;$/gm, '').replaceAll('import.meta.env', '__env'), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
 }).outputText;
-function harness({ configured = true, demoUrl = 'https://demo.supabase.co', profileRole, authError, profileError, missingSession = false, initialDemo = false } = {}) {
+const pathSource = readFileSync(new URL('../../src/lib/appUrl.ts', import.meta.url), 'utf8');
+function paths(base = '/') {
+  const exported = {};
+  const code = ts.transpileModule(pathSource.replaceAll('import.meta.env', '__env'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText;
+  vm.runInNewContext(code, { exports: exported, __env: { BASE_URL: base }, URL, window: { location: { origin: 'https://glazed.example' } } });
+  return exported;
+}
+function harness({ base = '/', configured = true, demoUrl = 'https://demo.supabase.co', profileRole, authError, profileError, missingSession = false, initialDemo = false } = {}) {
   const calls = [], redirects = [], configs = [], requests = [];
   const values = new Map([['glazed-auth-v1', 'real-session'], ...(initialDemo ? [['glazed-demo-v1', 'true'], ['glazed-demo-auth-v1', 'demo-session']] : [])]);
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
@@ -30,7 +37,7 @@ function harness({ configured = true, demoUrl = 'https://demo.supabase.co', prof
   };
   const exported = {};
   vm.runInNewContext(js, {
-    exports: exported, createClient: (url, key, options) => { configs.push({ url, key, options }); return client; },
+    exports: exported, ...paths(base), createClient: (url, key, options) => { configs.push({ url, key, options }); return client; },
     __env: { VITE_SUPABASE_URL: 'https://real.supabase.co', VITE_SUPABASE_ANON_KEY: 'real-public-key', ...(configured ? { VITE_DEMO_SUPABASE_URL: demoUrl, VITE_DEMO_SUPABASE_ANON_KEY: 'demo-public-key', VITE_DEMO_PASSWORD: 'demo-only-password' } : {}) },
     URL, Error, TypeError, AbortSignal, sessionStorage: storage,
     fetch: async (input, init) => { requests.push({ input, init }); return new Response('{}'); },
@@ -80,4 +87,17 @@ test('exit clears only the demo tab session and returns to normal login', async 
   assert.equal(app.values.has('glazed-demo-v1'), false); assert.equal(app.values.has('glazed-demo-auth-v1'), false);
   assert.equal(app.values.get('glazed-auth-v1'), 'real-session'); assert.deepEqual(app.redirects, ['/login']);
   assert.equal(app.calls.at(-1).options.scope, 'local');
+});
+
+for (const [role, destination] of [['manager', '/ERP-GSCM-401/'], ['cashier', '/ERP-GSCM-401/pos'], ['customer', '/ERP-GSCM-401/shop']]) test(`${role} demo entry retains the GitHub Pages repository path`, async () => {
+  const app = harness({ base: '/ERP-GSCM-401/' });
+  await app.enterDemo(role);
+  assert.deepEqual(app.redirects, [destination]);
+  assert.equal(app.values.get('glazed-auth-v1'), 'real-session');
+});
+test('demo exit returns to the repository login instead of the domain root', async () => {
+  const app = harness({ base: '/ERP-GSCM-401/', initialDemo: true });
+  await app.exitDemo();
+  assert.deepEqual(app.redirects, ['/ERP-GSCM-401/login']);
+  assert.equal(app.values.get('glazed-auth-v1'), 'real-session');
 });

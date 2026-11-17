@@ -78,7 +78,7 @@ Deno.serve(async (req: Request) => {
       if (updated.error) return reply(400, { error: 'The password could not be saved. Choose another password and try again.' });
       return reply(200, { message: 'Password saved. Share it privately with the account holder.' });
     }
-    const redirectTo = new URL('/accept-invite', appUrl).toString();
+    const redirectTo = new URL('accept-invite', `${appUrl.replace(/\/+$/, '')}/`).toString();
     if (action === 'resend') {
       if (typeof body.user_id !== 'string') return reply(400, { error: 'Choose an account.' });
       const { data, error } = await admin.auth.admin.getUserById(body.user_id);

@@ -116,7 +116,7 @@ function Editor({ item, onClose, onCreated, categories }: { item: Item | null; o
               <TextField label="Category" list="item-categories" {...text('category')} />
               <Select label="Item type" value={f.item_type} onChange={(e) => set('item_type', e.target.value as ItemType)} options={TYPES.map((t) => ({ value: t, label: ITEM_TYPE_LABELS[t] ?? t }))} />
               <TextField
-                label="Barcode" {...text('barcode')} hint="Code 128, printed from Barcode labels"
+                label="Barcode" {...text('barcode')} hint={'Code 128, printed from Barcode Labels' /* ds-exception: User-requested page-name capitalization. */}
                 suffix={<Button size="sm" variant="ghost" onClick={() => set('barcode', nextBarcode(itemsQ.data ?? []))}>Generate</Button>}
               />
               <Select label="Unit of measure" value={f.uom} onChange={(e) => set('uom', e.target.value as Uom)} options={[{ value: 'each', label: 'Each' }, { value: 'lb', label: 'Pounds' }, { value: 'gal', label: 'Gallons' }]} />

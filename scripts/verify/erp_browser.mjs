@@ -8,6 +8,8 @@ import { fileURLToPath } from "node:url";
 // verify real database authorization, netting and component consumption.
 const root = fileURLToPath(new URL("../../", import.meta.url));
 const origin = "http://127.0.0.1:4174";
+const appBase = process.env.ERP_BROWSER_BASE_PATH || "/";
+const appOrigin = `${origin}${appBase.replace(/\/$/, "")}`;
 const server = spawn(
   process.execPath,
   [
@@ -23,6 +25,7 @@ const server = spawn(
     stdio: "ignore",
     env: {
       ...process.env,
+      VITE_APP_BASE_PATH: appBase,
       VITE_SUPABASE_URL: "http://127.0.0.1:54321",
       VITE_SUPABASE_ANON_KEY: "browser-test",
       VITE_DEMO_SUPABASE_URL: "",
@@ -38,7 +41,7 @@ try {
     if (server.exitCode !== null)
       throw new Error("Test Vite server exited; port 4174 must be free.");
     try {
-      ready = (await fetch(origin)).ok;
+      ready = (await fetch(appOrigin + "/")).ok;
     } catch {}
     if (ready) break;
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -286,7 +289,7 @@ try {
         headers: { "access-control-allow-origin": "*" },
       });
     });
-    await page.goto(`${origin}/${role === "manager" ? "mrp" : "shop"}`);
+    await page.goto(`${appOrigin}/${role === "manager" ? "mrp" : "shop"}`);
     if (role === "customer") {
       await page.getByLabel(/^Username or email/).fill("test@example.invalid");
       await page.getByLabel(/^Password/).fill("test-only-password");
@@ -363,10 +366,10 @@ try {
       assert.equal(placed.p_location_id, 1);
       assert.deepEqual(placed.p_lines, [{ item_id: 1, qty: 1 }]);
       await page.getByText("ORD-00001", { exact: true }).waitFor();
-      await page.goto(`${origin}/shop`);
+      await page.goto(`${appOrigin}/shop`);
       await page.getByRole("button", { name: "Add Parent 1 to cart" }).click();
       failCatalog = true;
-      await page.goto(`${origin}/shop/cart`);
+      await page.goto(`${appOrigin}/shop/cart`);
       await page
         .getByText("Could not check pickup availability")
         .waitFor({ timeout: 20000 });

@@ -133,6 +133,12 @@ button, input, select, textarea { font: inherit; }
 .gz-camera__manual { display: flex; align-items: flex-end; gap: var(--space-2); margin-top: var(--space-4); }
 .gz-camera__manual .gz-field { flex: 1; }
 
+/* Shared navigation: retain row space on short screens and let long labels wrap. */
+.gz-nav > * { flex-shrink: 0; }
+.gz-nav__item { height: auto; min-height: calc(var(--space-8) + var(--space-1)); padding-block: var(--space-2); }
+.gz-nav__item > span:first-of-type { min-width: 0; overflow-wrap: anywhere; }
+.gz-nav__item > svg, .gz-nav__badge, .gz-nav__mark { flex-shrink: 0; }
+
 /* App shell (staff) */
 .app-sidebar { position: fixed; top: 0; bottom: 0; left: 0; z-index: var(--z-sidebar); width: var(--sidebar-width); }
 .app-sidebar .gz-nav { height: 100%; overflow-y: auto; }

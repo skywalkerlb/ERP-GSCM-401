@@ -479,7 +479,7 @@ The login page has a credential-free demo role selector. Keep demo credentials i
 - Charts use Recharts inside a token-styled `ChartCard`.
 - `Dialog`, built from tokens.
 - Print CSS that hides the app shell.
-- `vercel.json` rewrites all routes to `/index.html` (SPA).
+- GitHub Pages publishes Vite `dist/` through `.github/workflows/pages.yml` on pushes to main. Vite/router/full-page links use the repository prefix. The custom `404.html` loads the SPA for direct nested routes; no server rewrites are required.
 - Env: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The service-role key is local-only for the seed.
 
 ---
@@ -494,7 +494,7 @@ The login page has a credential-free demo role selector. Keep demo credentials i
 
 | Stream | Owns | Depends on |
 |---|---|---|
-| **A** Scaffold and shell | Vite/TS/router/Query setup, `src/components/*` (12 ports plus the noted accessibility fixes, Dialog, ChartCard), app shell, top bar with location switcher and theme toggle, login with demo buttons, `src/lib/*`, `src/hooks/*` (scanner, realtime, role), BarcodeLabel, print CSS, placeholder pages in every `src/features/<x>/index.tsx`, `/about`, vercel.json, README §4 | Phase 0 |
+| **A** Scaffold and shell | Vite/TS/router/Query setup, `src/components/*` (12 ports plus the noted accessibility fixes, Dialog, ChartCard), app shell, top bar with location switcher and theme toggle, login with demo buttons, `src/lib/*`, `src/hooks/*` (scanner, realtime, role), BarcodeLabel, print CSS, placeholder pages in every `src/features/<x>/index.tsx`, `/about`, GitHub Pages workflow, README §4 | Phase 0 |
 | **B** Database | All core migrations (schema, posting helpers, every RPC in §2, views and functions in §3, RLS, grants, realtime publication), `src/lib/rpc.ts` typed wrappers, `src/types/db.ts` (`supabase gen types --linked`), `scripts/verify/assertions.sql` | Phase 0 |
 | **C** Seed | `scripts/seed/*`: simulator, catalog, runner, auth users, `npm run seed` / `seed:check` / `demo:prep` | Contract (writes simulator code in parallel); runs after B is pushed |
 | **D** Selling | `features/pos`, `returns`, `orders`, `portal` (`/shop`), `labels` | A and B |
@@ -519,7 +519,7 @@ The login page has a credential-free demo role selector. Keep demo credentials i
 - **The seed must be fresh before the demo.** Reseed the night before so history ends yesterday, and run `demo:prep` that morning (release the bake plan, complete production). The "Start day" button on the bake plan screen is the backup.
 - **Business dates must use America/Denver everywhere.** UTC rollover at 5 PM local would otherwise shift the business date.
 - **The public demo URL allows writes.** Keep `npm run seed` able to reset everything, and keep a database backup taken right after seeding.
-- **Camera scanning needs HTTPS.** Vercel provides it. For phone testing in dev, use `@vitejs/plugin-basic-ssl` with `--host`. iOS has no `BarcodeDetector`, so ZXing is required.
+- **Camera scanning needs HTTPS.** GitHub Pages provides it. For phone testing in dev, use `@vitejs/plugin-basic-ssl` with `--host`. iOS has no `BarcodeDetector`, so ZXing is required.
 - **Labels must scan.** Print at 100% scale, black on white, with quiet zones. Test the USB scanner's Enter suffix.
 - **RLS and grant mistakes are the biggest security risk.** Supabase grants EXECUTE on functions to anon and authenticated by default. Revoke it on every `_` helper and on all functions for anon. Every definer function needs `search_path` set. Check with `supabase db lint` and the Security Advisor.
 - **`_is_system()` must use `session_user`.** Verify which session user the pooler reports before relying on `p_at`.
@@ -548,7 +548,7 @@ The login page has a credential-free demo role selector. Keep demo credentials i
    - Run each RPC with `set local role authenticated` and `request.jwt.claims` set to each role.
    - Cashiers can't create POs, and customers can't see costs or other customers' orders.
    - Use pgTAP with `supabase test db --linked` if the CLI supports it; otherwise use the Node runner.
-3. **Playwright against the Vercel preview**, with two contexts (manager and cashier) to check realtime. Scans are simulated by typing quickly and pressing Enter.
+3. **Browser checks against the GitHub Pages site**, with two contexts (manager and cashier) to check realtime. Scans are simulated by typing quickly and pressing Enter.
 
 **Demo script (one per requirement)**
 1. **POS:** sell three lines with a discount, then show the receipt. Valuation drops and the P&L rises live in the manager window.

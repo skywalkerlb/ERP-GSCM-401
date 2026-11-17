@@ -11,6 +11,7 @@ import { useAuth, friendlyAuthError, signupFieldErrors, type AppRole, type Profi
 import { homeFor } from '@/hooks/useRole';
 import { isDemoConfigured, enterDemo, isDemo, supabase } from '@/lib/supabase';
 import { ThemeToggle } from './ThemeToggle';
+import { appUrl } from '@/lib/appUrl';
 
 const DEMO_ROLES = [
   { value: 'owner', label: 'Owner' }, { value: 'admin', label: 'Admin' },
@@ -225,7 +226,7 @@ export function PasswordRecoveryPage() {
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('');
     try {
-      const { error: failure } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/update-password` });
+      const { error: failure } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: appUrl('/update-password') });
       if (failure) throw failure;
       setSent(true);
     } catch (cause) { setError(friendlyAuthError(cause)); }
