@@ -4,28 +4,37 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-16.** GitHub Pages replaces Vercel as the requested public frontend host at `https://skywalkerlb.github.io/ERP-GSCM-401/`. The push-to-main Actions workflow, five browser/demo build secrets, repository-prefixed assets/router/demo navigation/Auth callbacks and README site link are prepared. The old Vercel rewrite config is removed, and About identifies GitHub Pages.
-- Workflow authorization is complete, and GitHub accepted the implementation and handoff commits through `d66fb08`. The first Pages Actions run (`43989635680`) passed installation, all tests, build and artifact upload; deployment failed only because Pages is disabled. The site is not live yet, and briggsamason has no admin/maintain permission to enable it. A repository owner must choose Settings → Pages → Source: GitHub Actions once. README includes the intended site link.
-- Checks: all 334 JavaScript tests, repository-path production build/typecheck, design lint, workflow YAML parsing and diff checks pass. Full design lint was rerun after the checklist reminder. Build assets retain the correct prefix; no saved credentials were found across the 19 files. Changed UI keeps the same Glazed components, theme tokens, labels, focus styles and primary-button count. Both-theme browser review remains unverified.
-- Persistent Supabase is migrated (21 original migration versions), signup confirmation is disabled, and People is deployed. Supabase Site URL, exact repository-prefixed Auth callback allowlist and People APP_URL now target GitHub Pages; existing callback URLs remain allowed. The invitation path fix is deployed. Prior 35 schema assertions and rollback account security suite passed; public signup/login and permissions were verified with a removed temporary account.
-- Direct saved DB password remains stale (`28P01`); Supabase management API/CLI login works outside the sandbox. No owner has been assigned. Existing accounts and separate demo data are preserved; no reset or seed replay ran.
-- Latest upstream sidebar/Barcode Labels changes and contributor history remain integrated. Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
+**As of 2026-11-17.** Glazed is publicly hosted at **https://skywalkerlb.github.io/ERP-GSCM-401/**. GitHub Pages is enabled with Source: GitHub Actions and HTTPS enforced. Workflow run `44113413468` completed build and deployment successfully. The README prominently links to the site; every push to main triggers the publishing workflow. Supabase remains the authentication/data backend.
+- Live verification: root returns HTTP 200 with Glazed entry HTML; all six entry assets return HTTP 200; direct `/ERP-GSCM-401/shop/signup` serves the custom SPA fallback. That nested HTTP response is 404 by Pages design, while the app entry loads normally. People preflight permits the GitHub Pages origin.
+- The GitHub build passed all 334 JavaScript tests, design lint, typecheck, production build and artifact packaging. Earlier checks cover workflow YAML, URL prefixing, invitation callbacks and credential scans. No new UI edits during activation; approved Barcode Labels and Glazed! exceptions remain. Both-theme browser visual checks remain unverified because CUA timed out.
+- Persistent Supabase has all 21 migrations, confirmation-free username signup, Pages Site URL/allowlist and deployed People with prefix-preserving invitations. Prior 35 schema checks, rollback access security suite and public signup/login/permission probes passed. Existing accounts and isolated demo data are preserved; no reset/replay ran.
+- Direct saved DB password remains stale; management API/CLI access works. No ERP owner is assigned yet. Optional repository About website metadata still requires admin access; the README link is available to everyone.
+- Upstream sidebar/Barcode Labels changes and contributor history remain integrated. Demo seed reproducibility remains a separate follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Implementation, source publication and the GitHub-hosted build are complete. Awaiting one-time repository-owner Pages enablement before retrying deployment. Browser settings inspection also timed out; it did not change repository settings.
+- Hosting migration and first deployment are complete. Publishing the activation record also exercises the automatic main-push deployment trigger.
 
 ## Next Steps
-1. Repository owner selects GitHub Actions in Settings → Pages, then rerun the failed deployment job in run `43989635680` (or push main to start a new run).
-2. Verify the public root, direct/reloaded routes, username signup/login, demo entry/exit and both themes. Custom 404 loads the SPA at nested routes; direct nested responses retain HTTP 404 while rendering normally.
-3. Add the Pages URL to repository About after an administrator signs in (README link is already present).
-4. Obtain the exact existing owner account before bootstrap; verify privileged People/invitation flows afterward. Configure SMTP only for legacy recovery/staff invitations if needed.
+1. Verify the activation-record push deploys automatically, then use the README's Open Glazed link to share the public site.
+2. Complete browser signup/login, demo entry/exit and both-theme visual checks when browser automation is available.
+3. Obtain the exact existing ERP owner account before bootstrap; verify privileged People/invitation flows afterward. Configure SMTP only for legacy recovery/staff invitations if needed.
+4. Repository admin may optionally set the About website URL; this is not needed to view or automatically publish the app.
 
 ## Open Questions for the User
-- The remaining publishing input is a repository owner/admin enabling Pages with Source: GitHub Actions. OAuth workflow authorization and GitHub build verification are complete; collaborator credentials cannot change the Pages setting.
-- Which existing username or email should receive ERP owner access? Never share passwords in chat.
+- No further hosting setup is needed. Which existing username or email should receive ERP owner access? Never share passwords in chat.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-17: Activate public GitHub Pages hosting (Codex)
+- **What:** Confirmed Pages enabled and successfully published Glazed at the repository's public Pages URL.
+- **Why:** Finish the requested public frontend and automatic publishing after the user enabled GitHub Actions as the Pages source.
+- **How:** Dispatched existing workflow `44113413468`; build/deploy both succeeded, including 334 tests, lint, typecheck and production build. Public root and six assets return 200; custom signup deep-link fallback loads the app; People CORS permits Pages. No new product/UI changes; existing design exceptions preserved and browser visuals remain unverified.
+- **Files:** README.md, PROGRESS.md and docs/progress-archive/2026-11.md; GitHub Pages deployment state.
+- **Preferences learned:** None; implements existing GitHub Pages preference.
+- **Correction sweep:** Removed obsolete pending-enablement wording from current status/docs; historical logs retained.
+- **Rework:** Earlier deployment failed only because Pages had not yet been enabled; rerun succeeded after the setting changed.
+- **Follow-ups:** Verify automatic deployment on the handoff commit; optional browser review and ERP owner bootstrap remain.
+
 ### 2026-11-16: Configure GitHub Pages automatic publishing (Codex)
 - **What:** Added and pushed automatic Pages publishing, frontend base-path support and path-preserving invitation redirects; replaced current Vercel hosting guidance. GitHub accepted publication through `d66fb08` after authorization.
 - **Why:** User wants anyone to open the app from GitHub and see updates after each push.
@@ -115,16 +124,6 @@
 - **Correction sweep:** Swept confirmation/signup/name requirements across shared auth, both logins, signup, local config, People, current backend functions, tests and 3 current docs; historical logs/migrations preserved.
 - **Rework:** Replaces the previously approved email-confirmation flow.
 - **Follow-ups:** Restore Supabase access, apply migrations/settings, deploy backend and frontend, and finish hosted/browser checks.
-
-### 2026-11-16: Recorded publication authentication blockers (Codex)
-- **What:** Committed verified integrated changes as a6c852b; publication has not completed.
-- **Why:** The user requested live publication and authorized GitHub/Vercel sign-in.
-- **How:** SSH push failed public-key authentication; HTTPS lacked credentials. Prepared official GitHub CLI browser sign-in; automatic approval review rejected its broad repository/gist/workflow scopes, and explicit exact-scope approval is pending. Vercel GitHub login reports account_not_found. Build/typecheck, design lint and 281 verification tests pass.
-- **Files:** PROGRESS.md and progress archive; official CLI downloaded to /private/tmp only.
-- **Preferences learned:** None
-- **Correction sweep:** N/A
-- **Rework:** Reconciled newer upstream commits and documentation before attempting publication; preserved local histories and Chris Shipp attribution.
-- **Follow-ups:** Await exact scope approval, complete GitHub sign-in/push and resolve hosting access. Existing Barcode Labels and Glazed! exceptions remain; no new UI changes.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
