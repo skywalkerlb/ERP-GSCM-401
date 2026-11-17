@@ -9,13 +9,13 @@
 - Local environment and GitHub's two required backend secrets point to the selected project. Three demo build secrets were removed. Supabase CLI is linked to the selected real project; former backend `eaphbcbklbcadokfcewc` is retained and protected.
 - Both project IDs are blocked centrally from public demo entry and seed/reset/demo-prep operations. Demo remains unavailable until a third separate disposable backend is configured.
 - 377 combined JavaScript/TypeScript tests, app build/typecheck, seed typecheck and design lint pass. All five live access/onboarding/MRP/BOM/customer security suites passed with rolled-back fixtures. Concurrent MRP/customer-pickup work is preserved and its migrations are applied to the selected backend. No new design deviations; existing Barcode Labels/Glazed! exceptions remain. Earlier visual verification is still pending.
-- Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Frontend publication follows this record.
+- Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Pages run `44139328298` successfully published source `dd728b9`; live bundle verification confirms the selected backend URL, excludes the former backend URL and excludes the old public demo password.
 
 ## In-flight Work
-- Publishing corrected backend configuration and protected-project guards to GitHub Pages, then verifying the hosted bundle uses the selected backend. First workflow failed because reset-guard tests need seed dependencies; added their installation to CI and retained all checks.
+- Backend promotion and frontend publication are complete and verified. No owner claim or business reset is in progress. Final documentation publication follows.
 
 ## Next Steps
-1. Verify automatic Pages deployment and the live frontend's selected backend.
+1. Use the verified live site; its frontend and Supabase CLI now point to the selected real backend.
 2. Intended owner opens `/create-business`, uses the private OWNER_SETUP_CODE from local `.env.local`, and creates the business without email confirmation.
 3. Configure custom SMTP before inviting staff; provision a separate demo backend only if requested.
 
@@ -32,7 +32,7 @@
 - **Preferences learned:** Selected project is real; former backend remains protected (README §8.5).
 - **Correction sweep:** Swept all active project-ID references, frontend/build secrets, CLI link, reset/seed/prep guards, backend account access and current docs. Historical logs retained.
 - **Rework:** Decoded existing CLI keychain format for management API login. Preserved concurrent MRP/customer-pickup changes. Fixed initial Pages verification failure by installing seed test dependencies in CI. No new design exceptions; approved Barcode Labels/Glazed! exceptions retained.
-- **Follow-ups:** Verify Pages publication; owner completes setup using private code; configure SMTP. Demo requires a separate disposable project.
+- **Follow-ups:** Pages run `44139328298` succeeded and live bundle checks pass. Owner completes setup using private code; configure SMTP. Demo requires a separate disposable project.
 
 ### 2026-11-17: Publish and verify MRP/customer pickup on Pages (Codex)
 - **What:** Merged PR #1 and published the integrated MRP/customer frontend at the public GitHub Pages URL.
