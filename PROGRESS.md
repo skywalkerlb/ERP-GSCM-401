@@ -5,23 +5,23 @@
 
 ## Current Status
 **As of 2026-11-16.** GitHub Pages replaces Vercel as the requested public frontend host at `https://skywalkerlb.github.io/ERP-GSCM-401/`. The push-to-main Actions workflow, five browser/demo build secrets, repository-prefixed assets/router/demo navigation/Auth callbacks and README site link are prepared. The old Vercel rewrite config is removed, and About identifies GitHub Pages.
-- Publication is not live yet: connected GitHub account briggsamason has push/triage permission but no admin/maintain permission. GitHub denied Pages creation and repository About-link updates with HTTP 404. A repository owner must choose Settings → Pages → Source: GitHub Actions once. README already includes the clickable intended site link.
+- Publication is not live yet: implementation is committed locally as `ca62c3b`, but GitHub rejected its push because the OAuth login lacks `workflow` scope. An exact workflow-scope refresh is awaiting the user's browser authorization. The connected account also has no admin/maintain permission, so GitHub denied Pages creation and About-link updates. A repository owner must choose Settings → Pages → Source: GitHub Actions once. README includes the intended site link.
 - Checks: all 334 JavaScript tests, repository-path production build/typecheck, design lint, workflow YAML parsing and diff checks pass. Build assets retain the correct prefix; no saved credentials were found across the 19 pending files. No styling tokens or component layouts changed; both-theme browser review remains unverified.
 - Persistent Supabase is migrated (21 original migration versions), signup confirmation is disabled, and People is deployed. Supabase Site URL, exact repository-prefixed Auth callback allowlist and People APP_URL now target GitHub Pages; existing callback URLs remain allowed. The invitation path fix is deployed. Prior 35 schema assertions and rollback account security suite passed; public signup/login and permissions were verified with a removed temporary account.
 - Direct saved DB password remains stale (`28P01`); Supabase management API/CLI login works outside the sandbox. No owner has been assigned. Existing accounts and separate demo data are preserved; no reset or seed replay ran.
 - Latest upstream sidebar/Barcode Labels changes and contributor history remain integrated. Demo seed reproducibility remains a separate known follow-up (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Publishing the completed Pages implementation to main and verifying the Actions run. Live publication awaits one-time repository-owner Pages enablement; all required frontend build secrets are configured.
+- Awaiting GitHub device authorization for the added workflow permission, then retrying the prepared push. Live publication also awaits one-time repository-owner Pages enablement; all required frontend build secrets are configured.
 
 ## Next Steps
-1. Repository owner selects GitHub Actions in Settings → Pages, then reruns the Pages workflow if its initial deployment failed before enablement.
+1. Finish the requested workflow-scope device authorization and push `ca62c3b` plus the current handoff update. Repository owner selects GitHub Actions in Settings → Pages, then reruns the workflow if needed.
 2. Verify the public root, direct/reloaded routes, username signup/login, demo entry/exit and both themes. Custom 404 loads the SPA at nested routes; direct nested responses retain HTTP 404 while rendering normally.
 3. Add the Pages URL to repository About after an administrator signs in (README link is already present).
 4. Obtain the exact existing owner account before bootstrap; verify privileged People/invitation flows afterward. Configure SMTP only for legacy recovery/staff invitations if needed.
 
 ## Open Questions for the User
-- A repository owner/admin must enable GitHub Pages with Source: GitHub Actions; current collaborator credentials cannot change that setting.
+- Complete the active GitHub device authorization for workflow scope. A repository owner/admin must also enable Pages with Source: GitHub Actions; current collaborator credentials cannot change that setting.
 - Which existing username or email should receive ERP owner access? Never share passwords in chat.
 - What is the project due date?
 
@@ -33,8 +33,8 @@
 - **Files:** Pages workflow, Vite/router/URL helpers, People redirect, verification tests, current docs, env example and removed Vercel rewrite config.
 - **Preferences learned:** GitHub Pages replaces Vercel; main pushes publish automatically (README §8.3).
 - **Correction sweep:** Swept active hosting instructions, assets, full-page redirects, Auth callbacks and invitation URLs; historical logs retained.
-- **Rework:** GitHub denied Pages enablement because the connected collaborator lacks repository administration.
-- **Follow-ups:** One-time owner Pages enablement and live URL/browser verification; Supabase canonical URLs and People are already configured for Pages.
+- **Rework:** GitHub denied Pages/About settings without repository administration, then rejected workflow publication without OAuth workflow scope. Exact-scope authorization is pending; no force push or permissions bypass used.
+- **Follow-ups:** Complete workflow authorization, retry the prepared push, enable Pages once as repository owner and verify the live URL; Supabase canonical URLs and People already target Pages.
 
 ### 2026-11-16: Support repository-path frontend hosting (Codex)
 - **What:** Added a configurable Vite base, router basename and shared full-page/callback URL helpers for GitHub Pages.
