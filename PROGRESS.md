@@ -4,24 +4,48 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-17.** Glazed remains publicly hosted on GitHub Pages with Supabase authentication/data. Local first-owner setup implementation is complete and verified; no real owner has been claimed and no new deployment has run.
-- Existing live backend has 21 migrations and confirmation-free customer username signup. New onboarding migration/function will require deployment and a private server-only setup code.
-- Saved direct database password remains stale; no database reset/replay is permitted.
-- Existing demo reproducibility and browser verification follow-ups remain separate.
+**As of 2026-11-17.** Public frontend hosting is GitHub Pages at **https://skywalkerlb.github.io/ERP-GSCM-401/** with automatic publishing on main pushes. The MRP/customer-pickup release is integrated with the Pages base-path/router and latest username signup; combined verification passed and Pages publication is in progress.
+
+- The user successfully applied migrations `20261116000101..103` to linked persistent Supabase `eaphbcbklbcadokfcewc` and deployed People via CLI 2.122.1 (terminal output confirmed in this session). Baseline 21 migrations, username Auth settings and Pages URLs were verified by the earlier hosting rollout. The separate first-owner onboarding migration `20261117000001`/function/setup-code configuration is newly added upstream and remains pending; its setup UI stays unavailable until configured. No seed/reset is required or performed.
+- MRP nets confirmed BOM demand against dated PO receipts and company-wide stock over four weeks, calculates pack-rounded suggestions/order-by dates and shows nine seed-catalog parent BOMs. Customer catalog shows fresh availability by shop after direct/shared-kit reservations; checkout validates available items and pickup times. Persistent master data/owner still require setup if empty.
+- Prior release verification passed 338 TS/Node tests, four rollback SQL suites and 36 non-data assertions; Pages main separately passed 334 JavaScript tests. Combined verification passes: 367 TS/Node tests, both-theme browser flows at root and repository prefix, typecheck/design lint and prefixed production build. Concurrent first-owner setup changes are preserved; their private backend configuration remains pending upstream. No new design exceptions; approved Glazed! and Barcode Labels exceptions retained.
+- Existing demo data remains isolated; no replay ran. Known seed reproducibility differences remain (48 skipped events, 19 quantity differences).
 
 ## In-flight Work
-- Implementation and automated verification are complete. Backend deployment, private setup-code configuration, SMTP verification and browser visual review are pending; these are required before release.
+- Verify integrated PR #1, merge under the user's prior deployment authorization, monitor Pages publication and check the live frontend.
+- No database reset/replay or owner assignment in progress.
 
 ## Next Steps
-1. Review the completed local changes; all 355 JavaScript tests, production build/typecheck and design lint pass.
-2. Apply the additive onboarding migration, configure server secrets and deploy the function before frontend publishing.
-3. Verify invitation SMTP and callback URLs; intended owner completes setup privately.
+1. Complete combined tests and Pages deployment; verify updated MRP and customer portal at the public site.
+2. Confirm live backend functions and complete browser smoke checks without creating persistent orders.
+3. Complete upstream first-owner onboarding backend/private-code setup or obtain the exact account for trusted bootstrap; never claim an owner as a smoke test. Confirm catalog/inventory data before real customer ordering.
+4. Preserve existing demo data; repair historical seed reproducibility only under a separate request.
 
 ## Open Questions for the User
-- No implementation decisions pending. Deployment needs a privately configured setup code and working invitation email delivery; no owner account has been claimed.
+- Which existing username or email should receive persistent ERP owner access? Never share passwords in chat.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-17: Integrate MRP/customer pickup with GitHub Pages (Codex)
+- **What:** Combined PR #1 with the live Pages hosting changes, preserved username signup and added repository-prefix browser regression coverage.
+- **Why:** Finish the authorized frontend deployment after the user enabled GitHub Pages and successfully applied MRP migrations/deployed People from PowerShell.
+- **How:** Confirmed Pages root HTTP 200 and successful prior Actions runs; integrated main without dropping sidebar/Barcode Labels exceptions or URL-prefix support. Combined 367 TS/Node tests, both-theme prefixed browser flows, typecheck/design lint and production build pass; root-hosted browser flows also passed before the additive owner-setup merge. User CLI confirms all three MRP migrations applied to the linked persistent project; no database mutation/reset from this environment.
+- **Files:** Browser regression, README, database contract, PROGRESS and archive; integrated upstream Pages workflow/router/URL helpers.
+- **Preferences learned:** None; existing GitHub Pages hosting preference retained.
+- **Correction sweep:** N/A.
+- **Rework:** Resolved overlapping progress histories; retained upstream hosting/access changes and all MRP/pickup implementation.
+- **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; First-owner onboarding backend/setup-code configuration remains a separate upstream follow-up; no owner is claimed in this release.
+
+### 2026-11-16: Prepare combined release and verify deployment access (Codex)
+- **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
+- **Why:** The user authorized hosted migration/deployment of both feature sets.
+- **How:** Preserved username/password signup and existing access hierarchy; assigned unique ordered versions to the three unpublished MRP/customer migrations. Combined build/typecheck, design lint, 338 TS/Node tests, both-theme browser flows, four SQL suites and 36 assertions pass; 24 migrations apply on a fresh local database. No new design exceptions. Environment status has no deployment secrets; Vercel/Supabase plugins report DISABLED_BY_ADMIN. No hosted changes made.
+- **Files:** Three renamed migrations, seed MRP reference, browser test label, README, contract, PROGRESS and archive; integrated upstream auth changes.
+- **Preferences learned:** None; existing username-only signup preference retained.
+- **Correction sweep:** N/A.
+- **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
+- **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
+
 ### 2026-11-17: Implement first-owner business onboarding (Codex)
 - **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
 - **Why:** Owner needs to create the business and invite admins/staff who choose passwords using email usernames.
@@ -102,26 +126,6 @@
 - **Correction sweep:** N/A
 - **Rework:** New upstream commits arrived during authorization; preserved them in a second merge. Earlier automatic approval rejection was resolved by explicit approval of its exact scopes.
 - **Follow-ups:** Push and verify hosting. Backend rollout is still credential-blocked; Vercel GitHub login reports account_not_found. Approved Barcode Labels and Glazed! wording exceptions remain; no new design changes.
-
-### 2026-11-16: Publish simplified username signup to GitHub (Codex)
-- **What:** Committed and pushed all 17 changed files to GitHub main in `530db86`.
-- **Why:** User requested pushing the completed work to GitHub.
-- **How:** Confirmed remote main matched local base, GitHub noreply commit identity, no diff whitespace errors and no saved credentials in the pending files. GitHub accepted the main update to `530db86`. Existing 330 tests, build, typecheck, design lint and rollback database checks pass; no additional product or UI changes in this step.
-- **Files:** Username signup/auth, People password resets, shared identity, migration, verification tests, README, current architecture/contract, PROGRESS.md and archive.
-- **Preferences learned:** None.
-- **Correction sweep:** N/A.
-- **Rework:** None.
-- **Follow-ups:** Hosted rollout and browser visual checks remain pending backend access and working browser automation.
-
-### 2026-11-16: Add protected username password resets (Codex)
-- **What:** Added username display and authorized password resets to People; username accounts never receive invitation emails.
-- **Why:** Username-only accounts need a recovery path without email verification.
-- **How:** Shared identity helper; existing hierarchy checks; service-only reset-attempt authorization/audit before Auth updates. Passwords stay out of storage and audit. 286 People tests pass within 330 total local tests; final typecheck, build, design lint and diff checks pass. Existing Glazed components and theme tokens only; no design exceptions. Browser visual review is blocked by the CUA tab-creation error; integrated rollback SQL security checks pass. Final handoff reconciled after the documentation reminder.
-- **Files:** People endpoint/UI, shared identity helper, People endpoint/UI tests, PROGRESS.md and progress archive.
-- **Preferences learned:** Username accounts require no email verification; record centrally in README with the main signup change.
-- **Correction sweep:** Checked People invitations, resend, directory labels, reset controls and demo simulation; updated two runtime surfaces and shared identity handling.
-- **Rework:** None.
-- **Follow-ups:** Complete hosted rollout and browser verification when access is restored.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
