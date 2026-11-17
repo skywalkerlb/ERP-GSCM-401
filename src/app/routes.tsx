@@ -21,6 +21,7 @@ import { settingsRoutes } from '@/features/settings/routes';
 import { suppliersRoutes } from '@/features/suppliers/routes';
 import { AboutRoute } from './AboutPage';
 import PeoplePage from '@/features/people/PeoplePage';
+import CreateBusinessPage from './CreateBusinessPage';
 import { ACCESS } from './access';
 import { LoginPage, PortalLoginPage, PortalSignupPage, PasswordRecoveryPage, PasswordUpdatePage } from './AuthPages';
 import { NotFoundPage } from './NotFoundPage';
@@ -33,6 +34,7 @@ import { StaffLayout } from './AppShell';
  */
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
+  { path: '/create-business', element: <CreateBusinessPage /> },
   { path: '/forgot-password', element: <PasswordRecoveryPage /> },
   { path: '/update-password', element: <PasswordUpdatePage /> },
   { path: '/accept-invite', element: <PasswordUpdatePage /> },

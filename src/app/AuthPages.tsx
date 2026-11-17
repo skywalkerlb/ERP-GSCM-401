@@ -12,6 +12,7 @@ import { homeFor } from '@/hooks/useRole';
 import { isDemoConfigured, enterDemo, isDemo, supabase } from '@/lib/supabase';
 import { ThemeToggle } from './ThemeToggle';
 import { appUrl } from '@/lib/appUrl';
+import { BusinessSetupLink } from './BusinessSetupLink';
 
 const DEMO_ROLES = [
   { value: 'owner', label: 'Owner' }, { value: 'admin', label: 'Admin' },
@@ -45,7 +46,7 @@ function hasAuthLinkError(): boolean {
     return query.has('error') || query.has('error_code') || hash.has('error') || hash.has('error_code');
 }
 
-function AuthFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+export function AuthFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   const [linkError] = useState(hasAuthLinkError);
   return (
     <div className="auth-page">
@@ -140,6 +141,8 @@ export function LoginPage() {
   return (
     <AuthFrame title="Sign in to Glazed" subtitle="Orders, baking, stock and books for every shop.">
       <SignInForm />
+      <BusinessSetupLink />
+      <p className="auth-foot text-body-sm">Invited as an admin or employee? Open your invitation email to choose a password. Your email is your username.</p>
       <p className="auth-foot text-body-sm">New here? <Link className="gz-link" to="/shop/signup">Create an account</Link>. New accounts can order in the shop. An administrator or manager can grant staff access.</p>
       <p className="auth-foot text-body-sm">
         Ordering donuts for pickup?{' '}
@@ -267,6 +270,7 @@ export function PasswordUpdatePage() {
     finally { setBusy(false); }
   }
   return <AuthFrame title="Choose your password" subtitle="Set a password to access your account.">
+    {session?.user?.email && !saved && <p className="gz-muted text-body-sm">Your username is <strong>{session.user.email}</strong>. Use this email and your new password to sign in.</p>}
     {loading ? <Skeleton variant="block" /> : saved ? <Alert tone="success" title="Password saved">Sign in with your new password to continue.</Alert> : !session || linkError ?
       <Alert tone="warning" title="Open your email link">Use the latest invitation or password reset link. If it has expired, request another link.</Alert> :
       <form className="auth-form" onSubmit={submit}>

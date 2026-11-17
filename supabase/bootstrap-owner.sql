@@ -9,6 +9,10 @@ begin
   if not public._is_system() then raise exception 'Trusted database connection required.'; end if;
   select id into strict v_id from auth.users
     where lower(email)=lower(current_setting('glazed.owner_email')) and email_confirmed_at is not null;
+  perform id from public.business_setup where id=1 for update;
+  if exists(select 1 from public.business_setup where id=1 and completed_at is not null and owner_id is distinct from v_id) then
+    raise exception 'Business setup is permanently closed. Owner transfer requires a separate reviewed operation.';
+  end if;
   if exists(select 1 from public.profiles where role='owner' and user_id<>v_id) then
     raise exception 'An owner already exists. Owner transfer requires a separate reviewed operation.';
   end if;

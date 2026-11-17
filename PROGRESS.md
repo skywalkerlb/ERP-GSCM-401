@@ -4,27 +4,35 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-17.** Glazed is publicly hosted at **https://skywalkerlb.github.io/ERP-GSCM-401/**. GitHub Pages is enabled with Source: GitHub Actions and HTTPS enforced. Workflow run `44113413468` completed build and deployment successfully. The README prominently links to the site; every push to main triggers the publishing workflow. Supabase remains the authentication/data backend.
-- Live verification: root returns HTTP 200 with Glazed entry HTML; all six entry assets return HTTP 200; direct `/ERP-GSCM-401/shop/signup` serves the custom SPA fallback. That nested HTTP response is 404 by Pages design, while the app entry loads normally. People preflight permits the GitHub Pages origin.
-- The GitHub build passed all 334 JavaScript tests, design lint, typecheck, production build and artifact packaging. Earlier checks cover workflow YAML, URL prefixing, invitation callbacks and credential scans. No new UI edits during activation; approved Barcode Labels and Glazed! exceptions remain. Both-theme browser visual checks remain unverified because CUA timed out.
-- Persistent Supabase has all 21 migrations, confirmation-free username signup, Pages Site URL/allowlist and deployed People with prefix-preserving invitations. Prior 35 schema checks, rollback access security suite and public signup/login/permission probes passed. Existing accounts and isolated demo data are preserved; no reset/replay ran.
-- Direct saved DB password remains stale; management API/CLI access works. No ERP owner is assigned yet. Optional repository About website metadata still requires admin access; the README link is available to everyone.
-- Upstream sidebar/Barcode Labels changes and contributor history remain integrated. Demo seed reproducibility remains a separate follow-up (48 skipped events, 19 quantity differences).
+**As of 2026-11-17.** Glazed remains publicly hosted on GitHub Pages with Supabase authentication/data. Local first-owner setup implementation is complete and verified; no real owner has been claimed and no new deployment has run.
+- Existing live backend has 21 migrations and confirmation-free customer username signup. New onboarding migration/function will require deployment and a private server-only setup code.
+- Saved direct database password remains stale; no database reset/replay is permitted.
+- Existing demo reproducibility and browser verification follow-ups remain separate.
 
 ## In-flight Work
-- Hosting migration and first deployment are complete. Publishing the activation record also exercises the automatic main-push deployment trigger.
+- Implementation and automated verification are complete. Backend deployment, private setup-code configuration, SMTP verification and browser visual review are pending; these are required before release.
 
 ## Next Steps
-1. Verify the activation-record push deploys automatically, then use the README's Open Glazed link to share the public site.
-2. Complete browser signup/login, demo entry/exit and both-theme visual checks when browser automation is available.
-3. Obtain the exact existing ERP owner account before bootstrap; verify privileged People/invitation flows afterward. Configure SMTP only for legacy recovery/staff invitations if needed.
-4. Repository admin may optionally set the About website URL; this is not needed to view or automatically publish the app.
+1. Review the completed local changes; all 355 JavaScript tests, production build/typecheck and design lint pass.
+2. Apply the additive onboarding migration, configure server secrets and deploy the function before frontend publishing.
+3. Verify invitation SMTP and callback URLs; intended owner completes setup privately.
 
 ## Open Questions for the User
-- No further hosting setup is needed. Which existing username or email should receive ERP owner access? Never share passwords in chat.
+- No implementation decisions pending. Deployment needs a privately configured setup code and working invitation email delivery; no owner account has been claimed.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-17: Implement first-owner business onboarding (Codex)
+- **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
+- **Why:** Owner needs to create the business and invite admins/staff who choose passwords using email usernames.
+- **How:** Private backend setup code, persisted limits, locked one-time database claim, atomic business/location/profile/audit writes and safe owner retries. Existing records and role hierarchy preserved. 355 JavaScript tests, build/typecheck and design lint pass. Migration and expanded security SQL passed against isolated demo in a rollback-only transaction (including its missing access-audit prerequisite). No owner claim or deployment. Glazed components/tokens only; no design exceptions. Browser visual checks remain blocked by tab-creation automation error.
+- **Files:** Onboarding endpoint/migration/tests, bootstrap/config, auth UI/routes, README, CONTRACT and PROGRESS.
+- **Preferences learned:** One business, private setup code, owner-invited admins, email invitations and first-location setup (README §8.5).
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Design review:** Re-ran full design lint after the hook reminder: passed. New UI uses existing Glazed components and inherited theme tokens, visible field labels and standard focus styles; conditional views have one primary action, sentence-case copy and semantic status tones. No new design deviations. Existing approved Barcode Labels capitalization and sidebar Glazed! exceptions remain unchanged. Light/dark browser visual review remains unverified because browser tab creation failed.
+- **Follow-ups:** Deploy backend/configuration before frontend; verify both-theme visuals and SMTP. Existing demo backend lacks the delegated-access prerequisite; stage all unapplied migrations when deploying there. README setup instructions and preference rule are updated; changelog remains at ten entries.
+
 ### 2026-11-17: Activate public GitHub Pages hosting (Codex)
 - **What:** Confirmed Pages enabled and successfully published Glazed at the repository's public Pages URL.
 - **Why:** Finish the requested public frontend and automatic publishing after the user enabled GitHub Actions as the Pages source.
@@ -114,16 +122,6 @@
 - **Correction sweep:** Checked People invitations, resend, directory labels, reset controls and demo simulation; updated two runtime surfaces and shared identity handling.
 - **Rework:** None.
 - **Follow-ups:** Complete hosted rollout and browser verification when access is restored.
-
-### 2026-11-16: Simplify account creation to username and password (Codex)
-- **What:** Replaced email-confirmed signup with username/password signup and immediate customer access; retained existing email logins.
-- **Why:** User requested simple account creation without email verification and approved implementation.
-- **How:** Shared normalized identity, Glazed two-field form and immediate sessions; immutable usernames and no matching-email customer claims. 330 local tests, build/typecheck/design lint and exact migration/security SQL checks pass (demo transaction rolled back). Fixed test fixture owner collision. Visible labels, one primary action, standard focus styles/status tones and both-theme tokens reviewed; no design exceptions. Browser visuals blocked by CUA. Hosted DB password rejected; confirmation remains enabled.
-- **Files:** Auth pages/provider, shared identity, Supabase configuration/migration, People reset controls, verification tests and current documentation.
-- **Preferences learned:** Signup requires only username/password; no email verification (README §8.1).
-- **Correction sweep:** Swept confirmation/signup/name requirements across shared auth, both logins, signup, local config, People, current backend functions, tests and 3 current docs; historical logs/migrations preserved.
-- **Rework:** Replaces the previously approved email-confirmation flow.
-- **Follow-ups:** Restore Supabase access, apply migrations/settings, deploy backend and frontend, and finish hosted/browser checks.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
