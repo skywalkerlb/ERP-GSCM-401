@@ -4,7 +4,7 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-17.** `wzsbtfzettxpczgulibd` is the real persistent backend, as confirmed by the user. Promotion is complete: all 25 migrations applied, People/onboarding deployed, confirmation-free email signup and Pages callbacks configured. Existing business data is preserved; no reset/replay ran.
+**As of 2026-11-18.** `wzsbtfzettxpczgulibd` is the real persistent backend, as confirmed by the user. Promotion is complete: all 25 migrations applied, People/onboarding deployed, confirmation-free email signup and Pages callbacks configured. Existing business data is preserved; no reset/replay ran.
 - Eight seeded demo identities are banned with randomized credentials, sessions revoked, staff roles removed and customer-profile access detached. No real owner is claimed; live onboarding status returns HTTP 200 with available=true.
 - Local environment and GitHub's two required backend secrets point to the selected project. Three demo build secrets were removed. Supabase CLI is linked to the selected real project; former backend `eaphbcbklbcadokfcewc` is retained and protected.
 - Both project IDs are blocked centrally from public demo entry and seed/reset/demo-prep operations. Demo remains unavailable until a third separate disposable backend is configured.
@@ -12,18 +12,29 @@
 - Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Pages run `44139328298` successfully published source `dd728b9`; live bundle verification confirms the selected backend URL, excludes the former backend URL and excludes the old public demo password.
 
 ## In-flight Work
-- Backend promotion and frontend publication are complete and verified. No owner claim or business reset is in progress. Final documentation publication follows.
+- Email-confirmation request is complete: re-saved hosted mailer_autoconfirm=true and verified immediate public email/password signup. No pending unconfirmed password accounts were found; no owner was claimed. Demo activation remains blocked by Supabase’s two-active-free-project quota; awaiting approval to pause the unused former backend.
 
 ## Next Steps
-1. Use the verified live site; its frontend and Supabase CLI now point to the selected real backend.
+1. Refresh `/create-business` and create the owner email/password account; verification email and SMTP are not needed.
 2. Intended owner opens `/create-business`, uses the private OWNER_SETUP_CODE from local `.env.local`, and creates the business without email confirmation.
-3. Configure custom SMTP before inviting staff; provision a separate demo backend only if requested.
+3. Configure SMTP later for staff invitations. Demo activation is requested but needs a free project slot or paid capacity; no existing project has been paused.
 
 ## Open Questions for the User
-- No backend-selection decision pending: use `wzsbtfzettxpczgulibd`. Which email provider will send staff invitations? SMTP credentials should be entered privately in Supabase.
+- Owner signup has no email setup prerequisite. If it still fails, obtain the exact on-screen error; the live signup/session probe passed.
+- Demo activation: may the unused former backend be paused to free a project slot? SMTP provider selection is deferred.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-18: Verify owner signup without email confirmation (Codex)
+- **What:** Re-saved disabled hosted email confirmation on real project `wzsbtfzettxpczgulibd` and verified immediate signup.
+- **Why:** User is creating the owner account and explicitly does not want email-verification setup now.
+- **How:** Public settings already showed confirmation disabled; enforced mailer_autoconfirm=true through management API. Temporary public email/password signup returned an immediate session with auto-confirmed Auth email and ordinary customer role; fixture account/customer removed. No pending unconfirmed password accounts, no owner claim, no email sent. Owner setup remains available.
+- **Files:** README.md, supabase/CONTRACT.md, PROGRESS.md and progress archive; hosted Auth configuration.
+- **Preferences learned:** Owner signup requires no verification email or SMTP prerequisite (README §8.5).
+- **Correction sweep:** Checked local Auth config, owner signup, endpoint and database Auth checks, hosted settings and current docs. Auth auto-confirm satisfies existing server checks; no code/migration change needed.
+- **Rework:** None. No UI changes or design exceptions.
+- **Follow-ups:** User refreshes owner setup and retries; obtain exact error if it persists. No frontend deployment is required for this hosted setting. SMTP deferred; separate demo remains capacity-blocked.
+
 ### 2026-11-17: Promote selected Supabase project to real backend (Codex)
 - **What:** Promoted `wzsbtfzettxpczgulibd`, disabled seeded public identities and demo entry, deployed missing migrations/functions and updated local/GitHub configuration.
 - **Why:** User explicitly corrected the project ID and confirmed it must be the real backend.
@@ -114,16 +125,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** Remote main advanced during concurrent work; combined current backend status with upstream handoff instead of overwriting it.
 - **Follow-ups:** Frontend hosting and owner bootstrap remain separate from GitHub publication.
-
-### 2026-11-16: Roll out persistent Supabase username access (Codex)
-- **What:** Applied all 21 migrations to the previously empty persistent schema, deployed People and disabled signup email verification.
-- **Why:** User requested the Supabase rollout after connecting CLI access.
-- **How:** Authenticated management API bypassed stale direct-DB credentials; transaction-per-migration preserved enum boundaries and original migration history. Set production Site URL/exact redirects and People origin. All 35 schema checks (5 data checks skipped), rollback security suite and live signup/login/duplicate/customer-denial probes pass; temporary test account/customer removed. No data reset, demo seed, owner assignment, frontend deploy or UI edits.
-- **Files:** README.md, PROGRESS.md and progress archive; deployed existing Supabase migrations/functions and Auth settings.
-- **Preferences learned:** None; the existing no-email-verification preference is now configured on hosting.
-- **Correction sweep:** N/A.
-- **Rework:** Direct DB access still rejected the saved password; used the connected management API securely instead.
-- **Follow-ups:** Obtain exact owner account, deploy frontend and verify browser/privileged People flows.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
