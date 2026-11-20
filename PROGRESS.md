@@ -30,7 +30,7 @@
 - **Files:** Tenant migrations/APIs, auth/routes/shop links, shared shell/storage/realtime, reset guards, verification suites, README, architecture, CONTRACT and PROGRESS.
 - **Preferences learned:** Independent businesses per login, owner signup without setup code/email verification, concise login and expandable demo; recorded in README §8.1/§8.5.
 - **Correction sweep:** Replaced installation-wide owner setup, global credential management and public operational channels across frontend, APIs, SQL, scripts and current docs; preserved legacy shop links and isolated demo access.
-- **Rework:** Rehearsal caught signup membership leakage and scoped-reset back-link cycles; fixed before rollout. Added whole-document refresh when a persisted membership is invalidated, matching explicit switching. Integrated concurrent deployment/CLI records without dropping source changes.
+- **Rework:** Rehearsal caught signup membership leakage and scoped-reset back-link cycles; fixed before rollout. Added whole-document refresh when a persisted membership is invalidated, matching explicit switching. Integrated concurrent deployment/CLI and authorized-retirement records without dropping source changes.
 - **Design review:** Glazed components/tokens, visible labels/focus, one primary action, light/dark desktop/mobile reviewed. Long business/location names remain visible without horizontal overflow at 390px; wrapped staff/shop headers keep selectors usable. No new design exceptions; existing README §8.1 exceptions retained.
 - **Follow-ups:** Final mobile/access-fallback refinement publication; retain ignored backups. Configure SMTP before real invitations. No automatic demo reset scheduled.
 
