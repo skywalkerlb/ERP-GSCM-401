@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 // UI integration tests with a local mocked Supabase API. SQL suites separately
 // verify real database authorization, netting and component consumption.
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const origin = "http://127.0.0.1:4174";
+const testPort = process.env.ERP_BROWSER_PORT || "4174";
+const origin = `http://127.0.0.1:${testPort}`;
 const appBase = process.env.ERP_BROWSER_BASE_PATH || "/";
 const appOrigin = `${origin}${appBase.replace(/\/$/, "")}`;
 const server = spawn(
@@ -17,7 +18,7 @@ const server = spawn(
     "--host",
     "127.0.0.1",
     "--port",
-    "4174",
+    testPort,
     "--strictPort",
   ],
   {
@@ -39,7 +40,7 @@ try {
   let ready = false;
   for (let attempt = 0; attempt < 100; attempt++) {
     if (server.exitCode !== null)
-      throw new Error("Test Vite server exited; port 4174 must be free.");
+      throw new Error("Test Vite server exited; the selected test port must be free.");
     try {
       ready = (await fetch(appOrigin + "/")).ok;
     } catch {}
@@ -399,6 +400,80 @@ try {
       `${role}: both themes and ${role === "manager" ? "BOM/driver/forecast" : "stock locations/pickup/order confirmation/error handling"} passed`,
     );
     await context.close();
+  }
+  // A genuinely empty business can create its first shop without reopening owner setup.
+  for (const role of ["owner", "admin", "manager"]) {
+    for (const theme of ["light", "dark"]) {
+      const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+      await context.addInitScript(({ user, theme }) => {
+        localStorage.setItem("glazed-auth-v1", JSON.stringify({ access_token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMTEifQ.test", refresh_token: "test", expires_at: Math.floor(Date.now()/1000)+3600, token_type: "bearer", user }));
+        localStorage.setItem("glazed.location", "999");
+        localStorage.setItem("glazed.theme", theme);
+      }, { user, theme });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", e => errors.push(e.message));
+      let rows = [];
+      let saves = 0;
+      await page.route("http://127.0.0.1:54321/**", async route => {
+        const req = route.request();
+        const name = new URL(req.url()).pathname.split("/").pop();
+        let result = [];
+        if (name === "profiles") result = { user_id: user.id, role, full_name: "Real owner", home_location_id: null, customer_id: null };
+        else if (name === "user") result = user;
+        else if (name === "locations") result = rows;
+        else if (name === "app_settings") result = { id: 1, business_name: "Real business", default_tax_rate: .0725, ordering_cost_per_po: 45, holding_cost_rate_annual: .25, service_level_z: 1.65, usage_window_days: 90, review_period_days: 7, use_actual_lead_time: false, bake_buffer_pct: .08, day_old_markdown_pct: .5, score_w_ontime: .4, score_w_fill: .35, score_w_lead: .25, keep_threshold: 90, watch_threshold: 75, timezone: "America/Denver" };
+        else if (name === "save_business_location") {
+          const body = req.postDataJSON();
+          assert.ok(role === "owner" || role === "admin");
+          rows = [{ ...body.p_location, id: body.p_id ?? 10 }];
+          saves++;
+          result = 10;
+        }
+        return route.fulfill({ status: 200, json: result, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*" } });
+      });
+      await page.goto(`${appOrigin}/settings`);
+      await page.getByRole("heading", { name: "Settings", exact: true }).waitFor();
+      await page.getByText("Add a location to start trading", { exact: true }).waitFor();
+      assert.equal(await page.evaluate(() => localStorage.getItem("glazed.location")), null);
+      if (role === "manager") {
+        assert.equal(await page.getByRole("button", { name: "New location", exact: true }).count(), 0);
+      } else {
+        await page.getByRole("button", { name: "New location", exact: true }).click();
+        const dialog = page.getByRole("dialog");
+        await dialog.getByRole("button", { name: "Save location", exact: true }).click();
+        await dialog.getByText("Enter a name up to 120 characters.").waitFor();
+        assert.equal(saves, 0);
+        await dialog.getByLabel(/^Code/).fill("REAL");
+        await dialog.getByLabel(/^Name/).fill("Real shop");
+        await dialog.getByLabel(/^Address/).fill("1 Real Street");
+        await dialog.getByLabel("Opening time", { exact: true }).fill("06:00");
+        await dialog.getByLabel("Closing time", { exact: true }).fill("18:00");
+        await dialog.getByLabel("Sunday", { exact: true }).check();
+        assert.equal(await page.locator("html").getAttribute("data-theme"), theme);
+        await page.screenshot({ path: `/private/tmp/glazed-location-dialog-${role}-${theme}.png`, fullPage: true });
+        await dialog.getByRole("button", { name: "Save location", exact: true }).click();
+        await page.getByRole("button", { name: "Edit Real shop", exact: true }).waitFor();
+        assert.equal(saves, 1);
+        assert.equal(rows[0].tax_rate, .0725);
+        assert.deepEqual(rows[0].closed_weekdays, [0]);
+        assert.equal(await page.getByLabel("Location", { exact: true }).inputValue(), "10");
+        assert.equal(await page.getByText("Add a location to start trading", { exact: true }).count(), 0);
+        await page.getByRole("button", { name: "Edit Real shop", exact: true }).click();
+        await dialog.getByLabel(/^Name/).fill("Renamed shop");
+        await dialog.getByLabel("Active location", { exact: true }).uncheck();
+        await dialog.getByRole("button", { name: "Save location", exact: true }).click();
+        await page.getByRole("button", { name: "Edit Renamed shop", exact: true }).waitFor();
+        await page.getByText("Add a location to start trading", { exact: true }).waitFor();
+        assert.equal(rows[0].is_active, false);
+        assert.equal(saves, 2);
+        assert.equal(await page.getByLabel("Location", { exact: true }).count(), 0);
+        await page.screenshot({ path: `/private/tmp/glazed-location-${role}-${theme}.png`, fullPage: true });
+      }
+      assert.deepEqual(errors, []);
+      console.log(`${role} ${theme}: empty-business location setup and role visibility passed`);
+      await context.close();
+    }
   }
 } finally {
   await browser?.close();

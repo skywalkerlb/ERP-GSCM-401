@@ -1,3 +1,5 @@
+import { Alert } from '@/components/Alert';
+import { Button } from '@/components/Button';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Outlet, useLocation, useMatches, useNavigate, Navigate } from 'react-router-dom';
 import { RequireRole } from '@/components/RequireRole';
@@ -27,7 +29,7 @@ function ShellFrame({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [drawer, setDrawer] = useState(false);
   const { status } = useRealtimeInvalidation();
-  const { locationId } = useSelectedLocation();
+  const { locationId, loading: locationsLoading } = useSelectedLocation();
   const { users } = usePresence(locationId);
 
   const sections = useMemo(() => navFor(profile?.role ?? null), [profile?.role]);
@@ -65,6 +67,9 @@ function ShellFrame({ children }: { children: ReactNode }) {
       <div className="app-main">
         <Topbar onMenu={() => setDrawer(true)} status={status} users={users} />
         <main id="main" className="app-content" tabIndex={-1}>
+          {!locationsLoading && locationId === null && <Alert tone="info" title="Add a location to start trading" action={(profile?.role === 'owner' || profile?.role === 'admin') && pathname !== '/settings' ? <Button onClick={() => navigate('/settings')}>Open settings</Button> : undefined}>
+            {profile?.role === 'owner' || profile?.role === 'admin' ? 'Create your real shops and kitchens in Settings, then add suppliers, items and opening stock.' : 'Ask an owner or admin to create an active location and assign your shop in People.'}
+          </Alert>}
           {children}
         </main>
       </div>

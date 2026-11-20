@@ -4,27 +4,55 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-18.** `wzsbtfzettxpczgulibd` is the real persistent backend, as confirmed by the user. Promotion is complete: all 25 migrations applied, People/onboarding deployed, confirmation-free email signup and Pages callbacks configured. Existing business data is preserved; no reset/replay ran.
-- Eight seeded demo identities are banned with randomized credentials, sessions revoked, staff roles removed and customer-profile access detached. No real owner is claimed; live onboarding status returns HTTP 200 with available=true.
-- Local environment and GitHub's two required backend secrets point to the selected project. Three demo build secrets were removed. Supabase CLI is linked to the selected real project; former backend `eaphbcbklbcadokfcewc` is retained and protected.
-- Both project IDs are blocked centrally from public demo entry and seed/reset/demo-prep operations. Demo remains unavailable until a third separate disposable backend is configured.
-- 377 combined JavaScript/TypeScript tests, app build/typecheck, seed typecheck and design lint pass. All five live access/onboarding/MRP/BOM/customer security suites passed with rolled-back fixtures. Concurrent MRP/customer-pickup work is preserved and its migrations are applied to the selected backend. No new design deviations; existing Barcode Labels/Glazed! exceptions remain. Earlier visual verification is still pending.
-- Private owner setup code is stored in ignored `.env.local` and server secrets only. Custom SMTP is not configured; staff invitation delivery requires configuration. Pages run `44139328298` successfully published source `dd728b9`; live bundle verification confirms the selected backend URL, excludes the former backend URL and excludes the old public demo password.
+- Owner/admin location setup UI, active-location selection and real/demo About copy implemented; backend integration and validation in flight.
+**As of 2026-11-19.** Real backend `wzsbtfzettxpczgulibd` remains active and protected. Former backend `eaphbcbklbcadokfcewc` was paused with user authorization; its data is retained and reset protection remains enabled.
+- New disposable demo: `wnsimxaopjqwiajbiina`. All 25 migrations applied; People/onboarding deployed; People uses DEMO_MODE=true and Pages APP_URL. Demo Auth callbacks configured.
+- Sample-data replay is in progress. All six accounts passed live browser entry/landing/refresh/exit checks through the local frontend. Demo Actions secrets are configured; publication waits for the completed replay.
+- All 377 JavaScript/TypeScript checks, production build/typechecks, design lint and both-theme browser regressions pass. Fresh and repeated seed-account linking passed against the demo database; simultaneous visitor exit/session isolation passed.
+- Real owner onboarding remains available per the prior live check; staff invitation SMTP is deferred. Private credentials stay in ignored local files/server secrets.
 
 ## In-flight Work
-- Email-confirmation request is complete: re-saved hosted mailer_autoconfirm=true and verified immediate public email/password signup. No pending unconfirmed password accounts were found; no owner was claimed. Demo activation remains blocked by Supabase’s two-active-free-project quota; awaiting approval to pause the unused former backend.
+- Prepare permanent backend cleanup and add owner/admin location settings; public demo data remains separate.
+- Clean permanent backend sample data while preserving three genuine accounts and completed owner setup; location setup implementation and backup rehearsal underway.
+- Seed demo history, verify role accounts, publish demo settings and test public entry/session isolation.
 
 ## Next Steps
-1. Refresh `/create-business` and create the owner email/password account; verification email and SMTP are not needed.
-2. Intended owner opens `/create-business`, uses the private OWNER_SETUP_CODE from local `.env.local`, and creates the business without email confirmation.
-3. Configure SMTP later for staff invitations. Demo activation is requested but needs a free project slot or paid capacity; no existing project has been paused.
+0. Verify location setup UI/backend and complete authorized permanent sample-data cleanup.
+1. Finish the demo seed and live API/browser checks.
+2. Publish GitHub Pages with the configured demo Actions secrets.
+3. Complete owner setup separately and configure SMTP later for real staff invitations.
 
 ## Open Questions for the User
-- Owner signup has no email setup prerequisite. If it still fails, obtain the exact on-screen error; the live signup/session probe passed.
-- Demo activation: may the unused former backend be paused to free a project slot? SMTP provider selection is deferred.
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-19: Prepare real-business location setup (Codex)
+- **What:** Added owner/admin location create/edit dialog, active-location selection and empty-business guidance; About distinguishes real records from demo history.
+- **Why:** A clean business needs a way to create real shops without reopening owner registration.
+- **How:** Glazed components/tokens, save_business_location RPC, preserved inactive history and cleared stale stored location IDs. Typecheck, design lint, production build, 364 JavaScript checks and both-theme browser regressions pass.
+- **Files:** Settings location UI, location provider, app shell, About and PROGRESS.
+- **Preferences learned:** Empty permanent business; preserve genuine accounts and public demo.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Parent integrates backend, checks and live cleanup; no design exceptions.
+### 2026-11-19: Prepare permanent business cleanup (Codex)
+- **What:** Added one-time cleanup SQL and owner/admin location setup RPC; live preflight identifies eight seeded identities and three genuine accounts, including completed owner/admin access.
+- **Why:** Start the permanent business empty while retaining genuine access and keeping public demo untouched.
+- **How:** Dedicated cleanup preparation; private backup restored and fingerprint-checked cleanup rehearsal passed; location RPC deployed only to permanent backend. UI publication and live cleanup next. No data deleted yet.
+- **Files:** Location migration, PROGRESS.md; forthcoming cleanup tooling and settings UI.
+- **Preferences learned:** Remove sample master data/history; preserve genuine access; provide location settings.
+- **Correction sweep:** N/A.
+- **Rework:** PostgreSQL tools absent; installing for backup rehearsal.
+- **Follow-ups:** Verify backup, cleanup manifest and UI before live cleanup. No new design exceptions.
+### 2026-11-19: Restore separate public demo backend (Codex)
+- **What:** Paused the unused former backend, created disposable demo project `wnsimxaopjqwiajbiina`, applied all 25 migrations and deployed demo-mode functions.
+- **Why:** Visitors need credential-free demo access without exposing real business data.
+- **How:** Verified hosted project status and active references; retained both protected persistent project IDs. Separate demo Auth has Pages callbacks and immediate signup. The 210-day sample replay is running. All 377 JavaScript/TypeScript checks, build/typechecks, design lint and both-theme browser regressions pass; live role and concurrent session checks pass through the local frontend. Fresh/repeated seed-account linking passed.
+- **Files:** scripts/seed/run.ts, README.md, supabase/CONTRACT.md, PROGRESS.md and archive; hosted demo configuration and ignored local settings.
+- **Preferences learned:** User authorizes pausing the unused former backend to free a demo slot; preserve its data.
+- **Correction sweep:** N/A.
+- **Rework:** Corrected management pooler endpoint using official documentation. Installed browser dependencies and used system Chrome. Fixed a fresh-demo seed collision between Auth-created customer records and seeded customer links; links and profiles now move atomically without deleting records.
+- **Follow-ups:** Finish seed and verify the published frontend for all six roles and concurrent sessions. No UI changes or new design exceptions.
 ### 2026-11-18: Verify owner signup without email confirmation (Codex)
 - **What:** Re-saved disabled hosted email confirmation on real project `wzsbtfzettxpczgulibd` and verified immediate signup.
 - **Why:** User is creating the owner account and explicitly does not want email-verification setup now.
@@ -95,36 +123,6 @@
 - **Correction sweep:** Removed obsolete pending-enablement wording from current status/docs; historical logs retained.
 - **Rework:** Earlier deployment failed only because Pages had not yet been enabled; rerun succeeded after the setting changed.
 - **Follow-ups:** Verify automatic deployment on the handoff commit; optional browser review and ERP owner bootstrap remain.
-
-### 2026-11-16: Configure GitHub Pages automatic publishing (Codex)
-- **What:** Added and pushed automatic Pages publishing, frontend base-path support and path-preserving invitation redirects; replaced current Vercel hosting guidance. GitHub accepted publication through `d66fb08` after authorization.
-- **Why:** User wants anyone to open the app from GitHub and see updates after each push.
-- **How:** Pinned Pages actions, Node 24 build/tests and custom 404; configured five frontend/demo secrets. GitHub run `43989635680` passed installation, 334 tests/design lint, build/typecheck and artifact upload, then failed Pages configuration because the site is disabled. Workflow YAML/diff checks pass. Design checklist preserves Glazed props, tokens, primary actions, status tones, labels and focus/ARIA; no new exceptions. Approved Barcode Labels and sidebar Glazed! exceptions remain in README §8.1; both-theme visuals unverified. Supabase Pages URLs/invitation fix deployed.
-- **Files:** Pages workflow, Vite/router/URL helpers, People redirect, verification tests, current docs, env example and removed Vercel rewrite config.
-- **Preferences learned:** GitHub Pages replaces Vercel; main pushes publish automatically (README §8.3).
-- **Correction sweep:** Swept active hosting instructions, assets, full-page redirects, Auth callbacks and invitation URLs; historical logs retained.
-- **Rework:** Resolved the missing OAuth workflow scope through the user-approved device flow; push succeeded. Pages/About settings still require repository administration; no force push or permissions bypass used.
-- **Follow-ups:** Enable Pages once as repository owner, retry deployment and verify the public URL; all source/build/backend work is ready.
-
-### 2026-11-16: Support repository-path frontend hosting (Codex)
-- **What:** Added a configurable Vite base, router basename and shared full-page/callback URL helpers for GitHub Pages.
-- **Why:** User wants a public GitHub-hosted frontend that updates when main is pushed.
-- **How:** Keep browser routing and Auth URL hashes; prefix demo entry/exit and recovery URLs with the build base. No design values or visible component markup changed; existing Glazed styles remain intact. 36 focused URL/auth/demo tests, typecheck, design lint and the repository-prefix production build pass. All six built entry assets retain the repository prefix and exist.
-- **Files:** vite.config.ts, src/lib/appUrl.ts, src/app/routes.tsx, src/lib/supabase.ts, src/app/AuthPages.tsx, routing/auth/demo verification tests and PROGRESS.md.
-- **Preferences learned:** GitHub Pages replaces Vercel hosting; parent agent records the preference centrally.
-- **Correction sweep:** Searched runtime full-page navigation, Auth redirects and absolute asset paths; updated two demo redirects and password recovery plus the shared router/build base.
-- **Rework:** None; root-hosted local development retains its existing URLs.
-- **Follow-ups:** Complete coordinated Pages deployment, server invitation-prefix handling and live deep-link checks. GitHub custom 404 serves the SPA for nested routes while preserving the request URL; direct nested requests retain HTTP 404 status.
-
-### 2026-11-16: Publish persistent backend rollout records (Codex)
-- **What:** Reconciled the completed Supabase rollout records with current GitHub main for publication.
-- **Why:** User requested deploying the latest work to GitHub.
-- **How:** Fast-forwarded six upstream commits without changing their source or attribution; retained sidebar/Barcode Labels preferences and both documentation histories. Verified current GitHub login as briggsamason and retained that account's noreply author identity. Documentation diff checks and saved-credential scan pass; existing application checks remain recorded below. No new UI changes.
-- **Files:** README.md, PROGRESS.md and docs/progress-archive/2026-11.md.
-- **Preferences learned:** None.
-- **Correction sweep:** N/A.
-- **Rework:** Remote main advanced during concurrent work; combined current backend status with upstream handoff instead of overwriting it.
-- **Follow-ups:** Frontend hosting and owner bootstrap remain separate from GitHub publication.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

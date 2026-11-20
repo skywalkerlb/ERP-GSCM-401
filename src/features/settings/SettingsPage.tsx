@@ -1,3 +1,4 @@
+import { LocationsCard } from './LocationsCard';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert } from '@/components/Alert';
 import { Badge } from '@/components/Badge';
@@ -225,6 +226,7 @@ export default function SettingsPage() {
         }
       />
       <div className="gz-stack">
+        <LocationsCard defaultTaxRate={settings.data?.default_tax_rate ?? DEFAULTS.default_tax_rate} />
         {settings.isError && <Alert tone="danger" title="Could not load settings">{rpcErrorMessage(settings.error)} Refresh the page to try again.</Alert>}
         {saveError && <Alert tone="danger" title="Settings were not saved">{saveError}</Alert>}
         {result && <ImpactCard result={result.data} changed={result.changed} />}

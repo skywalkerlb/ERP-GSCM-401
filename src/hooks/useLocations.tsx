@@ -8,6 +8,7 @@ import { useAuth } from './useAuth';
 /** A row of the `locations` table. */
 export interface Location {
   id: number;
+  is_active?: boolean;
   code: string;
   name: string;
   kind: 'shop' | 'kitchen';
@@ -39,7 +40,7 @@ const STORAGE_KEY = 'glazed.location';
 export interface LocationContextValue {
   locations: Location[];
   shops: Location[];
-  /** The location chosen in the top bar. Null only while locations load. */
+  /** The location chosen in the top bar. Null while loading or when no active locations exist. */
   location: Location | null;
   locationId: number | null;
   setLocationId: (id: number) => void;
@@ -52,7 +53,7 @@ const LocationContext = createContext<LocationContextValue | null>(null);
 export function LocationProvider({ children }: { children: ReactNode }) {
   const { profile } = useAuth();
   const { data, isLoading } = useLocations();
-  const locations = useMemo(() => data ?? [], [data]);
+  const locations = useMemo(() => (data ?? []).filter((l) => l.is_active !== false), [data]);
   const [selected, setSelected] = useState<number | null>(() => {
     const saved = Number(readStorage(STORAGE_KEY));
     return Number.isFinite(saved) && saved > 0 ? saved : null;
@@ -73,8 +74,11 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   // When the saved choice no longer exists, forget it.
   useEffect(() => {
-    if (selected !== null && locations.length > 0 && !locations.some((l) => l.id === selected)) setSelected(null);
-  }, [locations, selected]);
+    if (!isLoading && data && selected !== null && !locations.some((l) => l.id === selected)) {
+      setSelected(null);
+      writeStorage(STORAGE_KEY, null);
+    }
+  }, [data, isLoading, locations, selected]);
 
   const setLocationId = useCallback((id: number) => {
     setSelected(id);
