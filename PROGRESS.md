@@ -12,7 +12,7 @@
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
-- None. Cleanup and setup implementation complete; final integrated publication verification underway.
+- None. Cleanup, setup implementation and integrated Pages deployment verification are complete (run 44643855828).
 
 ## Next Steps
 1. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
@@ -31,6 +31,7 @@
 - **Preferences learned:** Empty permanent business; preserve genuine accounts and public demo.
 - **Correction sweep:** N/A.
 - **Rework:** None.
+- **Design review:** Final design lint passed. Reviewed Glazed component props, light/dark screenshots, one primary action per view/dialog, semantic status tones, sentence-case voice, field labels, shared focus rings, dialog focus trap/return and close-button aria-label. No new deviations. Existing README §8.1 exceptions retained: Barcode Labels capitalization and sidebar Glazed! punctuation.
 - **Follow-ups:** Backend/UI integrated; both themes visually reviewed and browser tested. No design exceptions.
 ### 2026-11-19: Clean permanent business database (Codex)
 - **What:** Removed all reviewed sample business records and eight seeded Auth identities; preserved three genuine accounts/passwords, profiles/customer links, business name and permanent owner claim.
