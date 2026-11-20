@@ -4,26 +4,23 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-- Owner/admin location setup UI, active-location selection and real/demo About copy implemented; backend integration and validation in flight.
-**As of 2026-11-19.** Real backend `wzsbtfzettxpczgulibd` remains active and protected. Former backend `eaphbcbklbcadokfcewc` was paused with user authorization; its data is retained and reset protection remains enabled.
-- New disposable demo: `wnsimxaopjqwiajbiina`. All 25 migrations applied; People/onboarding deployed; People uses DEMO_MODE=true and Pages APP_URL. Demo Auth callbacks configured.
-- Sample-data replay is in progress. All six accounts passed live browser entry/landing/refresh/exit checks through the local frontend. Demo Actions secrets are configured; publication waits for the completed replay.
-- All 377 JavaScript/TypeScript checks, production build/typechecks, design lint and both-theme browser regressions pass. Fresh and repeated seed-account linking passed against the demo database; simultaneous visitor exit/session isolation passed.
-- Real owner onboarding remains available per the prior live check; staff invitation SMTP is deferred. Private credentials stay in ignored local files/server secrets.
+**As of 2026-11-19.** Permanent backend `wzsbtfzettxpczgulibd` is clean: sample business history, stock, catalog, suppliers, recipes, promotions and locations removed. Three genuine Auth accounts/passwords, profiles and linked customer identities preserved, including owner/admin. Eight seeded Auth identities deleted; completed owner setup remains closed. Business name retained.
+- Owner/admin location settings and startup guidance deployed; migration applied to permanent and separate demo backends. Public demo keeps all sample records (5,416 sales, 36 items); every public-table fingerprint matched before/after cleanup.
+- Private backup in ignored `.env.cleanup-backups/` was restored locally and cleanup rehearsed with rollback. Live UTC-normalized fingerprints matched before deletion; business writes/Auth signup blocked by transaction locks. Security history and document counters retained.
+- All 377 JavaScript/TypeScript checks, production build, design lint and both-theme browser checks pass. Location RPC local authorization/create/edit/deactivation checks passed; genuine password hashes match backup; live owner setup remains closed.
+- Public demo is live on Pages with all 26 migrations and demo-mode functions. Six-role entry/refresh/exit, retry/re-entry, concurrent visitors, and both themes passed; all 81 published JS assets use intended backends and exclude the demo service key. Final Pages run `44643203905` succeeded (`ed727f2`).
+- Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
-- Prepare permanent backend cleanup and add owner/admin location settings; public demo data remains separate.
-- Clean permanent backend sample data while preserving three genuine accounts and completed owner setup; location setup implementation and backup rehearsal underway.
-- Seed demo history, verify role accounts, publish demo settings and test public entry/session isolation.
+- Final real-business frontend polish publication and live empty-state verification remain separate work; demo activation is complete.
 
 ## Next Steps
-0. Verify location setup UI/backend and complete authorized permanent sample-data cleanup.
-1. Finish the demo seed and live API/browser checks.
-2. Publish GitHub Pages with the configured demo Actions secrets.
-3. Complete owner setup separately and configure SMTP later for real staff invitations.
+1. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
+2. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
+3. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
 
 ## Open Questions for the User
-- What is the project due date?
+- Project due date remains unspecified.
 
 ## Recent Changes
 ### 2026-11-19: Prepare real-business location setup (Codex)
@@ -34,25 +31,26 @@
 - **Preferences learned:** Empty permanent business; preserve genuine accounts and public demo.
 - **Correction sweep:** N/A.
 - **Rework:** None.
-- **Follow-ups:** Parent integrates backend, checks and live cleanup; no design exceptions.
-### 2026-11-19: Prepare permanent business cleanup (Codex)
-- **What:** Added one-time cleanup SQL and owner/admin location setup RPC; live preflight identifies eight seeded identities and three genuine accounts, including completed owner/admin access.
-- **Why:** Start the permanent business empty while retaining genuine access and keeping public demo untouched.
-- **How:** Dedicated cleanup preparation; private backup restored and fingerprint-checked cleanup rehearsal passed; location RPC deployed only to permanent backend. UI publication and live cleanup next. No data deleted yet.
-- **Files:** Location migration, PROGRESS.md; forthcoming cleanup tooling and settings UI.
-- **Preferences learned:** Remove sample master data/history; preserve genuine access; provide location settings.
-- **Correction sweep:** N/A.
-- **Rework:** PostgreSQL tools absent; installing for backup rehearsal.
-- **Follow-ups:** Verify backup, cleanup manifest and UI before live cleanup. No new design exceptions.
+- **Follow-ups:** Backend/UI integrated; both themes visually reviewed and browser tested. No design exceptions.
+### 2026-11-19: Clean permanent business database (Codex)
+- **What:** Removed all reviewed sample business records and eight seeded Auth identities; preserved three genuine accounts/passwords, profiles/customer links, business name and permanent owner claim.
+- **Why:** Start a real business with an empty catalog, shops, stock and history; keep public demo populated.
+- **How:** Restored private PostgreSQL backup locally; rehearsed exact cleanup/rollback; matched all table fingerprints under exclusive write/signup locks before atomic cleanup. Verified all removed-data tables empty, genuine passwords identical, owner registration closed and public demo unchanged.
+- **Files:** scripts/admin cleanup runner/SQL, location migration/UI, README, CONTRACT, PROGRESS; private ignored backup/manifests.
+- **Preferences learned:** Empty business, preserve real access, owner/admin location settings; sample data only in public demo.
+- **Correction sweep:** Removed misleading simulated-data claims from real About and clarified empty portal menu.
+- **Rework:** Installed PostgreSQL tools; local restore reported only pre-existing public schema. Initial live fingerprint guard rolled back safely because timezones serialized timestamps differently; normalized comparisons to UTC, rehearsed and succeeded.
+- **Follow-ups:** Owner enters real locations/master data/opening balances; configure SMTP. Live catalog and report views verified empty; final startup copy/UTC fingerprint fix published with this handoff. No new design exceptions.
 ### 2026-11-19: Restore separate public demo backend (Codex)
-- **What:** Paused the unused former backend, created disposable demo project `wnsimxaopjqwiajbiina`, applied all 25 migrations and deployed demo-mode functions.
-- **Why:** Visitors need credential-free demo access without exposing real business data.
-- **How:** Verified hosted project status and active references; retained both protected persistent project IDs. Separate demo Auth has Pages callbacks and immediate signup. The 210-day sample replay is running. All 377 JavaScript/TypeScript checks, build/typechecks, design lint and both-theme browser regressions pass; live role and concurrent session checks pass through the local frontend. Fresh/repeated seed-account linking passed.
-- **Files:** scripts/seed/run.ts, README.md, supabase/CONTRACT.md, PROGRESS.md and archive; hosted demo configuration and ignored local settings.
-- **Preferences learned:** User authorizes pausing the unused former backend to free a demo slot; preserve its data.
-- **Correction sweep:** N/A.
-- **Rework:** Corrected management pooler endpoint using official documentation. Installed browser dependencies and used system Chrome. Fixed a fresh-demo seed collision between Auth-created customer records and seeded customer links; links and profiles now move atomically without deleting records.
-- **Follow-ups:** Finish seed and verify the published frontend for all six roles and concurrent sessions. No UI changes or new design exceptions.
+- **What:** Created and populated separate disposable demo `wnsimxaopjqwiajbiina`; configured all role accounts, migrations, Edge Functions, Auth and Actions secrets.
+- **Why:** Visitors need credential-free demo access using isolated sample data.
+- **How:** Paused unused former backend with authorization, retaining data and both persistent-project guards. Completed 210-day replay with no failed events and reconciled inventory/accounting. All 377 JS/TS tests, build/typechecks, design lint, both-theme browser regressions, five rollback SQL suites and public six-role/session/retry checks pass. Pages run `44642873404` succeeded; final documentation deployment `44643203905` published `ed727f2` successfully; 81 published JS assets use intended backends and exclude the demo service key. Applied the integrated location migration to demo (26 total).
+- **Files:** scripts/seed/run.ts, README.md, supabase/CONTRACT.md, PROGRESS.md and archive; hosted configuration and ignored local settings.
+- **Preferences learned:** Pause unused former backend to free the demo slot; finish task validation before deployment.
+- **Correction sweep:** Recorded deployment sequencing in README §8.4; used an isolated checkout, then integrated the validated/published location release without dropping either change. Existing automatic main publishing remains intact.
+- **Rework:** Fixed fresh Auth-created customer collision by linking seeded customer/profile atomically without deleting records. Verified the actual seed function on fresh and repeated execution. Installed declared browser dependencies and used system Chrome.
+- **Follow-ups:** Demo activation complete; automatic reset scheduling remains out of scope. No new UI changes or design exceptions in demo restoration.
+
 ### 2026-11-18: Verify owner signup without email confirmation (Codex)
 - **What:** Re-saved disabled hosted email confirmation on real project `wzsbtfzettxpczgulibd` and verified immediate signup.
 - **Why:** User is creating the owner account and explicitly does not want email-verification setup now.

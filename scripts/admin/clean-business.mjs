@@ -13,6 +13,7 @@ if(apply && !(u.hostname===`db.${ref}.supabase.co` || (u.hostname.endsWith('.poo
 const sql=postgres(url,{max:1,connect_timeout:15,onnotice:()=>{},transform:{undefined:null}});
 const privateDir='.env.cleanup-backups';
 async function manifest(s){
+ await s`select set_config('TimeZone','UTC',false)`;
  const tables=await s`select tablename from pg_tables where schemaname='public' order by tablename`;
  const out={};
  for(const t of [...tables.map(r=>`public.${r.tablename}`),'auth.users']){

@@ -96,8 +96,8 @@ export default function PortalHomePage() {
       ) : catalogQ.isError ? null : shown.length === 0 ? (
         <EmptyState
           icon="store"
-          title={items.length === 0 ? 'The shelves are being stocked' : 'Nothing matches that'}
-          description={items.length === 0 ? 'The menu is empty right now. Check back in a little while.' : 'Try another word, category or shop.'}
+          title={items.length === 0 ? 'Online ordering is not available yet' : 'Nothing matches that'}
+          description={items.length === 0 ? 'There are no menu items available for pickup. Check back after the business adds its menu and pickup shops.' : 'Try another word, category or shop.'}
           action={
             items.length > 0 ? (
               <Button

@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useLocations, type Location } from '@/hooks/useLocations';
 import { queryKeys } from '@/lib/queryKeys';
 import { rpcErrorMessage } from '@/lib/rpc';
-import { supabase } from '@/lib/supabase';
+import { isDemo, supabase } from '@/lib/supabase';
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -20,7 +20,7 @@ export function LocationsCard({ defaultTaxRate }: { defaultTaxRate: number }) {
   const { profile } = useAuth();
   const locations = useLocations();
   const [editing, setEditing] = useState<Location | 'new' | null>(null);
-  if (profile?.role !== 'owner' && profile?.role !== 'admin') return null;
+  if (isDemo || (profile?.role !== 'owner' && profile?.role !== 'admin')) return null;
   return <>
     <Card title="Locations" subtitle="Create real shops and kitchens, then assign staff in People. Deactivating a location keeps its history." actions={<Button onClick={() => setEditing('new')}>New location</Button>}>
       {locations.isError && <Alert tone="danger" title="Could not load locations">{rpcErrorMessage(locations.error)}</Alert>}
