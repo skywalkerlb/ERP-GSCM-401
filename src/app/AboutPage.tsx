@@ -1,3 +1,4 @@
+import { isDemo } from '@/lib/supabase';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/Badge';
@@ -117,10 +118,10 @@ function AboutContent() {
         <Card title="Data" subtitle="Where the numbers come from.">
           <ul className="about-list">
             <li>
-              <span className="gz-muted">An AI-generated simulation of seven months of trading, built from a deterministic seed so it can be rerun and match.</span>
+              <span className="gz-muted">{isDemo ? 'An AI-generated simulation of seven months of trading, built from a deterministic seed so it can be rerun and match.' : 'Your business records are stored in the permanent business database. Sample data is kept separately in the public demo.'}</span>
             </li>
             <li>
-              <span className="gz-muted">History is replayed through the same database functions the screens use, so costs, stock and the books agree to the cent.</span>
+              <span className="gz-muted">{isDemo ? 'History is replayed through the same database functions the screens use, so costs, stock and the books agree to the cent.' : 'Business actions update stock, costs and accounting through transactional database functions. Reports use your stored records.'}</span>
             </li>
           </ul>
         </Card>

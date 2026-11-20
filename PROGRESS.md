@@ -4,31 +4,53 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-19.** Real backend `wzsbtfzettxpczgulibd` remains active and protected. Former backend `eaphbcbklbcadokfcewc` was paused with user authorization; data and reset protection are retained.
-- Disposable demo `wnsimxaopjqwiajbiina`: all 25 migrations, People/onboarding functions, demo-mode simulated invitations and Pages Auth callbacks configured.
-- The full 210-day replay completed without failed events: 5,416 sales, 56,817 sale lines and 100,515 inventory transactions. Inventory ledger, GL and item costs reconcile at $37,237.92.
-- All six roles pass entry, landing, refresh and exit through the local frontend. Retry/re-entry and simultaneous visitor isolation pass. Three demo Actions secrets configured; ready for publication.
-- All 377 JavaScript/TypeScript checks, production build/typechecks, design lint, both-theme browser regressions and five live rollback SQL suites pass. Fresh/repeated seed-account linking passes.
-- Concurrent real-business cleanup/location work is excluded from this isolated release. Real SMTP remains a separate follow-up. Secrets remain in ignored local files/server configuration.
+- Owner/admin location setup UI, active-location selection and real/demo About copy implemented; backend integration and validation in flight.
+**As of 2026-11-19.** Real backend `wzsbtfzettxpczgulibd` remains active and protected. Former backend `eaphbcbklbcadokfcewc` was paused with user authorization; its data is retained and reset protection remains enabled.
+- New disposable demo: `wnsimxaopjqwiajbiina`. All 25 migrations applied; People/onboarding deployed; People uses DEMO_MODE=true and Pages APP_URL. Demo Auth callbacks configured.
+- Demo 210-day replay completed without failures; inventory ledger/GL/item costs reconcile at $37,237.92. All six roles pass entry, landing, refresh and exit through the local release frontend. Demo Actions secrets configured; publication next.
+- All 377 JavaScript/TypeScript checks, production build/typechecks, design lint and both-theme browser regressions pass. Fresh and repeated seed-account linking passed against the demo database; simultaneous visitor exit/session isolation passed.
+- Real-business cleanup/location work is tracked separately; genuine owner/admin access is preserved. SMTP is deferred. Private credentials stay in ignored local files/server secrets.
 
 ## In-flight Work
-- Publish the completed demo release, then verify the public URL.
+- Prepare permanent backend cleanup and add owner/admin location settings; public demo data remains separate.
+- Clean permanent backend sample data while preserving three genuine accounts and completed owner setup; location setup implementation and backup rehearsal underway.
+- Publish the completed demo release and verify public entry.
 
 ## Next Steps
-1. Publish and verify six-role entry on GitHub Pages.
-2. Track concurrent real-business cleanup/location setup separately; configure SMTP later for real invitations.
+0. Verify location setup UI/backend and complete authorized permanent sample-data cleanup.
+1. Publish and verify public demo entry.
+2. Record completed publication and public browser checks.
+3. Configure SMTP later for real staff invitations.
 
 ## Open Questions for the User
 - What is the project due date?
 
 ## Recent Changes
+### 2026-11-19: Prepare real-business location setup (Codex)
+- **What:** Added owner/admin location create/edit dialog, active-location selection and empty-business guidance; About distinguishes real records from demo history.
+- **Why:** A clean business needs a way to create real shops without reopening owner registration.
+- **How:** Glazed components/tokens, save_business_location RPC, preserved inactive history and cleared stale stored location IDs. Typecheck, design lint, production build, 364 JavaScript checks and both-theme browser regressions pass.
+- **Files:** Settings location UI, location provider, app shell, About and PROGRESS.
+- **Preferences learned:** Empty permanent business; preserve genuine accounts and public demo.
+- **Correction sweep:** N/A.
+- **Rework:** None.
+- **Follow-ups:** Parent integrates backend, checks and live cleanup; no design exceptions.
+### 2026-11-19: Prepare permanent business cleanup (Codex)
+- **What:** Added one-time cleanup SQL and owner/admin location setup RPC; live preflight identifies eight seeded identities and three genuine accounts, including completed owner/admin access.
+- **Why:** Start the permanent business empty while retaining genuine access and keeping public demo untouched.
+- **How:** Dedicated cleanup preparation; private backup restored and fingerprint-checked cleanup rehearsal passed; location RPC deployed only to permanent backend. UI publication and live cleanup next. No data deleted yet.
+- **Files:** Location migration, PROGRESS.md; forthcoming cleanup tooling and settings UI.
+- **Preferences learned:** Remove sample master data/history; preserve genuine access; provide location settings.
+- **Correction sweep:** N/A.
+- **Rework:** PostgreSQL tools absent; installing for backup rehearsal.
+- **Follow-ups:** Verify backup, cleanup manifest and UI before live cleanup. No new design exceptions.
 ### 2026-11-19: Restore separate public demo backend (Codex)
 - **What:** Created and populated separate disposable demo `wnsimxaopjqwiajbiina`; configured all role accounts, migrations, Edge Functions, Auth and Actions secrets.
 - **Why:** Visitors need credential-free demo access using isolated sample data.
 - **How:** Paused unused former backend with authorization, retaining data and both persistent-project guards. Completed 210-day replay with no failed events and reconciled inventory/accounting. All 377 JS/TS tests, build/typechecks, design lint, both-theme browser regressions, five rollback SQL suites and live local role/session/retry checks pass.
 - **Files:** scripts/seed/run.ts, README.md, supabase/CONTRACT.md, PROGRESS.md and archive; hosted configuration and ignored local settings.
 - **Preferences learned:** Pause unused former backend to free the demo slot; finish task validation before deployment.
-- **Correction sweep:** Recorded deployment sequencing in README §8.4; excluded unfinished concurrent location work using an isolated checkout. Existing automatic main publishing remains intact.
+- **Correction sweep:** Recorded deployment sequencing in README §8.4; used an isolated checkout, then integrated the validated/published location release. Existing automatic main publishing remains intact.
 - **Rework:** Fixed fresh Auth-created customer collision by linking seeded customer/profile atomically without deleting records. Verified the actual seed function on fresh and repeated execution. Installed declared browser dependencies and used system Chrome.
 - **Follow-ups:** Publish and verify public entry. No UI changes or new design exceptions.
 
@@ -102,26 +124,6 @@
 - **Correction sweep:** Removed obsolete pending-enablement wording from current status/docs; historical logs retained.
 - **Rework:** Earlier deployment failed only because Pages had not yet been enabled; rerun succeeded after the setting changed.
 - **Follow-ups:** Verify automatic deployment on the handoff commit; optional browser review and ERP owner bootstrap remain.
-
-### 2026-11-16: Configure GitHub Pages automatic publishing (Codex)
-- **What:** Added and pushed automatic Pages publishing, frontend base-path support and path-preserving invitation redirects; replaced current Vercel hosting guidance. GitHub accepted publication through `d66fb08` after authorization.
-- **Why:** User wants anyone to open the app from GitHub and see updates after each push.
-- **How:** Pinned Pages actions, Node 24 build/tests and custom 404; configured five frontend/demo secrets. GitHub run `43989635680` passed installation, 334 tests/design lint, build/typecheck and artifact upload, then failed Pages configuration because the site is disabled. Workflow YAML/diff checks pass. Design checklist preserves Glazed props, tokens, primary actions, status tones, labels and focus/ARIA; no new exceptions. Approved Barcode Labels and sidebar Glazed! exceptions remain in README §8.1; both-theme visuals unverified. Supabase Pages URLs/invitation fix deployed.
-- **Files:** Pages workflow, Vite/router/URL helpers, People redirect, verification tests, current docs, env example and removed Vercel rewrite config.
-- **Preferences learned:** GitHub Pages replaces Vercel; main pushes publish automatically (README §8.3).
-- **Correction sweep:** Swept active hosting instructions, assets, full-page redirects, Auth callbacks and invitation URLs; historical logs retained.
-- **Rework:** Resolved the missing OAuth workflow scope through the user-approved device flow; push succeeded. Pages/About settings still require repository administration; no force push or permissions bypass used.
-- **Follow-ups:** Enable Pages once as repository owner, retry deployment and verify the public URL; all source/build/backend work is ready.
-
-### 2026-11-16: Support repository-path frontend hosting (Codex)
-- **What:** Added a configurable Vite base, router basename and shared full-page/callback URL helpers for GitHub Pages.
-- **Why:** User wants a public GitHub-hosted frontend that updates when main is pushed.
-- **How:** Keep browser routing and Auth URL hashes; prefix demo entry/exit and recovery URLs with the build base. No design values or visible component markup changed; existing Glazed styles remain intact. 36 focused URL/auth/demo tests, typecheck, design lint and the repository-prefix production build pass. All six built entry assets retain the repository prefix and exist.
-- **Files:** vite.config.ts, src/lib/appUrl.ts, src/app/routes.tsx, src/lib/supabase.ts, src/app/AuthPages.tsx, routing/auth/demo verification tests and PROGRESS.md.
-- **Preferences learned:** GitHub Pages replaces Vercel hosting; parent agent records the preference centrally.
-- **Correction sweep:** Searched runtime full-page navigation, Auth redirects and absolute asset paths; updated two demo redirects and password recovery plus the shared router/build base.
-- **Rework:** None; root-hosted local development retains its existing URLs.
-- **Follow-ups:** Complete coordinated Pages deployment, server invitation-prefix handling and live deep-link checks. GitHub custom 404 serves the SPA for nested routes while preserving the request URL; direct nested requests retain HTTP 404 status.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
