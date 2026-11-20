@@ -334,12 +334,19 @@ async function authUsers(sql: Sql, ids: Ids) {
       uid = data.user.id;
     }
     const custId = u.customer ? ids.cust[u.customer] : null;
-    await (sql as any).unsafe(
-      `insert into profiles (user_id, full_name, role, home_location_id, customer_id) values ($1, $2, $3::app_role, $4, $5)
-       on conflict (user_id) do update set full_name = excluded.full_name, role = excluded.role, home_location_id = excluded.home_location_id, customer_id = excluded.customer_id`,
-      [uid, u.full_name, u.role, u.home ? ids.loc[u.home] : null, custId],
-    );
-    if (custId) await (sql as any).unsafe('update customers set auth_user_id = $1 where id = $2', [uid, custId]);
+    await (sql as any).begin(async (tx: Sql) => {
+      // New Auth users already have a customer from the signup trigger. Move
+      // their link to the seeded customer without deleting either record.
+      if (custId) {
+        await (tx as any).unsafe('update customers set auth_user_id = null where auth_user_id = $1 and id <> $2', [uid, custId]);
+        await (tx as any).unsafe('update customers set auth_user_id = $1 where id = $2', [uid, custId]);
+      }
+      await (tx as any).unsafe(
+        `insert into profiles (user_id, full_name, role, home_location_id, customer_id) values ($1, $2, $3::app_role, $4, $5)
+         on conflict (user_id) do update set full_name = excluded.full_name, role = excluded.role, home_location_id = excluded.home_location_id, customer_id = excluded.customer_id`,
+        [uid, u.full_name, u.role, u.home ? ids.loc[u.home] : null, custId],
+      );
+    });
   }
   log(`Demo users ready: ${DEMO_USERS.map((u) => u.email).join(', ')}`);
 }

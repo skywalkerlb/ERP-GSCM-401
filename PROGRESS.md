@@ -12,7 +12,7 @@
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
-- Final real-business frontend polish publication and live empty-state verification remain separate work; demo activation is complete.
+- None. Cleanup and setup implementation complete; final integrated publication verification underway.
 
 ## Next Steps
 1. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
@@ -39,7 +39,7 @@
 - **Files:** scripts/admin cleanup runner/SQL, location migration/UI, README, CONTRACT, PROGRESS; private ignored backup/manifests.
 - **Preferences learned:** Empty business, preserve real access, owner/admin location settings; sample data only in public demo.
 - **Correction sweep:** Removed misleading simulated-data claims from real About and clarified empty portal menu.
-- **Rework:** Installed PostgreSQL tools; local restore reported only pre-existing public schema. Initial live fingerprint guard rolled back safely because timezones serialized timestamps differently; normalized comparisons to UTC, rehearsed and succeeded.
+- **Rework:** Merged concurrent public-demo deployment without losing its seed fix; installed PostgreSQL tools; local restore reported only pre-existing public schema. Initial live fingerprint guard rolled back safely because timezones serialized timestamps differently; normalized comparisons to UTC, rehearsed and succeeded.
 - **Follow-ups:** Owner enters real locations/master data/opening balances; configure SMTP. Live catalog and report views verified empty; final startup copy/UTC fingerprint fix published with this handoff. No new design exceptions.
 ### 2026-11-19: Restore separate public demo backend (Codex)
 - **What:** Created and populated separate disposable demo `wnsimxaopjqwiajbiina`; configured all role accounts, migrations, Edge Functions, Auth and Actions secrets.
