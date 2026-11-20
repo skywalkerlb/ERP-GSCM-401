@@ -16,22 +16,32 @@
 - None. Current main and both active Supabase backends deployed; final Pages verification follows the deployment log push.
 
 ## Next Steps
-2. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
-3. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
-4. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
+1. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
+2. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
+3. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
 
 ## Open Questions for the User
 - Project due date remains unspecified.
 
 ## Recent Changes
+### 2026-11-19: Update Supabase CLI configuration compatibility (Codex)
+- **What:** Updated the CLI config for v3.2.0, confirmed all 26 migrations already match production, and redeployed `people` and `onboarding`.
+- **Why:** The user asked to deploy to Supabase and GitHub.
+- **How:** Replaced the obsolete `inbucket` section with `local_smtp`; migration status showed no pending schema changes. Deployed both current functions to `wzsbtfzettxpczgulibd` with the CLI.
+- **Files:** `supabase/config.toml`, Supabase functions, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** None
+- **Follow-ups:** Review the preserved older CLI setup commits before reapplying any of their changes to current main.
+
 ### 2026-11-19: Deploy current main to GitHub and Supabase (Codex)
 - **What:** Synchronized latest GitHub main and redeployed People/onboarding to permanent and public-demo Supabase projects.
 - **Why:** User requested all current changes deployed to Git and Supabase.
-- **How:** Verified all 26 local migration versions already applied to both projects, deployed both functions using API bundling and retained existing configuration. No seeds, resets, account edits or data changes.
+- **How:** Verified all 26 local migration versions already applied to both projects, deployed both functions using API bundling and retained existing configuration. Verified real/demo onboarding returns 200 with setup closed and People rejects unauthenticated access with 401. No seeds, resets, account edits or data changes.
 - **Files:** PROGRESS.md and archive; hosted Edge Function deployments.
 - **Preferences learned:** None.
 - **Correction sweep:** N/A.
-- **Rework:** Initial push found newer upstream documentation; fast-forwarded before function deployment.
+- **Rework:** Integrated concurrent GitHub synchronization and local Supabase CLI config updates; retained both deployment records.
 - **Follow-ups:** Verify endpoint responses and final Pages deployment; owner configures real business. No UI changes or new design exceptions.
 ### 2026-11-19: Synchronize local main with GitHub (Codex)
 - **What:** Updated local `main` to GitHub's latest `main` at `8adfa19`.
@@ -111,16 +121,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** Resolved overlapping progress histories; retained upstream hosting/access changes and all MRP/pickup implementation.
 - **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; First-owner onboarding backend/setup-code configuration remains a separate upstream follow-up; no owner is claimed in this release.
-
-### 2026-11-16: Prepare combined release and verify deployment access (Codex)
-- **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
-- **Why:** The user authorized hosted migration/deployment of both feature sets.
-- **How:** Preserved username/password signup and existing access hierarchy; assigned unique ordered versions to the three unpublished MRP/customer migrations. Combined build/typecheck, design lint, 338 TS/Node tests, both-theme browser flows, four SQL suites and 36 assertions pass; 24 migrations apply on a fresh local database. No new design exceptions. Environment status has no deployment secrets; Vercel/Supabase plugins report DISABLED_BY_ADMIN. No hosted changes made.
-- **Files:** Three renamed migrations, seed MRP reference, browser test label, README, contract, PROGRESS and archive; integrated upstream auth changes.
-- **Preferences learned:** None; existing username-only signup preference retained.
-- **Correction sweep:** N/A.
-- **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
-- **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
