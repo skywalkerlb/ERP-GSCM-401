@@ -5,7 +5,7 @@
 
 ## Current Status
 **As of 2026-11-19.** Permanent backend `wzsbtfzettxpczgulibd` is clean: sample business history, stock, catalog, suppliers, recipes, promotions and locations removed. Three genuine Auth accounts/passwords, profiles and linked customer identities preserved, including owner/admin. Eight seeded Auth identities deleted; completed owner setup remains closed. Business name retained.
-- Local `main` is synchronized with GitHub `origin/main` at `8adfa19`. The two previous local commits are preserved on `pre-github-sync-20261119`; they are not included in the synchronized branch.
+- Current GitHub main synchronized locally; both active Supabase projects have all 26 migrations and freshly deployed People/onboarding functions. No data reset or configuration-secret changes.
 - Owner/admin location settings and startup guidance deployed; migration applied to permanent and separate demo backends. Public demo keeps all sample records (5,416 sales, 36 items); every public-table fingerprint matched before/after cleanup.
 - Private backup in ignored `.env.cleanup-backups/` was restored locally and cleanup rehearsed with rollback. Live UTC-normalized fingerprints matched before deletion; business writes/Auth signup blocked by transaction locks. Security history and document counters retained.
 - All 377 JavaScript/TypeScript checks, production build, design lint and both-theme browser checks pass. Location RPC local authorization/create/edit/deactivation checks passed; genuine password hashes match backup; live owner setup remains closed.
@@ -13,10 +13,9 @@
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
-- Review the two older Supabase CLI setup commits on `pre-github-sync-20261119` before deciding whether any setup changes should be reapplied to current GitHub main.
+- None. Current main and both active Supabase backends deployed; final Pages verification follows the deployment log push.
 
 ## Next Steps
-1. Review the preserved local Supabase CLI setup commits against current main before cherry-picking anything.
 2. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
 3. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
 4. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
@@ -25,6 +24,15 @@
 - Project due date remains unspecified.
 
 ## Recent Changes
+### 2026-11-19: Deploy current main to GitHub and Supabase (Codex)
+- **What:** Synchronized latest GitHub main and redeployed People/onboarding to permanent and public-demo Supabase projects.
+- **Why:** User requested all current changes deployed to Git and Supabase.
+- **How:** Verified all 26 local migration versions already applied to both projects, deployed both functions using API bundling and retained existing configuration. No seeds, resets, account edits or data changes.
+- **Files:** PROGRESS.md and archive; hosted Edge Function deployments.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** Initial push found newer upstream documentation; fast-forwarded before function deployment.
+- **Follow-ups:** Verify endpoint responses and final Pages deployment; owner configures real business. No UI changes or new design exceptions.
 ### 2026-11-19: Synchronize local main with GitHub (Codex)
 - **What:** Updated local `main` to GitHub's latest `main` at `8adfa19`.
 - **Why:** The user asked to pull all changes from GitHub.
@@ -113,17 +121,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
 - **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
-
-### 2026-11-17: Implement first-owner business onboarding (Codex)
-- **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
-- **Why:** Owner needs to create the business and invite admins/staff who choose passwords using email usernames.
-- **How:** Private backend setup code, persisted limits, locked one-time database claim, atomic business/location/profile/audit writes and safe owner retries. Existing records and role hierarchy preserved. 355 JavaScript tests, build/typecheck and design lint pass. Migration and expanded security SQL passed against isolated demo in a rollback-only transaction (including its missing access-audit prerequisite). No owner claim or deployment. Glazed components/tokens only; no design exceptions. Browser visual checks remain blocked by tab-creation automation error.
-- **Files:** Onboarding endpoint/migration/tests, bootstrap/config, auth UI/routes, README, CONTRACT and PROGRESS.
-- **Preferences learned:** One business, private setup code, owner-invited admins, email invitations and first-location setup (README §8.5).
-- **Correction sweep:** N/A.
-- **Rework:** None.
-- **Design review:** Re-ran full design lint after the hook reminder: passed. New UI uses existing Glazed components and inherited theme tokens, visible field labels and standard focus styles; conditional views have one primary action, sentence-case copy and semantic status tones. No new design deviations. Existing approved Barcode Labels capitalization and sidebar Glazed! exceptions remain unchanged. Light/dark browser visual review remains unverified because browser tab creation failed.
-- **Follow-ups:** Deploy backend/configuration before frontend; verify both-theme visuals and SMTP. Existing demo backend lacks the delegated-access prerequisite; stage all unapplied migrations when deploying there. README setup instructions and preference rule are updated; changelog remains at ten entries.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
