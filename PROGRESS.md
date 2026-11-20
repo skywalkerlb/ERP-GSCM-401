@@ -5,6 +5,7 @@
 
 ## Current Status
 **As of 2026-11-19.** Permanent backend `wzsbtfzettxpczgulibd` is clean: sample business history, stock, catalog, suppliers, recipes, promotions and locations removed. Three genuine Auth accounts/passwords, profiles and linked customer identities preserved, including owner/admin. Eight seeded Auth identities deleted; completed owner setup remains closed. Business name retained.
+- Local `main` is synchronized with GitHub `origin/main` at `8adfa19`. The two previous local commits are preserved on `pre-github-sync-20261119`; they are not included in the synchronized branch.
 - Owner/admin location settings and startup guidance deployed; migration applied to permanent and separate demo backends. Public demo keeps all sample records (5,416 sales, 36 items); every public-table fingerprint matched before/after cleanup.
 - Private backup in ignored `.env.cleanup-backups/` was restored locally and cleanup rehearsed with rollback. Live UTC-normalized fingerprints matched before deletion; business writes/Auth signup blocked by transaction locks. Security history and document counters retained.
 - All 377 JavaScript/TypeScript checks, production build, design lint and both-theme browser checks pass. Location RPC local authorization/create/edit/deactivation checks passed; genuine password hashes match backup; live owner setup remains closed.
@@ -12,17 +13,28 @@
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
-- None. Cleanup, setup implementation and integrated Pages deployment verification are complete (run 44643855828).
+- Review the two older Supabase CLI setup commits on `pre-github-sync-20261119` before deciding whether any setup changes should be reapplied to current GitHub main.
 
 ## Next Steps
-1. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
-2. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
-3. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
+1. Review the preserved local Supabase CLI setup commits against current main before cherry-picking anything.
+2. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
+3. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
+4. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
 
 ## Open Questions for the User
 - Project due date remains unspecified.
 
 ## Recent Changes
+### 2026-11-19: Synchronize local main with GitHub (Codex)
+- **What:** Updated local `main` to GitHub's latest `main` at `8adfa19`.
+- **Why:** The user asked to pull all changes from GitHub.
+- **How:** Fetched the remote, preserved the two local commits on `pre-github-sync-20261119`, then synchronized `main` to `origin/main` without merging the older divergent snapshot.
+- **Files:** `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** None
+- **Follow-ups:** Review the preserved local setup commits before reapplying any changes to current main.
+
 ### 2026-11-19: Prepare real-business location setup (Codex)
 - **What:** Added owner/admin location create/edit dialog, active-location selection and empty-business guidance; About distinguishes real records from demo history.
 - **Why:** A clean business needs a way to create real shops without reopening owner registration.
@@ -112,16 +124,6 @@
 - **Rework:** None.
 - **Design review:** Re-ran full design lint after the hook reminder: passed. New UI uses existing Glazed components and inherited theme tokens, visible field labels and standard focus styles; conditional views have one primary action, sentence-case copy and semantic status tones. No new design deviations. Existing approved Barcode Labels capitalization and sidebar Glazed! exceptions remain unchanged. Light/dark browser visual review remains unverified because browser tab creation failed.
 - **Follow-ups:** Deploy backend/configuration before frontend; verify both-theme visuals and SMTP. Existing demo backend lacks the delegated-access prerequisite; stage all unapplied migrations when deploying there. README setup instructions and preference rule are updated; changelog remains at ten entries.
-
-### 2026-11-17: Activate public GitHub Pages hosting (Codex)
-- **What:** Confirmed Pages enabled and successfully published Glazed at the repository's public Pages URL.
-- **Why:** Finish the requested public frontend and automatic publishing after the user enabled GitHub Actions as the Pages source.
-- **How:** Dispatched existing workflow `44113413468`; build/deploy both succeeded, including 334 tests, lint, typecheck and production build. Public root and six assets return 200; custom signup deep-link fallback loads the app; People CORS permits Pages. No new product/UI changes; existing design exceptions preserved and browser visuals remain unverified.
-- **Files:** README.md, PROGRESS.md and docs/progress-archive/2026-11.md; GitHub Pages deployment state.
-- **Preferences learned:** None; implements existing GitHub Pages preference.
-- **Correction sweep:** Removed obsolete pending-enablement wording from current status/docs; historical logs retained.
-- **Rework:** Earlier deployment failed only because Pages had not yet been enabled; rerun succeeded after the setting changed.
-- **Follow-ups:** Verify automatic deployment on the handoff commit; optional browser review and ERP owner bootstrap remain.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
