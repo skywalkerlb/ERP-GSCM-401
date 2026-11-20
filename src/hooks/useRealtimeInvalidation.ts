@@ -29,20 +29,23 @@ export function useRealtimeInvalidation(options: { toasts?: boolean } = {}): { s
   const { toasts = true } = options;
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const businessId = profile?.business_id;
   const [status, setStatus] = useState<ConnectionStatus>('connecting');
   const toastRef = useRef(toast);
   toastRef.current = toast;
   const lastToast = useRef(0);
   const userId = user?.id ?? null;
+  const customer = profile?.role === 'customer';
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !userId) return;
+    if (!isSupabaseConfigured || !userId || !businessId) return;
     setStatus('connecting');
     const channel = supabase
-      .channel(`app-events-${userId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_events' }, (payload) => {
-        const event = payload.new as AppEvent;
+      .channel(`business:${businessId}:${customer ? `customer:${userId}` : 'events'}`, { config: { private: true } })
+      .on('broadcast', { event: 'app-event' }, (message) => {
+        const event = message.payload as AppEvent & { business_id?: string };
+        if (event.business_id !== businessId) return;
         for (const queryKey of keysForTopic(event.topic)) {
           void queryClient.invalidateQueries({ queryKey });
         }
@@ -59,7 +62,7 @@ export function useRealtimeInvalidation(options: { toasts?: boolean } = {}): { s
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [userId, queryClient, toasts]);
+  }, [userId, businessId, customer, queryClient, toasts]);
 
   return { status };
 }

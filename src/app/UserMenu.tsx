@@ -60,6 +60,7 @@ export function UserMenu() {
               {profile && <Badge tone="accent">{sentenceCase(profile.role)}</Badge>}
             </div>
           </div>
+          <Button variant="ghost" role="menuitem" onClick={() => { setOpen(false); navigate('/create-business'); }}>Create a business</Button>
           <Button variant="ghost" icon="logout" role="menuitem" onClick={handleSignOut}>
             Sign out
           </Button>

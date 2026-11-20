@@ -38,7 +38,7 @@ try {
       const { error } = await client.auth.admin.updateUserById(user.id, { password, email_confirm: true });
       if (error) throw error;
     }
-    await sql`insert into profiles(user_id,full_name,role) values (${user.id},${"Demo " + role},${role}::app_role) on conflict(user_id) do update set role=excluded.role`;
+    await sql`insert into profiles(user_id,full_name,role) values (${user.id},${"Demo " + role},${role}::app_role) on conflict(business_id,user_id) do update set role=excluded.role`;
   }
   console.log('Isolated demo data and six role accounts are ready. Configure DEMO_MODE=true on its People function.');
 } finally { await sql.end(); }

@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase, isDemo, exitDemo } from '@/lib/supabase';
+import { selectedBusiness, selectBusiness } from '@/lib/businessContext';
 import { queryClient } from '@/lib/queryClient';
 import { USERNAME_PATTERN, normalizeUsername, usernameEmail } from '../../supabase/functions/_shared/identity';
 
 export type AppRole = 'owner' | 'admin' | 'manager' | 'cashier' | 'baker' | 'customer';
 export interface Profile {
   user_id: string;
+  business_id?: string;
   full_name: string | null;
   role: AppRole;
   home_location_id: number | null;
@@ -58,8 +60,18 @@ export function friendlyAuthError(error: unknown): string {
 }
 
 async function fetchProfile(userId: string): Promise<Profile | null> {
+  const memberships = await supabase.rpc('list_business_memberships');
+  if (memberships.error) throw memberships.error;
+  const rows = memberships.data as Array<Profile & { business_id: string; name: string; slug: string }>;
+  let membership = rows?.find(row => row.business_id === selectedBusiness()?.business_id);
+  const isShop = window.location.pathname.includes('/shop');
+  if (!membership && !isShop && rows?.length) { membership = rows[0]; selectBusiness(membership); }
+  if (isShop && !membership) {
+    const joined = await supabase.rpc('ensure_business_customer');
+    if (joined.error) throw joined.error;
+  }
   const { data, error } = await supabase.from('profiles')
-    .select('user_id, full_name, role, home_location_id, customer_id').eq('user_id', userId).maybeSingle();
+    .select('business_id, user_id, full_name, role, home_location_id, customer_id').eq('user_id', userId).maybeSingle();
   if (error) throw error;
   return data as Profile | null;
 }
@@ -84,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   currentUserId.current = userId;
   const applyProfile = useCallback((next: Profile | null) => {
     const previous = currentProfile.current;
-    if (previous?.user_id !== next?.user_id || previous?.role !== next?.role || previous?.home_location_id !== next?.home_location_id || previous?.customer_id !== next?.customer_id) queryClient.clear();
+    if (previous?.business_id !== next?.business_id || previous?.user_id !== next?.user_id || previous?.role !== next?.role || previous?.home_location_id !== next?.home_location_id || previous?.customer_id !== next?.customer_id) queryClient.clear();
     currentProfile.current = next;
     setProfile(next);
   }, []);
@@ -134,8 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const interval = window.setInterval(() => { if (document.visibilityState === 'visible') void refresh(); }, 30_000);
     window.addEventListener('focus', onFocus);
     // Treat realtime payloads only as invalidation signals; read access through RLS again.
-    const channel = supabase.channel(`account-access-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `user_id=eq.${userId}` }, onFocus)
+    const channel = supabase.channel(`account:${userId}:access`, { config: { private: true } })
+      .on('broadcast', { event: 'access-change' }, onFocus)
       .subscribe();
     return () => { active = false; window.clearInterval(interval); window.removeEventListener('focus', onFocus); void supabase.removeChannel(channel); };
   }, [userId, applyProfile]);
@@ -162,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const normalized = normalizeUsername(username);
       const { data, error } = await supabase.auth.signUp({ email: usernameEmail(normalized), password,
-        options: { data: { username: normalized, full_name: normalized } } });
+        options: { data: { username: normalized, full_name: normalized, ...(selectedBusiness()?.slug && selectedBusiness()!.slug !== 'glazed' ? { registration_intent: 'business' } : {}) } } });
       if (error) return { error: friendlyAuthError(error) };
       if (!data.session || !data.user) return { error: 'Account setup is incomplete. Ask the platform owner to finish account setup, then try signing in again.' };
       // Establish the session even if profile loading fails, so account setup can be retried.

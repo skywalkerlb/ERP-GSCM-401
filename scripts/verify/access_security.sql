@@ -6,8 +6,11 @@ grant select on access_fixtures to authenticated;
 insert into access_fixtures values ('admin',gen_random_uuid()),('manager',gen_random_uuid()),('customer',gen_random_uuid()),('cashier',gen_random_uuid()),('baker',gen_random_uuid());
 insert into auth.users(id,email,raw_app_meta_data,raw_user_meta_data)
 select id,'access-test-'||id||'@example.invalid',case when k='customer' then '{}'::jsonb else jsonb_build_object('role',k) end,'{}'::jsonb from access_fixtures;
+-- Staff fixtures are assigned by trusted administration, never signup metadata.
+update public.profiles p set role=f.k::app_role from access_fixtures f
+where p.user_id=f.id and p.business_id=public._active_business_id();
 -- Existing owner is never altered. Create a fixture owner only when setup has not assigned one.
-insert into access_fixtures select 'owner',user_id from profiles where role='owner';
+insert into access_fixtures select 'owner',user_id from profiles where role='owner' and business_id=public._active_business_id();
 do $$
 declare v_id uuid:=gen_random_uuid();
 begin

@@ -1,3 +1,4 @@
+import { businessStorageKey } from '@/lib/businessContext';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -35,7 +36,7 @@ export function useLocations() {
   });
 }
 
-const STORAGE_KEY = 'glazed.location';
+const storageKey = () => businessStorageKey('glazed.location');
 
 export interface LocationContextValue {
   locations: Location[];
@@ -55,7 +56,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const { data, isLoading } = useLocations();
   const locations = useMemo(() => (data ?? []).filter((l) => l.is_active !== false), [data]);
   const [selected, setSelected] = useState<number | null>(() => {
-    const saved = Number(readStorage(STORAGE_KEY));
+    const saved = Number(readStorage(storageKey()));
     return Number.isFinite(saved) && saved > 0 ? saved : null;
   });
 
@@ -76,13 +77,13 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isLoading && data && selected !== null && !locations.some((l) => l.id === selected)) {
       setSelected(null);
-      writeStorage(STORAGE_KEY, null);
+      writeStorage(storageKey(), null);
     }
   }, [data, isLoading, locations, selected]);
 
   const setLocationId = useCallback((id: number) => {
     setSelected(id);
-    writeStorage(STORAGE_KEY, String(id));
+    writeStorage(storageKey(), String(id));
   }, []);
 
   const value = useMemo<LocationContextValue>(

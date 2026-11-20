@@ -1,3 +1,4 @@
+import { shopPath } from '@/lib/businessContext';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Badge, Button, Card, EmptyState, PageHeader, Select, Skeleton, Tabs, TextField } from '@/components';
@@ -154,7 +155,7 @@ export default function PortalHomePage() {
           <span className="text-body-strong">
             {formatNumber(cart.count)} {cart.count === 1 ? 'item' : 'items'} in your cart · {formatMoney(subtotal)}
           </span>
-          <Button variant="primary" iconRight="chevronRight" onClick={() => navigate('/shop/cart')}>
+          <Button variant="primary" iconRight="chevronRight" onClick={() => navigate(shopPath('/cart'))}>
             View cart
           </Button>
         </div>

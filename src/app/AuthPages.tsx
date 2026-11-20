@@ -12,7 +12,7 @@ import { homeFor } from '@/hooks/useRole';
 import { isDemoConfigured, enterDemo, isDemo, supabase } from '@/lib/supabase';
 import { ThemeToggle } from './ThemeToggle';
 import { appUrl } from '@/lib/appUrl';
-import { BusinessSetupLink } from './BusinessSetupLink';
+import { selectedBusiness, shopPath } from '@/lib/businessContext';
 
 const DEMO_ROLES = [
   { value: 'owner', label: 'Owner' }, { value: 'admin', label: 'Admin' },
@@ -21,6 +21,7 @@ const DEMO_ROLES = [
 ];
 
 function DemoSelector() {
+  const [expanded, setExpanded] = useState(false);
   const [role, setRole] = useState<AppRole>('manager');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -30,9 +31,9 @@ function DemoSelector() {
     catch (cause) { setError(cause instanceof Error ? cause.message : 'The demo could not open. Try again.'); }
     finally { setBusy(false); }
   }
+  if (!expanded) return <p className="auth-foot"><Button variant="ghost" onClick={() => setExpanded(true)} aria-expanded={false}>Try the demo</Button></p>;
   return <section className="auth-form" aria-label="Try the demo">
     <div className="auth-divider text-label">Try the demo</div>
-    <p className="gz-muted text-body-sm">Choose a role to explore sample data. No username, password or account creation needed.</p>
     {error && <Alert tone="danger" title="Could not open demo">{error}</Alert>}
     <Select label="Demo role" options={DEMO_ROLES} value={role} onChange={(event) => setRole(event.target.value as AppRole)} disabled={busy} />
     <Button variant="secondary" onClick={() => void openDemo()} disabled={busy || !isDemoConfigured}>{busy ? 'Opening demo' : error ? 'Try demo again' : 'Enter demo'}</Button>
@@ -46,7 +47,7 @@ function hasAuthLinkError(): boolean {
     return query.has('error') || query.has('error_code') || hash.has('error') || hash.has('error_code');
 }
 
-export function AuthFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+export function AuthFrame({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const [linkError] = useState(hasAuthLinkError);
   return (
     <div className="auth-page">
@@ -59,9 +60,7 @@ export function AuthFrame({ title, subtitle, children }: { title: string; subtit
           <h1 className="text-h1" style={{ margin: 0 }}>
             {title}
           </h1>
-          <p className="gz-muted" style={{ margin: 0 }}>
-            {subtitle}
-          </p>
+          {subtitle && <p className="gz-muted" style={{ margin: 0 }}>{subtitle}</p>}
         </div>
         <Card>{linkError && <Alert tone="warning" title="This email link could not be used">The link may have expired or already been used. Sign in with your username and password, or request a new password reset link for an existing email account.</Alert>}{children}</Card>
       </div>
@@ -71,8 +70,8 @@ export function AuthFrame({ title, subtitle, children }: { title: string; subtit
 
 /** Where to go after signing in: staff to their home screen (or where they were headed), customers to /shop. */
 function destination(profile: Profile, from: string | undefined): string {
-  if (profile.role === 'customer') return from?.startsWith('/shop') ? from : '/shop';
-  return from && !from.startsWith('/shop') && from !== '/login' ? from : homeFor(profile.role);
+  if (profile.role === 'customer') return from?.includes('/shop') ? from : shopPath();
+  return from && !from.includes('/shop') && from !== '/login' ? from : homeFor(profile.role);
 }
 
 function useRedirectIfSignedIn(): ReactNode {
@@ -139,17 +138,9 @@ export function LoginPage() {
   const redirect = useRedirectIfSignedIn();
   if (redirect) return <>{redirect}</>;
   return (
-    <AuthFrame title="Sign in to Glazed" subtitle="Orders, baking, stock and books for every shop.">
+    <AuthFrame title="Sign in to Glazed">
       <SignInForm />
-      <BusinessSetupLink />
-      <p className="auth-foot text-body-sm">Invited as an admin or employee? Open your invitation email to choose a password. Your email is your username.</p>
-      <p className="auth-foot text-body-sm">New here? <Link className="gz-link" to="/shop/signup">Create an account</Link>. New accounts can order in the shop. An administrator or manager can grant staff access.</p>
-      <p className="auth-foot text-body-sm">
-        Ordering donuts for pickup?{' '}
-        <Link className="gz-link" to="/shop/login">
-          Go to the shop
-        </Link>
-      </p>
+      <p className="auth-foot text-body-sm"><Link className="gz-link" to="/create-business">Create a business</Link>{' · '}<Link className="gz-link" to={shopPath('/signup')}>Customer signup</Link></p>
       <DemoSelector />
     </AuthFrame>
   );
@@ -160,11 +151,11 @@ export function PortalLoginPage() {
   const redirect = useRedirectIfSignedIn();
   if (redirect) return <>{redirect}</>;
   return (
-    <AuthFrame title="Order fresh donuts" subtitle="Sign in to see what each shop has today and pick a pickup time.">
+    <AuthFrame title="Order fresh donuts" >
       <SignInForm />
       <p className="auth-foot text-body-sm">
         New here?{' '}
-        <Link className="gz-link" to="/shop/signup">
+        <Link className="gz-link" to={shopPath('/signup')}>
           Create an account
         </Link>
         {' '}or{' '}
@@ -215,7 +206,7 @@ export function PortalSignupPage() {
         </Button>
       </form>
       <p className="auth-foot text-body-sm">Your account starts with customer access. An administrator or manager can grant staff access.</p>
-      <p className="auth-foot text-body-sm">Already have an account? <Link className="gz-link" to="/shop/login">Sign in</Link></p>
+      <p className="auth-foot text-body-sm">Already have an account? <Link className="gz-link" to={shopPath('/login')}>Sign in</Link></p>
     </AuthFrame>
   );
 }
@@ -229,7 +220,7 @@ export function PasswordRecoveryPage() {
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('');
     try {
-      const { error: failure } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: appUrl('/update-password') });
+      const { error: failure } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: appUrl('/update-password') + (selectedBusiness()?.slug ? `?business=${encodeURIComponent(selectedBusiness()!.slug)}` : '') });
       if (failure) throw failure;
       setSent(true);
     } catch (cause) { setError(friendlyAuthError(cause)); }

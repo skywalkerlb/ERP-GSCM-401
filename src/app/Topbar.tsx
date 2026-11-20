@@ -8,6 +8,7 @@ import type { ConnectionStatus } from '@/hooks/useRealtimeInvalidation';
 import { OnlineUsers } from './OnlineUsers';
 import { QuickSearch } from './QuickSearch';
 import { ThemeToggle } from './ThemeToggle';
+import { BusinessSwitcher } from './BusinessSwitcher';
 import { UserMenu } from './UserMenu';
 
 const STATUS: Record<ConnectionStatus, { tone: 'success' | 'warning' | 'danger'; label: string; hint: string }> = {
@@ -55,6 +56,7 @@ export function Topbar({ onMenu, status, users }: TopbarProps) {
         Scan or search
       </Button>
       <div className="app-topbar__spacer" />
+      <BusinessSwitcher />
       <OnlineUsers users={users} />
       <span title={live.hint}>
         <Badge tone={live.tone}>{live.label}</Badge>

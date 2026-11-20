@@ -16,7 +16,7 @@ function paths(base = '/') {
   vm.runInNewContext(code, { exports: exported, __env: { BASE_URL: base }, URL, window: { location: { origin: 'https://glazed.example' } } });
   return exported;
 }
-function harness({ base = '/', configured = true, demoUrl = 'https://demo.supabase.co', profileRole, authError, profileError, missingSession = false, initialDemo = false } = {}) {
+function harness({ base = '/', configured = true, demoUrl = 'https://demo.supabase.co', profileRole, authError, profileError, missingSession = false, initialDemo = false, business = null } = {}) {
   const calls = [], redirects = [], configs = [], requests = [];
   const values = new Map([['glazed-auth-v1', 'real-session'], ...(initialDemo ? [['glazed-demo-v1', 'true'], ['glazed-demo-auth-v1', 'demo-session']] : [])]);
   const storage = { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };
@@ -40,7 +40,7 @@ function harness({ base = '/', configured = true, demoUrl = 'https://demo.supaba
   vm.runInNewContext(js, {
     exports: exported, ...paths(base), createClient: (url, key, options) => { configs.push({ url, key, options }); return client; },
     __env: { VITE_SUPABASE_URL: 'https://real.supabase.co', VITE_SUPABASE_ANON_KEY: 'real-public-key', ...(configured ? { VITE_DEMO_SUPABASE_URL: demoUrl, VITE_DEMO_SUPABASE_ANON_KEY: 'demo-public-key', VITE_DEMO_PASSWORD: 'demo-only-password' } : {}) },
-    URL, Error, TypeError, AbortSignal, isProtectedProject, sessionStorage: storage,
+    URL, Request, Headers, selectedBusiness: () => business, Error, TypeError, AbortSignal, isProtectedProject, sessionStorage: storage,
     fetch: async (input, init) => { requests.push({ input, init }); return new Response('{}'); },
     window: { location: { assign: destination => redirects.push(destination) } },
   });
@@ -78,7 +78,9 @@ test('invalid role cannot access arbitrary demo identity', async () => {
 });
 test('demo requests use bounded fetch and respect cancellation without changing real client fetch', async () => {
   const app = harness(); await app.enterDemo('manager');
-  assert.equal(app.configs[0].options.global, undefined);
+  const realSignal = new AbortController().signal;
+  await app.configs[0].options.global.fetch('https://real.supabase.co/test', { signal: realSignal });
+  assert.equal(app.requests.shift().init.signal, realSignal);
   const controller = new AbortController(); controller.abort();
   await app.configs.at(-1).options.global.fetch('https://demo.supabase.co/test', { signal: controller.signal });
   assert.equal(app.requests[0].init.signal.aborted, true);
@@ -101,4 +103,11 @@ test('demo exit returns to the repository login instead of the domain root', asy
   await app.exitDemo();
   assert.deepEqual(app.redirects, ['/ERP-GSCM-401/login']);
   assert.equal(app.values.get('glazed-auth-v1'), 'real-session');
+});
+
+test('business requests preserve authentication headers and use the selected business', async () => {
+  const app = harness({ business: { business_id: 'business-a' } });
+  await app.configs[0].options.global.fetch(new Request('https://real.supabase.co/rest/v1/items', { headers: { Authorization: 'Bearer identity' } }));
+  assert.equal(app.requests[0].init.headers.get('x-business-id'), 'business-a');
+  assert.equal(app.requests[0].init.headers.get('authorization'), 'Bearer identity');
 });

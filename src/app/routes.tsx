@@ -22,6 +22,7 @@ import { suppliersRoutes } from '@/features/suppliers/routes';
 import { AboutRoute } from './AboutPage';
 import PeoplePage from '@/features/people/PeoplePage';
 import CreateBusinessPage from './CreateBusinessPage';
+import { BusinessShopBoundary } from './BusinessShopBoundary';
 import { ACCESS } from './access';
 import { LoginPage, PortalLoginPage, PortalSignupPage, PasswordRecoveryPage, PasswordUpdatePage } from './AuthPages';
 import { NotFoundPage } from './NotFoundPage';
@@ -39,9 +40,14 @@ export const routes: RouteObject[] = [
   { path: '/update-password', element: <PasswordUpdatePage /> },
   { path: '/accept-invite', element: <PasswordUpdatePage /> },
   { path: '/about', element: <AboutRoute /> },
-  { path: '/shop/login', element: <PortalLoginPage /> },
-  { path: '/shop/signup', element: <PortalSignupPage /> },
-  { path: '/shop', element: <PortalLayout />, children: portalRoutes },
+  { path: '/shop/login', element: <BusinessShopBoundary legacy><PortalLoginPage /></BusinessShopBoundary> },
+  { path: '/shop/signup', element: <BusinessShopBoundary legacy><PortalSignupPage /></BusinessShopBoundary> },
+  { path: '/shop', element: <BusinessShopBoundary legacy><PortalLayout /></BusinessShopBoundary>, children: portalRoutes },
+  { path: '/b/:businessSlug', element: <BusinessShopBoundary />, children: [
+    { path: 'shop/login', element: <PortalLoginPage /> },
+    { path: 'shop/signup', element: <PortalSignupPage /> },
+    { path: 'shop', element: <PortalLayout />, children: portalRoutes },
+  ] },
   {
     path: '/',
     element: <StaffLayout />,

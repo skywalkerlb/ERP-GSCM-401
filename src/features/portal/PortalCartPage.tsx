@@ -1,3 +1,4 @@
+import { shopPath } from '@/lib/businessContext';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -98,7 +99,7 @@ export default function PortalCartPage() {
       void qc.invalidateQueries({ queryKey: queryKeys.catalog.all });
       void qc.invalidateQueries({ queryKey: queryKeys.mrp.all });
       toast.success('Order placed', `${res.so_number} for ${formatMoney(res.total)} before tax. Track your pickup in My orders.`);
-      navigate('/shop/orders');
+      navigate(shopPath('/orders'));
     },
   });
 
@@ -107,7 +108,7 @@ export default function PortalCartPage() {
     if (canPlace && !place.isPending) place.mutate();
   }
 
-  const crumbs = [{ label: 'Shop', to: '/shop' }, { label: 'Cart' }];
+  const crumbs = [{ label: 'Shop', to: shopPath('') }, { label: 'Cart' }];
   if (catalogQ.isLoading || shopsQ.isLoading) {
     return (
       <>
@@ -135,7 +136,7 @@ export default function PortalCartPage() {
           title="Your cart is empty"
           description="Add a few donuts and come back here to choose a pickup time."
           action={
-            <Button variant="primary" onClick={() => navigate('/shop')}>
+            <Button variant="primary" onClick={() => navigate(shopPath(''))}>
               Browse the shop
             </Button>
           }

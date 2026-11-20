@@ -1,3 +1,4 @@
+import { shopPath } from '@/lib/businessContext';
 import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -50,7 +51,7 @@ export default function PortalOrdersPage() {
     <>
       <PageHeader
         title="My orders"
-        breadcrumb={[{ label: 'Shop', to: '/shop' }, { label: 'My orders' }]}
+        breadcrumb={[{ label: 'Shop', to: shopPath('') }, { label: 'My orders' }]}
         subtitle="Your pickup orders. Status updates here as soon as the shop changes it."
       />
 
@@ -87,7 +88,7 @@ export default function PortalOrdersPage() {
           title={tab === 'upcoming' ? 'No orders on the way' : 'No past orders yet'}
           description={tab === 'upcoming' ? 'Order ahead and skip the line. Your next pickup will show up here.' : 'Finished and cancelled orders are kept here.'}
           action={
-            <Button variant="primary" onClick={() => navigate('/shop')}>
+            <Button variant="primary" onClick={() => navigate(shopPath(''))}>
               Browse the shop
             </Button>
           }

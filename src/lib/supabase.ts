@@ -1,3 +1,4 @@
+import { selectedBusiness } from './businessContext';
 import { createClient } from '@supabase/supabase-js';
 import type { AppRole } from '@/hooks/useAuth';
 import { appPath } from '@/lib/appUrl';
@@ -25,10 +26,17 @@ const demoFetch: typeof fetch = (input, init) => fetch(input, {
   ...init,
   signal: AbortSignal.any([AbortSignal.timeout(15_000), ...(init?.signal ? [init.signal] : [])]),
 });
+const businessFetch: typeof fetch = (input, init) => {
+  const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+  const business = selectedBusiness();
+  const target = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+  if (business && (target.pathname.startsWith('/rest/v1/') || target.pathname.startsWith('/functions/v1/'))) headers.set('x-business-id', business.business_id);
+  return (isDemo ? demoFetch : fetch)(input, { ...init, headers });
+};
 export const supabase = createClient(url || 'http://localhost:54321', anonKey || 'missing-anon-key', {
   auth: { ...options, storageKey: isDemo ? 'glazed-demo-auth-v1' : 'glazed-auth-v1', ...(isDemo ? { storage: sessionStorage } : {}) },
   realtime: { params: { eventsPerSecond: 10 } },
-  ...(isDemo ? { global: { fetch: demoFetch } } : {}),
+  global: { fetch: businessFetch },
 });
 const demoEmails: Record<AppRole, string> = {
   owner: 'owner@example.com', admin: 'admin@example.com', manager: 'manager@example.com',
@@ -51,12 +59,14 @@ export async function enterDemo(role: AppRole): Promise<void> {
     const { data: profile, error: profileError } = await client.from('profiles')
       .select('role').eq('user_id', data.user.id).single();
     if (profileError || profile?.role !== role) throw new Error('The selected demo role is not ready. Try another role or ask the platform owner to check demo setup.');
+    sessionStorage.removeItem('glazed-demo-business-v1');
     sessionStorage.setItem('glazed-demo-v1', 'true');
     window.location.assign(appPath(demoHomes[role]));
   } catch (cause) {
     // Never globally sign out a shared demo identity or touch the visitor's real account session.
     try { await client.auth.signOut({ scope: 'local' }); } catch { /* Clear this tab even if offline. */ }
     sessionStorage.removeItem('glazed-demo-auth-v1');
+    sessionStorage.removeItem('glazed-demo-business-v1');
     sessionStorage.removeItem('glazed-demo-v1');
     if (cause instanceof Error && (cause.name === 'TimeoutError' || cause.name === 'AbortError' || cause instanceof TypeError)) {
       throw new Error('Could not reach the demo server. Check your connection and try again.');
@@ -67,6 +77,7 @@ export async function enterDemo(role: AppRole): Promise<void> {
 export async function exitDemo(): Promise<void> {
   try { await supabase.auth.signOut({ scope: 'local' }); }
   finally {
+    sessionStorage.removeItem('glazed-demo-business-v1');
     sessionStorage.removeItem('glazed-demo-v1');
     sessionStorage.removeItem('glazed-demo-auth-v1');
     window.location.assign(appPath('/login'));

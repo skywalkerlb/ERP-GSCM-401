@@ -7,6 +7,7 @@ import { isSupabaseConfigured, isDemo, exitDemo } from '@/lib/supabase';
 import { Alert } from '@/components/Alert';
 import { Button } from '@/components/Button';
 import { SetupScreen } from './SetupScreen';
+import { BusinessRouteGate } from './BusinessShopBoundary';
 import { router } from './routes';
 
 export function App() {
@@ -14,9 +15,9 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <AuthProvider>
+        <BusinessRouteGate><AuthProvider>
           <>{isDemo && <Alert tone="info" title="Demo — sample data" action={<Button onClick={() => void exitDemo()}>Exit demo</Button>}>Changes stay in the demo sandbox. People invitations are simulated.</Alert>}<RouterProvider router={router} /></>
-        </AuthProvider>
+        </AuthProvider></BusinessRouteGate>
       </ToastProvider>
     </QueryClientProvider>
   );

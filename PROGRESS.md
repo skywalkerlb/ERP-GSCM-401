@@ -12,17 +12,29 @@
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
-- None. Cleanup, setup implementation and integrated Pages deployment verification are complete (run 44643855828).
+- Implementing membership-authorized private Realtime event/presence channels alongside approved multi-business registration in isolated `/private/tmp/glazed-multi-business`: business-scoped roles/data, shop links and compact login. Public signup remains gated until security tests pass. README runtime guidance and CONTRACT §11 now describe the implemented tenant interfaces and staged rollout.
+- Previous real-business cleanup/setup publication is complete (run 44643855828); current multi-business work is not yet deployed.
 
 ## Next Steps
+0. Finish fresh multi-business migration rehearsal and owner/customer signup privacy checks, then browser verification before deployment.
 1. Real-business owner/admin: Settings → Locations → New location; enter real shop address/hours and review tax rates.
 2. Add suppliers, ingredients/products, recipes and opening stock/accounting balances; assign staff locations in People.
 3. Configure SMTP before inviting staff. Retain private backup until clean start is accepted. Forecasts and usage-based purchasing metrics need real history.
 
 ## Open Questions for the User
-- Project due date remains unspecified.
+- Project due date remains unspecified; no additional business-registration decisions are pending.
 
 ## Recent Changes
+### 2026-11-19: Implement independent business registration (Codex)
+- **What:** Started approved business isolation, public owner signup, business switching/shop links and compact login in an isolated checkout.
+- **Why:** Users need independent businesses and a login screen with less text.
+- **How:** Added caller-JWT business creation and service-only business/actor-scoped People directory/access APIs; global password changes by staff are forbidden. Nineteen endpoint tests and the full rollback-only isolation/role/FK/Realtime/reset matrix pass after fresh migration rehearsal, including signup intent privacy, a closed registration gate, 216 actor/target/requested-role combinations checked against both service authorization and assignment, 36 self-change combinations and 36 invitation-role combinations. Actual stored Realtime message tests also pass: exact business-topic reads, valid own presence probes, denied foreign-topic inserts, and own-account-only access invalidations. Added scoped private broadcast/presence channels with stored-message topic boundaries and identity-private access invalidations and selected-business request-header regression checks and lazy per-business cart initialization and fail-closed tenant-scoped demo resets; retired legacy global cleanup/owner-bootstrap on tenant schemas. Tenant migration passed on a fresh local database; two-business creation, repeated identifiers, forged-header denial, customer join and owner switching smoke checks passed with rollback. Parallel database, frontend and security work; preserve current real business and isolated public demo. Registration stays gated until end-to-end isolation verification.
+- **Files:** Business migrations/APIs, frontend/auth and verification suites (in progress).
+- **Preferences learned:** Multiple businesses per login; independent business shop links; owner email/password signup without setup code/email verification; compact secondary links and expandable demo.
+- **Correction sweep:** Updated README §8.1/§8.5 preferences for compact login and independent businesses. Replace installation-wide onboarding with isolated business creation; preserve legacy real/demo access during migration.
+- **Rework:** Tenant insert guard needed non-bypass definer execution to call private identity helpers; corrected and reran smoke checks successfully. Security audit caught original-business customer creation for independent owner/invitation signup; marker-based signup now avoids unrelated membership. Scoped demo reset cycles were found by the SQL matrix and corrected before deployment.
+- **Follow-ups:** Complete implementation, full migration rehearsal/security/browser checks, then deploy. No new design exceptions authorized.
+
 ### 2026-11-19: Prepare real-business location setup (Codex)
 - **What:** Added owner/admin location create/edit dialog, active-location selection and empty-business guidance; About distinguishes real records from demo history.
 - **Why:** A clean business needs a way to create real shops without reopening owner registration.
@@ -30,7 +42,7 @@
 - **Files:** Settings location UI, location provider, app shell, About and PROGRESS.
 - **Preferences learned:** Empty permanent business; preserve genuine accounts and public demo.
 - **Correction sweep:** N/A.
-- **Rework:** None.
+- **Rework:** Local scoped reset rehearsal caught sales/order back-link cycles; clear only the selected business’s nullable back-links before dependency-ordered deletion.
 - **Design review:** Final design lint passed. Reviewed Glazed component props, light/dark screenshots, one primary action per view/dialog, semantic status tones, sentence-case voice, field labels, shared focus rings, dialog focus trap/return and close-button aria-label. No new deviations. Existing README §8.1 exceptions retained: Barcode Labels capitalization and sidebar Glazed! punctuation.
 - **Follow-ups:** Backend/UI integrated; both themes visually reviewed and browser tested. No design exceptions.
 ### 2026-11-19: Clean permanent business database (Codex)
@@ -112,16 +124,6 @@
 - **Rework:** None.
 - **Design review:** Re-ran full design lint after the hook reminder: passed. New UI uses existing Glazed components and inherited theme tokens, visible field labels and standard focus styles; conditional views have one primary action, sentence-case copy and semantic status tones. No new design deviations. Existing approved Barcode Labels capitalization and sidebar Glazed! exceptions remain unchanged. Light/dark browser visual review remains unverified because browser tab creation failed.
 - **Follow-ups:** Deploy backend/configuration before frontend; verify both-theme visuals and SMTP. Existing demo backend lacks the delegated-access prerequisite; stage all unapplied migrations when deploying there. README setup instructions and preference rule are updated; changelog remains at ten entries.
-
-### 2026-11-17: Activate public GitHub Pages hosting (Codex)
-- **What:** Confirmed Pages enabled and successfully published Glazed at the repository's public Pages URL.
-- **Why:** Finish the requested public frontend and automatic publishing after the user enabled GitHub Actions as the Pages source.
-- **How:** Dispatched existing workflow `44113413468`; build/deploy both succeeded, including 334 tests, lint, typecheck and production build. Public root and six assets return 200; custom signup deep-link fallback loads the app; People CORS permits Pages. No new product/UI changes; existing design exceptions preserved and browser visuals remain unverified.
-- **Files:** README.md, PROGRESS.md and docs/progress-archive/2026-11.md; GitHub Pages deployment state.
-- **Preferences learned:** None; implements existing GitHub Pages preference.
-- **Correction sweep:** Removed obsolete pending-enablement wording from current status/docs; historical logs retained.
-- **Rework:** Earlier deployment failed only because Pages had not yet been enabled; rerun succeeded after the setting changed.
-- **Follow-ups:** Verify automatic deployment on the handoff commit; optional browser review and ERP owner bootstrap remain.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`

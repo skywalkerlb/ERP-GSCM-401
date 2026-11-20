@@ -2,8 +2,8 @@ import { isDemo, supabase } from '@/lib/supabase';
 export interface OnboardingStatus { available: boolean }
 export interface SetupLocation { id: number; name: string }
 export interface OnboardingInput {
-  action: 'status' | 'locations' | 'complete'; setup_code?: string; business_name?: string;
-  location_id?: number | null; location_name?: string; location_address?: string;
+  action: 'status' | 'create'; business_name?: string;
+  location_name?: string; location_address?: string; request_id?: string;
 }
 /** Credentials stay in request bodies and memory, never URLs or browser storage. */
 export async function onboardingAction<T>(input: OnboardingInput): Promise<T> {

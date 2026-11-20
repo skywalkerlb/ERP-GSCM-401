@@ -6,6 +6,7 @@ select set_config('glazed.owner_email', :'owner_email', true);
 do $$
 declare v_id uuid;
 begin
+  if to_regclass('public.businesses') is not null then raise exception 'Legacy owner bootstrap is retired. Use business registration.'; end if;
   if not public._is_system() then raise exception 'Trusted database connection required.'; end if;
   select id into strict v_id from auth.users
     where lower(email)=lower(current_setting('glazed.owner_email')) and email_confirmed_at is not null;

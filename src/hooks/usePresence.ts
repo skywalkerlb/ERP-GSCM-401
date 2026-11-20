@@ -29,13 +29,14 @@ export function usePresence(locationId: number | null = null): { users: OnlineUs
   const channelRef = useRef<RealtimeChannel | null>(null);
   const userId = user?.id ?? null;
   const name = profile?.full_name ?? user?.email ?? 'Someone';
+  const businessId = profile?.business_id;
   const role = profile?.role ?? 'staff';
   const latest = useRef({ name, role, locationId });
   latest.current = { name, role, locationId };
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !userId) return;
-    const channel = supabase.channel('glazed-presence', { config: { presence: { key: userId } } });
+    if (!isSupabaseConfigured || !userId || !businessId || role === 'customer') return;
+    const channel = supabase.channel(`business:${businessId}:presence`, { config: { private: true, presence: { key: userId } } });
     channelRef.current = channel;
 
     channel
@@ -63,7 +64,7 @@ export function usePresence(locationId: number | null = null): { users: OnlineUs
       setUsers([]);
       void supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, businessId, role]);
 
   // Tell the others when your name, role or location changes.
   useEffect(() => {

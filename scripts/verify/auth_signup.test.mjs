@@ -10,11 +10,11 @@ const source = readFileSync(new URL('../../src/hooks/useAuth.tsx', import.meta.u
 const js = ts.transpileModule(source.replace(/^import .*;$/gm, ''), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
 }).outputText;
-function harness({ demo = false, session = null, profile = { user_id: 'new-user', role: 'customer' }, signupResult = { data: { session: { user: { id: 'new-user' } }, user: { id: 'new-user' } }, error: null } } = {}) {
+function harness({ business = null, demo = false, session = null, profile = { user_id: 'new-user', role: 'customer' }, signupResult = { data: { session: { user: { id: 'new-user' } }, user: { id: 'new-user' } }, error: null } } = {}) {
   const exported = {}, effects = [], calls = [], states = [], timers = [], listeners = {};
   let stateIndex = 0, nextProfile = profile, profileFailure = null, clears = 0;
   vm.runInNewContext(js, {
-    exports: exported, ...identity,
+    exports: exported, ...identity, selectedBusiness: () => business, selectBusiness: () => {},
     require: () => ({ jsx: (type, props) => ({ type, props }) }),
     createContext: () => ({ Provider: 'AuthProvider' }),
     useCallback: fn => fn, useRef: current => ({ current }), useMemo: fn => fn(),
@@ -25,13 +25,15 @@ function harness({ demo = false, session = null, profile = { user_id: 'new-user'
     },
     isSupabaseConfigured: true, isDemo: demo,
     queryClient: { clear: () => { clears++; } },
-    window: { location: { origin: 'https://glazed.example' }, setInterval: fn => { timers.push(fn); return 1; }, clearInterval: () => {}, addEventListener: (event, fn) => { listeners[event] = fn; }, removeEventListener: () => {} },
+    window: { location: { origin: 'https://glazed.example', pathname: '/login' }, setInterval: fn => { timers.push(fn); return 1; }, clearInterval: () => {}, addEventListener: (event, fn) => { listeners[event] = fn; }, removeEventListener: () => {} },
     document: { visibilityState: 'visible' },
     supabase: {
-      channel: () => ({ on: (_event, filter, callback) => {
+      rpc: async () => ({ data: [{ business_id: "00000000-0000-4000-8000-000000000001", name: "Glazed", slug: "glazed", ...nextProfile }], error: null }),
+      channel: (name, options) => { listeners.channel = { name, options }; return { on: (event, filter, callback) => {
+        listeners.event = event;
         listeners.realtime = callback; listeners.filter = filter;
         return { subscribe: () => ({}) };
-      } }),
+      } }; },
       removeChannel: async () => { calls.push('removeChannel'); },
       auth: { signUp: async input => { calls.push(input); return signupResult; }, signInWithPassword: async input => { calls.push(input); return signupResult; } },
       from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: nextProfile, error: profileFailure }) }) }) }),
@@ -94,7 +96,10 @@ test('focus and polling refresh access and discard cached privileged data on rol
   await tick();
   assert.equal(app.clears(), afterInitial, 'unchanged access keeps the cache');
   app.setProfile({ user_id: 'user-1', role: 'customer' });
-  assert.equal(app.listeners.filter.filter, 'user_id=eq.user-1');
+  assert.equal(app.listeners.channel.name, 'account:user-1:access');
+  assert.equal(app.listeners.channel.options.config.private, true);
+  assert.equal(app.listeners.event, 'broadcast');
+  assert.equal(app.listeners.filter.event, 'access-change');
   app.listeners.realtime({ new: { role: 'owner' } });
   await tick();
   assert.equal(app.clears(), afterInitial + 1);
@@ -109,4 +114,11 @@ test('focus and polling refresh access and discard cached privileged data on rol
   assert.equal(app.clears(), afterInitial + 2);
   cleanup();
   assert.ok(app.calls.includes('removeChannel'));
+});
+
+test('customer signup for another business creates no original-business profile through metadata', async () => {
+  const app = harness({ business: { business_id: '00000000-0000-4000-8000-000000000002', slug: 'second-shop' } });
+  await app.value.signUp(valid);
+  assert.equal(app.calls[0].options.data.registration_intent, 'business');
+  assert.equal(Object.hasOwn(app.calls[0].options.data, 'role'), false);
 });

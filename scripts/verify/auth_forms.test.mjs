@@ -18,7 +18,7 @@ function mount(name, { base = '/', auth = {}, error = null, search = '', hash = 
   const pathCode = compile('../../src/lib/appUrl.ts').replaceAll('import.meta.env', '__env');
   vm.runInNewContext(pathCode, { exports: pathHelpers, __env: { BASE_URL: base }, URL, window: { location: { origin: 'https://glazed.example' } } });
   vm.runInNewContext(guardProps ? guard : pages, {
-    exports: exported, ...pathHelpers,
+    exports: exported, ...pathHelpers, selectedBusiness: () => null, shopPath: (suffix = '') => '/shop' + suffix,
     require: () => ({ jsx: (type, props) => ({ type, props }), jsxs: (type, props) => ({ type, props }), Fragment: 'Fragment' }),
     useState: initial => { const i = index++; if (!(i in state)) state[i] = typeof initial === 'function' ? initial() : initial; return [state[i], next => { state[i] = next; }]; },
     useAuth: () => ({ session: null, profile: null, loading: false, profileError: null,

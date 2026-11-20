@@ -91,6 +91,8 @@ async function truncateAll(sql: Sql) {
   } catch (err: any) {
     log(`_reset_demo_data not available (${String(err?.message ?? err).slice(0, 80)}); truncating tables directly`);
   }
+  const [tenantSchema] = await (sql as any)`select to_regclass('public.businesses') is not null as present`;
+  if (tenantSchema.present) throw new Error('Tenant-aware demo reset failed; refusing an unscoped table reset.');
   const rows = await (sql as any)`select tablename from pg_tables where schemaname = 'public'`;
   const tables = rows.map((r: any) => r.tablename).filter((t: string) => !KEEP_TABLES.includes(t));
   log(`Truncating ${tables.length} tables (keeping ${KEEP_TABLES.join(', ')})`);
@@ -343,7 +345,7 @@ async function authUsers(sql: Sql, ids: Ids) {
       }
       await (tx as any).unsafe(
         `insert into profiles (user_id, full_name, role, home_location_id, customer_id) values ($1, $2, $3::app_role, $4, $5)
-         on conflict (user_id) do update set full_name = excluded.full_name, role = excluded.role, home_location_id = excluded.home_location_id, customer_id = excluded.customer_id`,
+         on conflict (business_id, user_id) do update set full_name = excluded.full_name, role = excluded.role, home_location_id = excluded.home_location_id, customer_id = excluded.customer_id`,
         [uid, u.full_name, u.role, u.home ? ids.loc[u.home] : null, custId],
       );
     });

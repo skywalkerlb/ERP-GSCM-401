@@ -1,3 +1,4 @@
+import { shopPath } from '@/lib/businessContext';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
@@ -6,11 +7,12 @@ import { RequireRole } from '@/components/RequireRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealtimeInvalidation } from '@/hooks/useRealtimeInvalidation';
 import { cx } from '@/lib/cx';
+import { BusinessSwitcher } from './BusinessSwitcher';
 import { ThemeToggle } from './ThemeToggle';
 
 const LINKS: Array<{ to: string; label: string; icon: IconName; end?: boolean }> = [
-  { to: '/shop', label: 'Shop', icon: 'store', end: true },
-  { to: '/shop/orders', label: 'My orders', icon: 'clipboard' },
+  { to: shopPath(''), label: 'Shop', icon: 'store', end: true },
+  { to: shopPath('/orders'), label: 'My orders', icon: 'clipboard' },
 ];
 
 function PortalFrame() {
@@ -25,7 +27,7 @@ function PortalFrame() {
         Skip to content
       </a>
       <header className="portal-header">
-        <Logo to="/shop" />
+        <Logo to={shopPath('')} />
         <nav className="portal-nav" aria-label="Shop">
           {LINKS.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => cx('portal-link', isActive && 'is-active')}>
@@ -35,10 +37,11 @@ function PortalFrame() {
           ))}
         </nav>
         <div className="app-topbar__spacer" />
-        <NavLink to="/shop/cart" className={({ isActive }) => cx('portal-link', isActive && 'is-active')} aria-label="Cart">
+        <NavLink to={shopPath('/cart')} className={({ isActive }) => cx('portal-link', isActive && 'is-active')} aria-label="Cart">
           <Icon name="bag" size={18} />
           <span>Cart</span>
         </NavLink>
+        <BusinessSwitcher />
         <ThemeToggle />
         {name && <span className="app-hide-sm gz-muted text-body-sm">{name}</span>}
         <Button
@@ -47,7 +50,7 @@ function PortalFrame() {
           aria-label="Sign out"
           onClick={async () => {
             await signOut();
-            navigate('/shop/login', { replace: true });
+            navigate(shopPath('/login'), { replace: true });
           }}
         />
       </header>
@@ -61,7 +64,7 @@ function PortalFrame() {
 /** Light layout for the customer portal at /shop. Requires a signed-in user. */
 export function PortalLayout() {
   return (
-    <RequireRole loginPath="/shop/login">
+    <RequireRole loginPath={shopPath('/login')}>
       <PortalFrame />
     </RequireRole>
   );

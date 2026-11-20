@@ -1,3 +1,5 @@
+import { appUrl } from '@/lib/appUrl';
+import { shopPath } from '@/lib/businessContext';
 import { LocationsCard } from './LocationsCard';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert } from '@/components/Alert';
@@ -227,6 +229,7 @@ export default function SettingsPage() {
       />
       <div className="gz-stack">
         <LocationsCard defaultTaxRate={settings.data?.default_tax_rate ?? DEFAULTS.default_tax_rate} />
+        <Card title="Customer shop"><p className="text-body-sm">Share this link with your customers.</p><a className="gz-link text-body-sm" href={appUrl(shopPath())}>{appUrl(shopPath())}</a></Card>
         {settings.isError && <Alert tone="danger" title="Could not load settings">{rpcErrorMessage(settings.error)} Refresh the page to try again.</Alert>}
         {saveError && <Alert tone="danger" title="Settings were not saved">{saveError}</Alert>}
         {result && <ImpactCard result={result.data} changed={result.changed} />}

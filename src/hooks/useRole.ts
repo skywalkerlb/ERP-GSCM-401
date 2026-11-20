@@ -1,3 +1,4 @@
+import { shopPath } from '@/lib/businessContext';
 import { useAuth, type AppRole } from './useAuth';
 
 export const STAFF_ROLES: AppRole[] = ['owner', 'admin', 'manager', 'cashier', 'baker'];
@@ -33,7 +34,7 @@ export function useRole(): RoleInfo {
 export function homeFor(role: AppRole | null | undefined): string {
   switch (role) {
     case 'customer':
-      return '/shop';
+      return shopPath('');
     case 'cashier':
       return '/pos';
     case 'baker':

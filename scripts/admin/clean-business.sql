@@ -1,6 +1,7 @@
 -- One-time operation, never a migration or demo-reset replacement.
 -- The runner locks all public tables + auth.users and checks the restored backup manifest.
 do $$ begin
+ if to_regclass('public.businesses') is not null then raise exception 'Legacy global cleanup is retired for multi-business databases.'; end if;
  if current_setting('glazed.cleanup_authorized',true) is distinct from 'wzsbtfzettxpczgulibd' then raise exception 'Verified cleanup runner required.'; end if;
  if (select count(*) from profiles where role='owner')<>1 or not exists(select 1 from business_setup where completed_at is not null and owner_id='62a267bd-8628-4a0e-80f0-4bc52aa5f3a7') then raise exception 'Owner state changed.'; end if;
 end $$;

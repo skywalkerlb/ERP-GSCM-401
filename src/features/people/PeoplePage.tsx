@@ -31,9 +31,8 @@ interface Directory {
   locations: { id: number; name: string }[];
 }
 interface PeopleAction {
-  action: 'list' | 'invite' | 'resend' | 'set-role' | 'reset-password';
+  action: 'list' | 'invite' | 'resend' | 'set-role';
   email?: string;
-  password?: string;
   userId?: string;
   role?: string;
   homeLocationId?: number | null;
@@ -60,6 +59,7 @@ function demoAction(input: PeopleAction, actor: Actor): Directory & { message?: 
     } catch { /* An old demo session starts again with the sample directory. */ }
   }
   if (!assignableRoles(actor.role).length) throw new Error('Staff management access is required.');
+  if (!['list', 'invite', 'resend', 'set-role'].includes(input.action)) throw new Error('Unsupported business account action. Password recovery belongs to the account holder.');
   if (input.action === 'list') return directory;
   if (input.action === 'invite') {
     const email = input.email!.trim().toLowerCase();
@@ -79,10 +79,6 @@ function demoAction(input: PeopleAction, actor: Actor): Directory & { message?: 
     if (input.action === 'set-role') {
       person.role = input.role as AppRole;
       person.home_location_id = input.homeLocationId ?? null;
-    } else if (input.action === 'reset-password') {
-      if (!person.username && !usernameFromEmail(person.email)) throw new Error('This account uses email password recovery.');
-      if (!input.password || input.password.length < 6) throw new Error('Use a password with at least 6 characters.');
-      // Never persist passwords, even in the demo directory.
     } else person.invited_at = new Date().toISOString();
   }
   sessionStorage.setItem(DEMO_KEY, JSON.stringify(directory));
@@ -92,7 +88,7 @@ function demoAction(input: PeopleAction, actor: Actor): Directory & { message?: 
 async function peopleAction(input: PeopleAction, actor: Actor): Promise<Directory & { message?: string }> {
   if (isDemo) return demoAction(input, actor);
   const { data, error } = await supabase.functions.invoke('people', { body: {
-    action: input.action, email: input.email, user_id: input.userId, password: input.password,
+    action: input.action, email: input.email, user_id: input.userId,
     role: input.role, home_location_id: input.homeLocationId,
   } });
   if (error) {
@@ -127,8 +123,6 @@ export default function PeoplePage() {
   const [role, setRole] = useState<string>(staffOptions[0]?.value ?? 'cashier');
   const [location, setLocation] = useState('');
   const [editing, setEditing] = useState<Person | null>(null);
-  const [resetting, setResetting] = useState<Person | null>(null);
-  const [newPassword, setNewPassword] = useState('');
   const [editRole, setEditRole] = useState<string>(staffOptions[0]?.value ?? 'cashier');
   const [editLocation, setEditLocation] = useState('');
   const [busy, setBusy] = useState(false);
@@ -138,8 +132,6 @@ export default function PeoplePage() {
   useEffect(() => {
     setRole(assignableRoles(profile?.role ?? 'customer').find((value) => value !== 'customer') ?? 'cashier');
     setEditing(null);
-    setResetting(null);
-    setNewPassword('');
   }, [profile?.role, profile?.user_id]);
 
   async function mutate(input: PeopleAction) {
@@ -150,9 +142,7 @@ export default function PeoplePage() {
       const result = await peopleAction(input, actor);
       setNotice(result.message ?? 'Access updated.');
       setEditing(null);
-      setResetting(null);
-      setNewPassword('');
-      if (input.action === 'invite') setEmail('');
+          if (input.action === 'invite') setEmail('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not save access. Try again.');
     } finally {
@@ -176,7 +166,7 @@ export default function PeoplePage() {
       const status = person.status ?? (person.email_confirmed_at ? 'active' : person.invited_at ? 'invited' : 'unconfirmed');
       return <Badge tone={status === 'active' ? 'success' : 'info'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     } },
-    { key: 'actions', header: 'Actions', render: (person) => !canManageAccount(actor.role, person.role, actor.user_id, person.user_id) ? <span className="gz-muted">Access is protected</span> : <div className="gz-row"><Button size="sm" disabled={busy} aria-label={`Edit access for ${accountName(person)}`} onClick={() => { setResetting(null); setNewPassword(''); setEditing(person); setEditRole(person.role); setEditLocation(person.home_location_id === null ? '' : String(person.home_location_id)); }}>Edit access</Button>{(person.username || usernameFromEmail(person.email)) && <Button size="sm" disabled={busy} aria-label={`Reset password for ${accountName(person)}`} onClick={() => { setEditing(null); setResetting(person); setNewPassword(''); }}>Reset password</Button>}{(person.status === 'invited' || (person.invited_at && !person.email_confirmed_at)) && <Button size="sm" disabled={busy} aria-label={`Resend invitation to ${accountName(person)}`} onClick={() => void mutate({ action: 'resend', userId: person.user_id })}>Resend invitation</Button>}</div> },
+    { key: 'actions', header: 'Actions', render: (person) => !canManageAccount(actor.role, person.role, actor.user_id, person.user_id) ? <span className="gz-muted">Access is protected</span> : <div className="gz-row"><Button size="sm" disabled={busy} aria-label={`Edit access for ${accountName(person)}`} onClick={() => { setEditing(person); setEditRole(person.role); setEditLocation(person.home_location_id === null ? '' : String(person.home_location_id)); }}>Edit access</Button>{(person.status === 'invited' || (person.invited_at && !person.email_confirmed_at)) && <Button size="sm" disabled={busy} aria-label={`Resend invitation to ${accountName(person)}`} onClick={() => void mutate({ action: 'resend', userId: person.user_id })}>Resend invitation</Button>}</div> },
   ];
 
   if (!canManage) return <Alert tone="warning" title="Staff management access required">Ask an owner, admin or manager to manage invitations and staff roles.</Alert>;
@@ -208,14 +198,9 @@ export default function PeoplePage() {
           <div className="gz-row"><Button type="submit" disabled={busy}>Save access</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button></div>
         </form>
       </Card>}
-      {resetting && <Card title={`Reset password for ${accountName(resetting)}`} subtitle="Confirm the account holder's identity before setting a new password. Share the new password privately.">
-        <form className="gz-stack" onSubmit={(event) => { event.preventDefault(); void mutate({ action: 'reset-password', userId: resetting.user_id, password: newPassword }); }}>
-          <TextField label="New password" type="password" autoComplete="new-password" required minLength={6} hint="At least 6 characters." value={newPassword} onChange={(event) => setNewPassword(event.target.value)} disabled={busy} />
-          <div className="gz-row"><Button type="submit" disabled={busy || newPassword.length < 6}>{busy ? 'Saving password' : 'Save password'}</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => { setResetting(null); setNewPassword(''); }}>Cancel</Button></div>
-        </form>
-      </Card>}
-      <Card title="Platform accounts" padded={false} actions={<Button variant="ghost" disabled={busy || directory.isFetching} onClick={() => void directory.refetch()}>Refresh people</Button>}>
-        <DataTable columns={columns} rows={directory.data?.people ?? []} rowKey="user_id" loading={directory.isPending} empty="No accounts found. Invite a person above to get started." aria-label="Platform accounts and access" />
+      <p className="gz-muted text-body-sm">Password recovery is managed by the account holder from sign in. Username-only accounts require trusted platform support.</p>
+      <Card title="Business accounts" padded={false} actions={<Button variant="ghost" disabled={busy || directory.isFetching} onClick={() => void directory.refetch()}>Refresh people</Button>}>
+        <DataTable columns={columns} rows={directory.data?.people ?? []} rowKey="user_id" loading={directory.isPending} empty="No accounts found. Invite a person above to get started." aria-label="Business accounts and access" />
       </Card>
     </div>
   </>;

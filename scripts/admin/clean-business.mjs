@@ -22,6 +22,8 @@ async function manifest(s){
  return out;
 }
 try{
+ const [tenantSchema]=await sql`select to_regclass('public.businesses') is not null as present`;
+ if(tenantSchema.present)throw Error('Legacy global cleanup is retired for multi-business databases.');
  if(!apply){const m=await manifest(sql);fs.writeFileSync(privateDir+'/restored-manifest.json',JSON.stringify(m),{mode:0o600});}
  await sql.begin(async tx=>{
   await tx.unsafe("set local lock_timeout='10s'; set local statement_timeout='90s'");

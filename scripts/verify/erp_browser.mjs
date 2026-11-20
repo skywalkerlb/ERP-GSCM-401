@@ -29,9 +29,9 @@ const server = spawn(
       VITE_APP_BASE_PATH: appBase,
       VITE_SUPABASE_URL: "http://127.0.0.1:54321",
       VITE_SUPABASE_ANON_KEY: "browser-test",
-      VITE_DEMO_SUPABASE_URL: "",
-      VITE_DEMO_SUPABASE_ANON_KEY: "",
-      VITE_DEMO_PASSWORD: "",
+      VITE_DEMO_SUPABASE_URL: "https://demo-test.supabase.co",
+      VITE_DEMO_SUPABASE_ANON_KEY: "demo-test",
+      VITE_DEMO_PASSWORD: "demo-password",
     },
   },
 );
@@ -165,6 +165,27 @@ try {
     order_by_date: i ? null : "2026-11-15",
     is_expedite: !i,
   }));
+  for (const size of ["desktop", "mobile"]) {
+    for (const theme of ["light", "dark"]) {
+      const context = await browser.newContext({ viewport: size === "desktop" ? { width: 1440, height: 1000 } : { width: 390, height: 844 } });
+      await context.addInitScript(theme => localStorage.setItem("glazed.theme", theme), theme);
+      const page = await context.newPage();
+      await page.goto(appOrigin + "/login");
+      await page.getByRole("heading", { name: "Sign in to Glazed" }).waitFor();
+      await page.getByRole("link", { name: "Create a business", exact: true }).waitFor();
+      assert.equal(await page.getByLabel("Demo role").count(), 0);
+      await page.screenshot({ path: `/private/tmp/glazed-login-${size}-${theme}.png`, fullPage: true });
+      await page.getByRole("button", { name: "Try the demo", exact: true }).click();
+      await page.getByLabel("Demo role").waitFor();
+      await page.screenshot({ path: `/private/tmp/glazed-login-demo-${size}-${theme}.png`, fullPage: true });
+      await page.getByRole("link", { name: "Create a business", exact: true }).click();
+      await page.getByRole("heading", { name: "Create your business" }).waitFor();
+      assert.equal(await page.getByLabel("Private setup code").count(), 0);
+      await page.screenshot({ path: `/private/tmp/glazed-create-business-${size}-${theme}.png`, fullPage: true });
+      assert.equal(await page.locator("body").evaluate(el => el.scrollWidth > window.innerWidth), false);
+      await context.close();
+    }
+  }
   for (const role of ["manager", "customer"]) {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1000 },
@@ -204,7 +225,10 @@ try {
           },
         });
       let result = [];
-      if (name === "profiles")
+      if (name === "list_business_memberships") result = [{ business_id: "00000000-0000-4000-8000-000000000001", name: "Glazed", slug: "glazed", role }];
+      else if (name === "resolve_business") result = [{ business_id: "00000000-0000-4000-8000-000000000001", name: "Glazed", slug: "glazed" }];
+      else if (name === "ensure_business_customer") result = {};
+      else if (name === "profiles")
         result = {
           user_id: user.id,
           full_name: "Browser tester",
@@ -407,7 +431,7 @@ try {
       const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
       await context.addInitScript(({ user, theme }) => {
         localStorage.setItem("glazed-auth-v1", JSON.stringify({ access_token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMTEifQ.test", refresh_token: "test", expires_at: Math.floor(Date.now()/1000)+3600, token_type: "bearer", user }));
-        localStorage.setItem("glazed.location", "999");
+        localStorage.setItem("glazed.location:real:00000000-0000-4000-8000-000000000001", "999");
         localStorage.setItem("glazed.theme", theme);
       }, { user, theme });
       const page = await context.newPage();
@@ -419,7 +443,10 @@ try {
         const req = route.request();
         const name = new URL(req.url()).pathname.split("/").pop();
         let result = [];
-        if (name === "profiles") result = { user_id: user.id, role, full_name: "Real owner", home_location_id: null, customer_id: null };
+        if (name === "list_business_memberships") result = [{ business_id: "00000000-0000-4000-8000-000000000001", name: "Glazed", slug: "glazed", role }];
+      else if (name === "resolve_business") result = [{ business_id: "00000000-0000-4000-8000-000000000001", name: "Glazed", slug: "glazed" }];
+      else if (name === "ensure_business_customer") result = {};
+      else if (name === "profiles") result = { user_id: user.id, role, full_name: "Real owner", home_location_id: null, customer_id: null };
         else if (name === "user") result = user;
         else if (name === "locations") result = rows;
         else if (name === "app_settings") result = { id: 1, business_name: "Real business", default_tax_rate: .0725, ordering_cost_per_po: 45, holding_cost_rate_annual: .25, service_level_z: 1.65, usage_window_days: 90, review_period_days: 7, use_actual_lead_time: false, bake_buffer_pct: .08, day_old_markdown_pct: .5, score_w_ontime: .4, score_w_fill: .35, score_w_lead: .25, keep_threshold: 90, watch_threshold: 75, timezone: "America/Denver" };
@@ -435,7 +462,7 @@ try {
       await page.goto(`${appOrigin}/settings`);
       await page.getByRole("heading", { name: "Settings", exact: true }).waitFor();
       await page.getByText("Add a location to start trading", { exact: true }).waitFor();
-      assert.equal(await page.evaluate(() => localStorage.getItem("glazed.location")), null);
+      assert.equal(await page.evaluate(() => localStorage.getItem("glazed.location:real:00000000-0000-4000-8000-000000000001")), null);
       if (role === "manager") {
         assert.equal(await page.getByRole("button", { name: "New location", exact: true }).count(), 0);
       } else {
@@ -474,6 +501,55 @@ try {
       console.log(`${role} ${theme}: empty-business location setup and role visibility passed`);
       await context.close();
     }
+  }
+  // One global login can create another business and switch between distinct roles.
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    await context.addInitScript(user => localStorage.setItem("glazed-auth-v1", JSON.stringify({ access_token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMTEifQ.test", refresh_token: "test", expires_at: Math.floor(Date.now()/1000)+3600, token_type: "bearer", user })), user);
+    const original = { business_id: "00000000-0000-4000-8000-000000000001", name: "Original business", slug: "glazed", role: "cashier" };
+    const created = { business_id: "00000000-0000-4000-8000-000000000002", name: "Second bakery", slug: "second-bakery", role: "owner" };
+    const memberships = [original];
+    const creationRequests = [];
+    const profileHeaders = [];
+    const page = await context.newPage();
+    await page.route("http://127.0.0.1:54321/**", async route => {
+      const req = route.request(), url = new URL(req.url()), name = url.pathname.split("/").pop();
+      if (req.method() === "OPTIONS") return route.fulfill({ status: 200, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*" } });
+      const id = req.headers()["x-business-id"] || original.business_id;
+      let result = [];
+      if (name === "user") result = user;
+      else if (name === "list_business_memberships") result = memberships;
+      else if (name === "profiles") { profileHeaders.push(id); result = { user_id: user.id, business_id: id, role: id === created.business_id ? "owner" : "cashier", full_name: "Multi-business user", home_location_id: null, customer_id: null }; }
+      else if (name === "onboarding") { const input = req.postDataJSON(); creationRequests.push(input); memberships.push(created); result = created; }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(result) });
+    });
+    await page.goto(appOrigin + "/create-business");
+    await page.getByLabel("Business name").fill(created.name);
+    await page.getByLabel("First shop name").fill("Second shop");
+    await page.getByLabel("Shop address").fill("200 Main St");
+    for (const theme of ["light", "dark"]) {
+      if ((await page.locator("html").getAttribute("data-theme")) !== theme) await page.getByRole("button", { name: `Switch to ${theme} theme` }).click();
+      for (const size of ["desktop", "mobile"]) {
+        await page.setViewportSize(size === "desktop" ? { width: 1440, height: 1000 } : { width: 390, height: 844 });
+        await page.screenshot({ path: `/private/tmp/glazed-business-details-${size}-${theme}.png`, fullPage: true });
+      }
+    }
+    await page.getByRole("button", { name: "Create business", exact: true }).click();
+    await page.waitForURL(appOrigin + "/");
+    await page.getByLabel("Business", { exact: true }).waitFor();
+    assert.equal(await page.getByLabel("Business", { exact: true }).inputValue(), created.business_id);
+    assert.equal(creationRequests.length, 1);
+    assert.equal(creationRequests[0].action, "create");
+    assert.ok(creationRequests[0].request_id);
+    assert.equal(profileHeaders.at(-1), created.business_id);
+    await page.getByLabel("Business", { exact: true }).selectOption(original.business_id);
+    await page.waitForURL(appOrigin + "/pos");
+    await page.getByLabel("Business", { exact: true }).waitFor();
+    assert.equal(await page.getByLabel("Business", { exact: true }).inputValue(), original.business_id);
+    assert.equal(profileHeaders.at(-1), original.business_id);
+    assert.equal(await page.getByRole("link", { name: "People", exact: true }).count(), 0);
+    console.log("Existing account creates independent business, selects new owner context and switches back to cashier context");
+    await context.close();
   }
 } finally {
   await browser?.close();
