@@ -4,15 +4,15 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-**As of 2026-11-19.** Independent business registration is live on [Glazed](https://skywalkerlb.github.io/ERP-GSCM-401/). Visitors create an email/password account and business as owner without a setup code or verification email. Login uses compact links and expandable demo access; each business has a shareable shop link and independent roles/data.
+**As of 2026-11-20.** Independent business registration is live on [Glazed](https://skywalkerlb.github.io/ERP-GSCM-401/). Visitors create an email/password account and business as owner without a setup code or verification email. Login uses compact links and expandable demo access; each business has a shareable shop link and independent roles/data.
 - Permanent `wzsbtfzettxpczgulibd` and disposable demo `wnsimxaopjqwiajbiina` have all 30 migrations and current People/onboarding functions. Registration is enabled only on the real backend; both projects require private-only Realtime channels.
 - Existing records, memberships and Auth credentials were preserved. Private backups were restored and migrated locally; fingerprints across all 73 original public/Auth tables matched before/after hosted migration. Backups/proofs are retained in ignored `.env.tenancy-backups/20261119-multibusiness/`.
 - Public live signup created two independent businesses, switched between them and verified shop isolation; only temporary fixtures were removed. All six live demo roles pass entry, refresh and exit. Valid private channels subscribe; foreign topics and legacy public channels are rejected.
 - 95 JavaScript and 13 TypeScript tests, build/typechecks, design lint, both-theme browser regressions and five rollback SQL suites pass. SQL includes the actual 216-case role matrix, cross-business reads/writes/FKs, signup privacy, scoped reset and stored Realtime topic boundaries.
-- Main release `07e6aca` published successfully in Pages run `44651197375`; final mobile-header/access-fallback refinement is being recorded. Former backend was retired by a separate authorized operation; reset guards retain its ID. Staff invitation SMTP remains deferred.
+- Final feature release `803ffdd` published successfully in Pages run `44671980753`, including mobile selectors and safe access-fallback refresh. Former backend was retired by a separate authorized operation; reset guards retain its ID. Staff invitation SMTP remains deferred.
 
 ## In-flight Work
-- Final mobile long-name header verification and publication of the validated access-fallback refresh refinement. Bounded business/location fields now wrap onto a labelled mobile row in both staff and shop headers.
+- None. Implementation, Supabase rollout, final browser validation and GitHub Pages publication are complete. Local main includes the feature and preserved concurrent deployment/retirement records.
 
 ## Next Steps
 1. Open Create a business from login, or sign in to an existing business and use the Business selector to create/switch businesses.
@@ -23,16 +23,16 @@
 - Project due date remains unspecified; no business-registration decisions are pending.
 
 ## Recent Changes
-### 2026-11-19: Implement and deploy independent business registration (Codex)
+### 2026-11-20: Implement and deploy independent business registration (Codex)
 - **What:** Shipped public owner registration, independent businesses/memberships, switching, shareable shops and a compact login with expandable demo access.
 - **Why:** Anyone needs to create their own business from login, with fewer words on the screen.
-- **How:** Applied four tenant migrations and deployed People/onboarding to both projects after backup-restore rehearsals and exact original-data/credential fingerprint checks. Enabled real registration only after frontend and isolation validation. 95 JS/13 TS tests, build/typechecks, design lint, both-theme browser regressions and five rollback SQL suites pass; actual SQL covers 216 actor/target/requested-role assignments, 36 self changes and 36 invitation combinations. Live two-business signup/switch/shop privacy, six demo roles and private-channel authorization pass. Pages run `44651197375` published the main release.
+- **How:** Applied four tenant migrations and deployed People/onboarding to both projects after backup-restore rehearsals and exact original-data/credential fingerprint checks. Enabled real registration only after frontend and isolation validation. 95 JS/13 TS tests, build/typechecks, design lint, both-theme browser regressions and five rollback SQL suites pass; actual SQL covers 216 actor/target/requested-role assignments, 36 self changes and 36 invitation combinations. Live two-business signup/switch/shop privacy, six demo roles and private-channel authorization pass. Pages run `44671980753` successfully published final feature commit `803ffdd`; local main is synchronized.
 - **Files:** Tenant migrations/APIs, auth/routes/shop links, shared shell/storage/realtime, reset guards, verification suites, README, architecture, CONTRACT and PROGRESS.
 - **Preferences learned:** Independent businesses per login, owner signup without setup code/email verification, concise login and expandable demo; recorded in README §8.1/§8.5.
 - **Correction sweep:** Replaced installation-wide owner setup, global credential management and public operational channels across frontend, APIs, SQL, scripts and current docs; preserved legacy shop links and isolated demo access.
 - **Rework:** Rehearsal caught signup membership leakage and scoped-reset back-link cycles; fixed before rollout. Added whole-document refresh when a persisted membership is invalidated, matching explicit switching. Integrated concurrent deployment/CLI and authorized-retirement records without dropping source changes.
 - **Design review:** Glazed components/tokens, visible labels/focus, one primary action, light/dark desktop/mobile reviewed. Long business/location names remain visible without horizontal overflow at 390px; wrapped staff/shop headers keep selectors usable. No new design exceptions; existing README §8.1 exceptions retained.
-- **Follow-ups:** Final mobile/access-fallback refinement publication; retain ignored backups. Configure SMTP before real invitations. No automatic demo reset scheduled.
+- **Follow-ups:** Retain ignored backups. Configure SMTP before real invitations. No automatic demo reset scheduled; no feature work remains.
 
 ### 2026-11-19: Retire unused Supabase backend (Codex)
 - **What:** Permanently deleted only `eaphbcbklbcadokfcewc`; real and public-demo projects remain healthy.
