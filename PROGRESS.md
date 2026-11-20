@@ -5,12 +5,13 @@
 
 ## Current Status
 **As of 2026-11-19.** Permanent backend `wzsbtfzettxpczgulibd` is clean: sample business history, stock, catalog, suppliers, recipes, promotions and locations removed. Three genuine Auth accounts/passwords, profiles and linked customer identities preserved, including owner/admin. Eight seeded Auth identities deleted; completed owner setup remains closed. Business name retained.
-- Local `main` is synchronized with GitHub `origin/main` at `8adfa19`. The two previous local commits are preserved on `pre-github-sync-20261119`; they are not included in the synchronized branch.
+- Local `main` is synchronized with GitHub `origin/main` at `68524f2`. The two previous local commits are preserved on `pre-github-sync-20261119`; they are not included in the synchronized branch.
 - Owner/admin location settings and startup guidance deployed; migration applied to permanent and separate demo backends. Public demo keeps all sample records (5,416 sales, 36 items); every public-table fingerprint matched before/after cleanup.
 - Private backup in ignored `.env.cleanup-backups/` was restored locally and cleanup rehearsed with rollback. Live UTC-normalized fingerprints matched before deletion; business writes/Auth signup blocked by transaction locks. Security history and document counters retained.
 - All 377 JavaScript/TypeScript checks, production build, design lint and both-theme browser checks pass. Location RPC local authorization/create/edit/deactivation checks passed; genuine password hashes match backup; live owner setup remains closed.
 - Public demo is live on Pages with all 26 migrations and demo-mode functions. Six-role entry/refresh/exit, retry/re-entry, concurrent visitors, and both themes passed; all 81 published JS assets use intended backends and exclude the demo service key. Final Pages run `44643203905` succeeded (`ed727f2`).
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
+- Supabase CLI v3.2.0 is compatible with the local config. All 26 local migrations match production; `people` and `onboarding` were redeployed to `wzsbtfzettxpczgulibd`.
 
 ## In-flight Work
 - Review the two older Supabase CLI setup commits on `pre-github-sync-20261119` before deciding whether any setup changes should be reapplied to current GitHub main.
@@ -25,6 +26,16 @@
 - Project due date remains unspecified.
 
 ## Recent Changes
+### 2026-11-19: Update Supabase CLI configuration compatibility (Codex)
+- **What:** Updated the CLI config for v3.2.0, confirmed all 26 migrations already match production, and redeployed `people` and `onboarding`.
+- **Why:** The user asked to deploy to Supabase and GitHub.
+- **How:** Replaced the obsolete `inbucket` section with `local_smtp`; migration status showed no pending schema changes. Deployed both current functions to `wzsbtfzettxpczgulibd` with the CLI.
+- **Files:** `supabase/config.toml`, Supabase functions, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** None
+- **Follow-ups:** Review the preserved older CLI setup commits before reapplying any of their changes to current main.
+
 ### 2026-11-19: Synchronize local main with GitHub (Codex)
 - **What:** Updated local `main` to GitHub's latest `main` at `8adfa19`.
 - **Why:** The user asked to pull all changes from GitHub.
@@ -103,16 +114,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** Resolved overlapping progress histories; retained upstream hosting/access changes and all MRP/pickup implementation.
 - **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; First-owner onboarding backend/setup-code configuration remains a separate upstream follow-up; no owner is claimed in this release.
-
-### 2026-11-16: Prepare combined release and verify deployment access (Codex)
-- **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
-- **Why:** The user authorized hosted migration/deployment of both feature sets.
-- **How:** Preserved username/password signup and existing access hierarchy; assigned unique ordered versions to the three unpublished MRP/customer migrations. Combined build/typecheck, design lint, 338 TS/Node tests, both-theme browser flows, four SQL suites and 36 assertions pass; 24 migrations apply on a fresh local database. No new design exceptions. Environment status has no deployment secrets; Vercel/Supabase plugins report DISABLED_BY_ADMIN. No hosted changes made.
-- **Files:** Three renamed migrations, seed MRP reference, browser test label, README, contract, PROGRESS and archive; integrated upstream auth changes.
-- **Preferences learned:** None; existing username-only signup preference retained.
-- **Correction sweep:** N/A.
-- **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
-- **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
 
 ### 2026-11-17: Implement first-owner business onboarding (Codex)
 - **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
