@@ -576,3 +576,13 @@ The login page has a credential-free demo role selector. Keep demo credentials i
 - /Users/masonbriggs/ERP Project (GSCM401)/scripts/seed/ (simulator and runner; to be created)
 - /Users/masonbriggs/ERP Project (GSCM401)/design-system/components/index.d.ts and /Users/masonbriggs/ERP Project (GSCM401)/design-system/DESIGN_SYSTEM.md (component props and UI rules to port)
 - /Users/masonbriggs/ERP Project (GSCM401)/scripts/check-design.sh (lint scope that decides where the seed code and chart colors can live)
+
+## 9. Independent businesses (2026-11-19 amendment)
+
+This amendment supersedes installation-wide account, business and public-channel assumptions above. The implemented tenancy interfaces and security boundaries are defined in `supabase/CONTRACT.md` §11.
+
+- One global Auth identity may have separate roles in multiple businesses. Public `/create-business` creates an isolated business, owner membership and first shop atomically without a setup code or email verification. Registration is gated in trusted platform settings and stays disabled in the demo.
+- Operational rows carry immutable `business_id`; restrictive RLS, composite foreign keys, scoped natural keys and non-bypass transactional functions enforce membership and selected-business isolation. A request header selects context but grants no access. People operations verify both caller and selected-business membership server-side; credentials remain global.
+- `/b/<slug>/shop` identifies each public shop; legacy `/shop` selects the original business. Business changes reload the document, and real/demo/business storage namespaces keep carts and locations separate.
+- Realtime uses private membership-authorized business events/presence and identity-private access invalidations. Hosted projects require private-only channels. Public operational broadcasts and cross-business presence are denied.
+- Existing records were migrated without changing their contents or Auth credentials. Demo resets delete only the selected disposable business; legacy global cleanup/bootstrap tools refuse the tenant schema. Retain private backups and run rollback SQL isolation tests before future tenancy changes.

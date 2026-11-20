@@ -278,7 +278,7 @@ Set local `auth.email.enable_confirmations=false` and separately disable hosted 
 
 ## 11. Independent businesses and public owner registration (2026-11-19)
 
-The persistent project is `wzsbtfzettxpczgulibd`; former project `eaphbcbklbcadokfcewc` stays paused/protected. Disposable demo `wnsimxaopjqwiajbiina` remains separate. Tenant migrations preserve all existing records as original business `00000000-0000-4000-8000-000000000001`, slug `glazed`. Legacy `/shop` links select that business; new links use `/b/<slug>/shop`.
+The persistent project is `wzsbtfzettxpczgulibd`; former project `eaphbcbklbcadokfcewc` was retired with user authorization; its ID remains protected from reset scripts. Disposable demo `wnsimxaopjqwiajbiina` remains separate. Tenant migrations preserve all existing records as original business `00000000-0000-4000-8000-000000000001`, slug `glazed`. Legacy `/shop` links select that business; new links use `/b/<slug>/shop`.
 
 Auth identities/passwords remain global. `profiles` stores business memberships keyed by `(business_id,user_id)`, with role, customer and home-location assignments scoped to the business. `business_memberships` is a security-invoker compatibility view. Natural identifiers, accounting defaults, settings and document counters are local to a business. Composite foreign keys prevent cross-business references; rows cannot change business identity.
 

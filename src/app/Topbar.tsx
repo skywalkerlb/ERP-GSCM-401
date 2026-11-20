@@ -46,6 +46,7 @@ export function Topbar({ onMenu, status, users }: TopbarProps) {
       {locations.length > 0 && (
         <Select
           className="app-topbar__location"
+          label="Location"
           aria-label="Location"
           value={locationId ?? ''}
           onChange={(e) => setLocationId(Number(e.target.value))}

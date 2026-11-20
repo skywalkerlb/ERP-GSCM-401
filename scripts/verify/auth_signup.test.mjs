@@ -14,7 +14,7 @@ function harness({ business = null, demo = false, session = null, profile = { us
   const exported = {}, effects = [], calls = [], states = [], timers = [], listeners = {};
   let stateIndex = 0, nextProfile = profile, profileFailure = null, clears = 0;
   vm.runInNewContext(js, {
-    exports: exported, ...identity, selectedBusiness: () => business, selectBusiness: () => {},
+    exports: exported, ...identity, selectedBusiness: () => business, selectBusiness: next => { business = next; },
     require: () => ({ jsx: (type, props) => ({ type, props }) }),
     createContext: () => ({ Provider: 'AuthProvider' }),
     useCallback: fn => fn, useRef: current => ({ current }), useMemo: fn => fn(),
@@ -25,7 +25,7 @@ function harness({ business = null, demo = false, session = null, profile = { us
     },
     isSupabaseConfigured: true, isDemo: demo,
     queryClient: { clear: () => { clears++; } },
-    window: { location: { origin: 'https://glazed.example', pathname: '/login' }, setInterval: fn => { timers.push(fn); return 1; }, clearInterval: () => {}, addEventListener: (event, fn) => { listeners[event] = fn; }, removeEventListener: () => {} },
+    window: { location: { origin: 'https://glazed.example', pathname: '/login', reload: () => calls.push('reloadBusiness') }, setInterval: fn => { timers.push(fn); return 1; }, clearInterval: () => {}, addEventListener: (event, fn) => { listeners[event] = fn; }, removeEventListener: () => {} },
     document: { visibilityState: 'visible' },
     supabase: {
       rpc: async () => ({ data: [{ business_id: "00000000-0000-4000-8000-000000000001", name: "Glazed", slug: "glazed", ...nextProfile }], error: null }),
@@ -121,4 +121,10 @@ test('customer signup for another business creates no original-business profile 
   await app.value.signUp(valid);
   assert.equal(app.calls[0].options.data.registration_intent, 'business');
   assert.equal(Object.hasOwn(app.calls[0].options.data, 'role'), false);
+});
+
+test('an invalidated selected membership reloads before using another business profile', async () => {
+ const app=harness({ business:{business_id:'00000000-0000-4000-8000-000000000002',slug:'previous'},profile:{user_id:'new-user',role:'cashier'} });
+ const result=await app.value.signIn('staff@example.com','password');
+ assert.equal(result.profile,null);assert.equal(app.calls.filter(c=>c==='reloadBusiness').length,1);assert.ok(app.clears()>0);
 });

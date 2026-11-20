@@ -59,13 +59,27 @@ export function friendlyAuthError(error: unknown): string {
   return 'The request could not be completed. Try again, or ask the platform owner for help.';
 }
 
+let businessReloadPending = false;
+
 async function fetchProfile(userId: string): Promise<Profile | null> {
   const memberships = await supabase.rpc('list_business_memberships');
   if (memberships.error) throw memberships.error;
   const rows = memberships.data as Array<Profile & { business_id: string; name: string; slug: string }>;
   let membership = rows?.find(row => row.business_id === selectedBusiness()?.business_id);
   const isShop = window.location.pathname.includes('/shop');
-  if (!membership && !isShop && rows?.length) { membership = rows[0]; selectBusiness(membership); }
+  if (!membership && !isShop && rows?.length) {
+    const previous = selectedBusiness();
+    membership = rows[0];
+    selectBusiness(membership);
+    if (previous && previous.business_id !== membership.business_id) {
+      // Revocation or another identity can invalidate a persisted selection.
+      // Discard local forms and pending work just as the explicit switcher does.
+      queryClient.clear();
+      businessReloadPending = true;
+      window.location.reload();
+      return null;
+    }
+  }
   if (isShop && !membership) {
     const joined = await supabase.rpc('ensure_business_customer');
     if (joined.error) throw joined.error;
@@ -76,9 +90,10 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   return data as Profile | null;
 }
 async function fetchProfileWithRetry(userId: string): Promise<Profile | null> {
+  if (businessReloadPending) return null;
   for (let attempt = 0; attempt < 4; attempt++) {
     const profile = await fetchProfile(userId);
-    if (profile) return profile;
+    if (profile || businessReloadPending) return profile;
     if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, 400));
   }
   return null;

@@ -17,7 +17,7 @@ export function BusinessSwitcher() {
     return result.data as Array<BusinessContext & { role: AppRole }>;
   } });
   if (!query.data?.length) return null;
-  return <><Select label="Business" value={selectedBusiness()?.business_id ?? profile?.business_id ?? ''} options={[...query.data.map(b => ({ value: b.business_id, label: b.name })), { value: 'create', label: 'Create a business' }]} onChange={event => {
+  return <><Select className="app-business-switcher" label="Business" value={selectedBusiness()?.business_id ?? profile?.business_id ?? ''} options={[...query.data.map(b => ({ value: b.business_id, label: b.name })), { value: 'create', label: 'Create a business' }]} onChange={event => {
     if (event.target.value === 'create') { window.location.assign(appPath('/create-business')); return; }
     const business = query.data.find(b => b.business_id === event.target.value);
     if (!business) return;

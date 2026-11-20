@@ -507,7 +507,7 @@ try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addInitScript(user => localStorage.setItem("glazed-auth-v1", JSON.stringify({ access_token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTQxMTEtODExMS0xMTExMTExMTExMTEifQ.test", refresh_token: "test", expires_at: Math.floor(Date.now()/1000)+3600, token_type: "bearer", user })), user);
     const original = { business_id: "00000000-0000-4000-8000-000000000001", name: "Original business", slug: "glazed", role: "cashier" };
-    const created = { business_id: "00000000-0000-4000-8000-000000000002", name: "Second bakery", slug: "second-bakery", role: "owner" };
+    const created = { business_id: "00000000-0000-4000-8000-000000000002", name: "Second bakery and neighborhood kitchen with a deliberately long business name", slug: "second-bakery", role: "owner" };
     const memberships = [original];
     const creationRequests = [];
     const profileHeaders = [];
@@ -520,6 +520,7 @@ try {
       if (name === "user") result = user;
       else if (name === "list_business_memberships") result = memberships;
       else if (name === "profiles") { profileHeaders.push(id); result = { user_id: user.id, business_id: id, role: id === created.business_id ? "owner" : "cashier", full_name: "Multi-business user", home_location_id: null, customer_id: null }; }
+      else if (name === "locations") result = [{ id: 1, code: "MAIN", name: "Main neighborhood shop and central kitchen with a long location name", kind: "shop", is_active: true, address: "200 Main", tax_rate: 0.0725 }];
       else if (name === "onboarding") { const input = req.postDataJSON(); creationRequests.push(input); memberships.push(created); result = created; }
       return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(result) });
     });
@@ -538,6 +539,18 @@ try {
     await page.waitForURL(appOrigin + "/");
     await page.getByLabel("Business", { exact: true }).waitFor();
     assert.equal(await page.getByLabel("Business", { exact: true }).inputValue(), created.business_id);
+    await page.getByLabel("Location", { exact: true }).waitFor();
+    for (const theme of ["light", "dark"]) {
+      if ((await page.locator("html").getAttribute("data-theme")) !== theme) await page.getByRole("button", { name: `Switch to ${theme} theme` }).click();
+      for (const width of [1440, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        const layout = await page.evaluate(() => ({ viewport: innerWidth, scroll: document.body.scrollWidth, fields: [...document.querySelectorAll('.app-topbar select')].map(el => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, width: r.width }; }) }));
+        assert.equal(layout.fields.length, 2);
+        assert.ok(layout.scroll <= layout.viewport, `Header overflows at ${width} in ${theme}`);
+        assert.ok(layout.fields.every(field => field.width > 0 && field.left >= 0 && field.right <= layout.viewport));
+        await page.screenshot({ path: `/private/tmp/glazed-business-header-${width}-${theme}.png`, fullPage: true });
+      }
+    }
     assert.equal(creationRequests.length, 1);
     assert.equal(creationRequests[0].action, "create");
     assert.ok(creationRequests[0].request_id);
