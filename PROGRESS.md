@@ -4,22 +4,22 @@
 > **Size rules:** no more than 10 entries in Recent Changes and 300 lines. Status sections are snapshots.
 
 ## Current Status
-- Owner/admin location setup UI, active-location selection and real/demo About copy implemented; backend integration and validation in flight.
+- Owner/admin location setup, active-location selection and real/demo About copy are integrated and published; the separately authorized permanent-data cleanup remains tracked below.
 **As of 2026-11-19.** Real backend `wzsbtfzettxpczgulibd` remains active and protected. Former backend `eaphbcbklbcadokfcewc` was paused with user authorization; its data is retained and reset protection remains enabled.
-- New disposable demo: `wnsimxaopjqwiajbiina`. All 25 migrations applied; People/onboarding deployed; People uses DEMO_MODE=true and Pages APP_URL. Demo Auth callbacks configured.
-- Demo 210-day replay completed without failures; inventory ledger/GL/item costs reconcile at $37,237.92. All six roles pass entry, landing, refresh and exit through the local release frontend. Demo Actions secrets configured; publication next.
+- New disposable demo: `wnsimxaopjqwiajbiina`. All 26 migrations applied; People/onboarding deployed; People uses DEMO_MODE=true and Pages APP_URL. Demo Auth callbacks configured.
+- Demo 210-day replay completed without failures; inventory ledger/GL/item costs reconcile at $37,237.92. All six roles pass entry, landing, refresh and exit on the public GitHub Pages site. Retry/re-entry and concurrent visitor isolation pass. Pages run `44642873404` published source `10cd068`; all five Actions settings configured.
 - All 377 JavaScript/TypeScript checks, production build/typechecks, design lint and both-theme browser regressions pass. Fresh and repeated seed-account linking passed against the demo database; simultaneous visitor exit/session isolation passed.
 - Real-business cleanup/location work is tracked separately; genuine owner/admin access is preserved. SMTP is deferred. Private credentials stay in ignored local files/server secrets.
 
 ## In-flight Work
 - Prepare permanent backend cleanup and add owner/admin location settings; public demo data remains separate.
 - Clean permanent backend sample data while preserving three genuine accounts and completed owner setup; location setup implementation and backup rehearsal underway.
-- Publish the completed demo release and verify public entry.
+- Demo activation is complete. Permanent-data cleanup remains a separate task.
 
 ## Next Steps
 0. Verify location setup UI/backend and complete authorized permanent sample-data cleanup.
-1. Publish and verify public demo entry.
-2. Record completed publication and public browser checks.
+1. Retain the verified separate demo; no automatic resets are scheduled.
+2. Track permanent-data cleanup independently from demo activation.
 3. Configure SMTP later for real staff invitations.
 
 ## Open Questions for the User
@@ -47,12 +47,12 @@
 ### 2026-11-19: Restore separate public demo backend (Codex)
 - **What:** Created and populated separate disposable demo `wnsimxaopjqwiajbiina`; configured all role accounts, migrations, Edge Functions, Auth and Actions secrets.
 - **Why:** Visitors need credential-free demo access using isolated sample data.
-- **How:** Paused unused former backend with authorization, retaining data and both persistent-project guards. Completed 210-day replay with no failed events and reconciled inventory/accounting. All 377 JS/TS tests, build/typechecks, design lint, both-theme browser regressions, five rollback SQL suites and live local role/session/retry checks pass.
+- **How:** Paused unused former backend with authorization, retaining data and both persistent-project guards. Completed 210-day replay with no failed events and reconciled inventory/accounting. All 377 JS/TS tests, build/typechecks, design lint, both-theme browser regressions, five rollback SQL suites and public six-role/session/retry checks pass. Pages run `44642873404` succeeded; 81 published JS assets use intended backends and exclude the demo service key. Applied the integrated location migration to demo (26 total).
 - **Files:** scripts/seed/run.ts, README.md, supabase/CONTRACT.md, PROGRESS.md and archive; hosted configuration and ignored local settings.
 - **Preferences learned:** Pause unused former backend to free the demo slot; finish task validation before deployment.
-- **Correction sweep:** Recorded deployment sequencing in README §8.4; used an isolated checkout, then integrated the validated/published location release. Existing automatic main publishing remains intact.
+- **Correction sweep:** Recorded deployment sequencing in README §8.4; used an isolated checkout, then integrated the validated/published location release without dropping either change. Existing automatic main publishing remains intact.
 - **Rework:** Fixed fresh Auth-created customer collision by linking seeded customer/profile atomically without deleting records. Verified the actual seed function on fresh and repeated execution. Installed declared browser dependencies and used system Chrome.
-- **Follow-ups:** Publish and verify public entry. No UI changes or new design exceptions.
+- **Follow-ups:** Demo activation complete; automatic reset scheduling remains out of scope. No new UI changes or design exceptions in demo restoration.
 
 ### 2026-11-18: Verify owner signup without email confirmation (Codex)
 - **What:** Re-saved disabled hosted email confirmation on real project `wzsbtfzettxpczgulibd` and verified immediate signup.

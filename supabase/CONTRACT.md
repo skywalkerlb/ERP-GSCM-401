@@ -284,7 +284,7 @@ Set local `auth.email.enable_confirmations=false` and separately disable hosted 
 
 ## 11. First-owner business setup (2026-11-17)
 
-The real backend is `wzsbtfzettxpczgulibd` (formerly demo). Former backend `eaphbcbklbcadokfcewc` remains protected. Neither may host public demo identities or receive demo resets/prep. Business data is preserved during promotion; seeded demo identities are disabled before real access. Former backend is paused with user authorization, retaining its data. Separate disposable demo project `wnsimxaopjqwiajbiina` has all migrations, sample history and role accounts; see PROGRESS.md for publication verification.
+The real backend is `wzsbtfzettxpczgulibd` (formerly demo). Former backend `eaphbcbklbcadokfcewc` remains protected. Neither may host public demo identities or receive demo resets/prep. Business data is preserved during promotion; seeded demo identities are disabled before real access. Former backend is paused with user authorization, retaining its data. Separate disposable demo project `wnsimxaopjqwiajbiina` has all migrations, sample history and role accounts; public six-role entry is verified.
 
 This is a single-business installation, not a multi-tenant service. Apply migration `20261117000001_business_onboarding.sql`, deploy `onboarding` with gateway JWT verification disabled (the function verifies protected actions with Auth `getUser`), and configure server-only `APP_URL` and `OWNER_SETUP_CODE` (16–256 random characters). The public status action reveals availability only. CORS uses the canonical app origin. Demo mode closes setup.
 
