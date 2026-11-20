@@ -12,6 +12,7 @@
 - Former backend remains paused and protected. SMTP for staff invitations is deferred. No new design exceptions.
 
 ## In-flight Work
+- Completed source/security/browser validation; gated database/API/frontend rollout underway, preserving concurrent CLI/deployment records.
 - Implementing membership-authorized private Realtime event/presence channels alongside approved multi-business registration in isolated `/private/tmp/glazed-multi-business`: business-scoped roles/data, shop links and compact login. Public signup remains gated until security tests pass. README runtime guidance and CONTRACT §11 now describe the implemented tenant interfaces and staged rollout.
 - Previous real-business cleanup/setup publication is complete (run 44643855828); current multi-business work is not yet deployed.
 
@@ -25,6 +26,36 @@
 - Project due date remains unspecified; no additional business-registration decisions are pending.
 
 ## Recent Changes
+### 2026-11-19: Synchronize local main with GitHub (Codex)
+- **What:** Updated local `main` to GitHub's latest `main` at `8adfa19`.
+- **Why:** The user asked to pull all changes from GitHub.
+- **How:** Fetched the remote, preserved the two local commits on `pre-github-sync-20261119`, then synchronized `main` to `origin/main` without merging the older divergent snapshot.
+- **Files:** `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** None
+- **Follow-ups:** Review the preserved local setup commits before reapplying any changes to current main.
+
+### 2026-11-19: Deploy current main to GitHub and Supabase (Codex)
+- **What:** Synchronized latest GitHub main and redeployed People/onboarding to permanent and public-demo Supabase projects.
+- **Why:** User requested all current changes deployed to Git and Supabase.
+- **How:** Verified all 26 local migration versions already applied to both projects, deployed both functions using API bundling and retained existing configuration. Verified real/demo onboarding returns 200 with setup closed and People rejects unauthenticated access with 401. No seeds, resets, account edits or data changes.
+- **Files:** PROGRESS.md and archive; hosted Edge Function deployments.
+- **Preferences learned:** None.
+- **Correction sweep:** N/A.
+- **Rework:** Integrated concurrent GitHub synchronization and local Supabase CLI config updates; retained both deployment records.
+- **Follow-ups:** Verify endpoint responses and final Pages deployment; owner configures real business. No UI changes or new design exceptions.
+
+### 2026-11-19: Update Supabase CLI configuration compatibility (Codex)
+- **What:** Updated the CLI config for v3.2.0, confirmed all 26 migrations already match production, and redeployed `people` and `onboarding`.
+- **Why:** The user asked to deploy to Supabase and GitHub.
+- **How:** Replaced the obsolete `inbucket` section with `local_smtp`; migration status showed no pending schema changes. Deployed both current functions to `wzsbtfzettxpczgulibd` with the CLI.
+- **Files:** `supabase/config.toml`, Supabase functions, `PROGRESS.md`, `docs/progress-archive/2026-11.md`
+- **Preferences learned:** None
+- **Correction sweep:** N/A
+- **Rework:** None
+- **Follow-ups:** Review the preserved older CLI setup commits before reapplying any of their changes to current main.
+
 ### 2026-11-19: Implement independent business registration (Codex)
 - **What:** Started approved business isolation, public owner signup, business switching/shop links and compact login in an isolated checkout.
 - **Why:** Users need independent businesses and a login screen with less text.
@@ -45,6 +76,7 @@
 - **Rework:** Local scoped reset rehearsal caught sales/order back-link cycles; clear only the selected business’s nullable back-links before dependency-ordered deletion.
 - **Design review:** Final design lint passed. Reviewed Glazed component props, light/dark screenshots, one primary action per view/dialog, semantic status tones, sentence-case voice, field labels, shared focus rings, dialog focus trap/return and close-button aria-label. No new deviations. Existing README §8.1 exceptions retained: Barcode Labels capitalization and sidebar Glazed! punctuation.
 - **Follow-ups:** Backend/UI integrated; both themes visually reviewed and browser tested. No design exceptions.
+
 ### 2026-11-19: Clean permanent business database (Codex)
 - **What:** Removed all reviewed sample business records and eight seeded Auth identities; preserved three genuine accounts/passwords, profiles/customer links, business name and permanent owner claim.
 - **Why:** Start a real business with an empty catalog, shops, stock and history; keep public demo populated.
@@ -54,6 +86,7 @@
 - **Correction sweep:** Removed misleading simulated-data claims from real About and clarified empty portal menu.
 - **Rework:** Merged concurrent public-demo deployment without losing its seed fix; installed PostgreSQL tools; local restore reported only pre-existing public schema. Initial live fingerprint guard rolled back safely because timezones serialized timestamps differently; normalized comparisons to UTC, rehearsed and succeeded.
 - **Follow-ups:** Owner enters real locations/master data/opening balances; configure SMTP. Live catalog and report views verified empty; final startup copy/UTC fingerprint fix published with this handoff. No new design exceptions.
+
 ### 2026-11-19: Restore separate public demo backend (Codex)
 - **What:** Created and populated separate disposable demo `wnsimxaopjqwiajbiina`; configured all role accounts, migrations, Edge Functions, Auth and Actions secrets.
 - **Why:** Visitors need credential-free demo access using isolated sample data.
@@ -93,37 +126,6 @@
 - **Correction sweep:** N/A.
 - **Rework:** Preserved concurrent Pages, username and first-owner source changes while resolving progress history conflicts.
 - **Follow-ups:** Separate first-owner backend/private-code setup and persistent master data remain; existing demo history limitations preserved. No new design exceptions.
-
-### 2026-11-17: Integrate MRP/customer pickup with GitHub Pages (Codex)
-- **What:** Combined PR #1 with the live Pages hosting changes, preserved username signup and added repository-prefix browser regression coverage.
-- **Why:** Finish the authorized frontend deployment after the user enabled GitHub Pages and successfully applied MRP migrations/deployed People from PowerShell.
-- **How:** Confirmed Pages root HTTP 200 and successful prior Actions runs; integrated main without dropping sidebar/Barcode Labels exceptions or URL-prefix support. Combined 367 TS/Node tests, both-theme prefixed browser flows, typecheck/design lint and production build pass; root-hosted browser flows also passed before the additive owner-setup merge. User CLI confirms all three MRP migrations applied to the linked persistent project; no database mutation/reset from this environment.
-- **Files:** Browser regression, README, database contract, PROGRESS and archive; integrated upstream Pages workflow/router/URL helpers.
-- **Preferences learned:** None; existing GitHub Pages hosting preference retained.
-- **Correction sweep:** N/A.
-- **Rework:** Resolved overlapping progress histories; retained upstream hosting/access changes and all MRP/pickup implementation.
-- **Follow-ups:** Merge verified PR, monitor Pages run and check live UI; First-owner onboarding backend/setup-code configuration remains a separate upstream follow-up; no owner is claimed in this release.
-
-### 2026-11-16: Prepare combined release and verify deployment access (Codex)
-- **What:** Integrated the latest username signup into the MRP/customer pickup release, resolved migration version collisions and checked deployment connections.
-- **Why:** The user authorized hosted migration/deployment of both feature sets.
-- **How:** Preserved username/password signup and existing access hierarchy; assigned unique ordered versions to the three unpublished MRP/customer migrations. Combined build/typecheck, design lint, 338 TS/Node tests, both-theme browser flows, four SQL suites and 36 assertions pass; 24 migrations apply on a fresh local database. No new design exceptions. Environment status has no deployment secrets; Vercel/Supabase plugins report DISABLED_BY_ADMIN. No hosted changes made.
-- **Files:** Three renamed migrations, seed MRP reference, browser test label, README, contract, PROGRESS and archive; integrated upstream auth changes.
-- **Preferences learned:** None; existing username-only signup preference retained.
-- **Correction sweep:** N/A.
-- **Rework:** Concurrent username migration reused the original MRP version; renumbered the unpublished release migrations.
-- **Follow-ups:** Enable authorized Vercel/Supabase access or securely configure CLI credentials; inspect hosted migration history, migrate without resets, configure Auth, deploy backend/frontend and verify live.
-
-### 2026-11-17: Implement first-owner business onboarding (Codex)
-- **What:** Added permanent protected owner setup, sign-in option, email-account onboarding, first-shop setup and invitation guidance.
-- **Why:** Owner needs to create the business and invite admins/staff who choose passwords using email usernames.
-- **How:** Private backend setup code, persisted limits, locked one-time database claim, atomic business/location/profile/audit writes and safe owner retries. Existing records and role hierarchy preserved. 355 JavaScript tests, build/typecheck and design lint pass. Migration and expanded security SQL passed against isolated demo in a rollback-only transaction (including its missing access-audit prerequisite). No owner claim or deployment. Glazed components/tokens only; no design exceptions. Browser visual checks remain blocked by tab-creation automation error.
-- **Files:** Onboarding endpoint/migration/tests, bootstrap/config, auth UI/routes, README, CONTRACT and PROGRESS.
-- **Preferences learned:** One business, private setup code, owner-invited admins, email invitations and first-location setup (README §8.5).
-- **Correction sweep:** N/A.
-- **Rework:** None.
-- **Design review:** Re-ran full design lint after the hook reminder: passed. New UI uses existing Glazed components and inherited theme tokens, visible field labels and standard focus styles; conditional views have one primary action, sentence-case copy and semantic status tones. No new design deviations. Existing approved Barcode Labels capitalization and sidebar Glazed! exceptions remain unchanged. Light/dark browser visual review remains unverified because browser tab creation failed.
-- **Follow-ups:** Deploy backend/configuration before frontend; verify both-theme visuals and SMTP. Existing demo backend lacks the delegated-access prerequisite; stage all unapplied migrations when deploying there. README setup instructions and preference rule are updated; changelog remains at ten entries.
 
 ## Archive Index
 - `docs/progress-archive/2026-11.md`
